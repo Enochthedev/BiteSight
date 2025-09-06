@@ -1,0 +1,2 @@
+# This directory will contain training images organized by food class
+# Structure: train/food_class_name/image_files.jpg

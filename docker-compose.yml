@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nutrition-postgres
+    environment:
+      POSTGRES_DB: nutrition_feedback
+      POSTGRES_USER: nutrition_user
+      POSTGRES_PASSWORD: nutrition_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nutrition-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: nutrition-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nutrition-network
+
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nutrition-backend
+    environment:
+      - DATABASE_URL=postgresql://nutrition_user:nutrition_pass@postgres:5432/nutrition_feedback
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET_KEY=your-secret-key-change-in-production
+      - ENVIRONMENT=development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./shared:/app/shared
+      - uploaded_images:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - nutrition-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Nginx for serving static files and load balancing
+  nginx:
+    image: nginx:alpine
+    container_name: nutrition-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - uploaded_images:/var/www/uploads
+    depends_on:
+      - backend
+    networks:
+      - nutrition-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploaded_images:
+
+networks:
+  nutrition-network:
+    driver: bridge
