@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+  namespace: nutrition-feedback
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nutrition-backend
+  namespace: nutrition-feedback
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nutrition-backend
+  template:
+    metadata:
+      labels:
+        app: nutrition-backend
+    spec:
+      containers:
+      - name: backend
+        image: nutrition-backend:latest
+        ports:
+        - containerPort: 8000
+        - containerPort: 9090
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@nutrition-postgres:5432/$(POSTGRES_DB)"
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: nutrition-config
+              key: POSTGRES_USER
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: nutrition-config
+              key: POSTGRES_DB
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nutrition-secrets
+              key: POSTGRES_PASSWORD
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: nutrition-config
+              key: REDIS_URL
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nutrition-secrets
+              key: JWT_SECRET_KEY
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: nutrition-config
+              key: ENVIRONMENT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: nutrition-config
+              key: LOG_LEVEL
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: nutrition-secrets
+              key: SENTRY_DSN
+        - name: PROMETHEUS_METRICS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: nutrition-config
+              key: PROMETHEUS_METRICS_PORT
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /app/uploads
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: uploads-storage
+        persistentVolumeClaim:
+          claimName: uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nutrition-backend
+  namespace: nutrition-feedback
+spec:
+  selector:
+    app: nutrition-backend
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nutrition-backend-hpa
+  namespace: nutrition-feedback
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nutrition-backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

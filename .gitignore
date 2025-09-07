@@ -1,3 +1,6 @@
+# Kiro IDE specific files
+.kiro/
+
 # Environment variables
 .env
 .env.local

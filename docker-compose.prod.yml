@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nutrition-postgres-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nutrition_feedback}
+      POSTGRES_USER: ${POSTGRES_USER:-nutrition_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nutrition-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nutrition_user} -d ${POSTGRES_DB:-nutrition_feedback}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: nutrition-redis-prod
+    volumes:
+      - redis_data:/data
+    networks:
+      - nutrition-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: nutrition-backend-prod
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-nutrition_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-nutrition_feedback}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ENVIRONMENT=production
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - PROMETHEUS_METRICS_PORT=9090
+    volumes:
+      - uploaded_images:/app/uploads
+      - app_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nutrition-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Nginx Load Balancer
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.prod
+    container_name: nutrition-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+      - uploaded_images:/var/www/uploads
+      - ./nginx/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - nutrition-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nutrition-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - nutrition-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  # Grafana for monitoring dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nutrition-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - nutrition-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploaded_images:
+  app_logs:
+  nginx_logs:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  nutrition-network:
+    driver: bridge

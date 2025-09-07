@@ -38,6 +38,16 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Nutrition Feedback API...")
 
+    # Initialize Redis connection
+    try:
+        from app.core.redis_client import get_redis_client
+        redis_client = get_redis_client()
+        redis_client.connect()
+        logger.info("Redis connection established")
+    except Exception as e:
+        logger.error(f"Redis connection failed: {e}")
+        # Don't raise - Redis is optional for basic functionality
+
     # Initialize database connection
     try:
         # Test database connection
@@ -70,6 +80,14 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down Nutrition Feedback API...")
+
+    # Cleanup Redis connection
+    try:
+        redis_client = get_redis_client()
+        redis_client.disconnect()
+        logger.info("Redis connection closed")
+    except Exception as e:
+        logger.error(f"Error closing Redis connection: {e}")
 
     # Cleanup async task processor
     try:
@@ -205,19 +223,39 @@ async def health_check():
     try:
         # Test database connection
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         db_status = "healthy"
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         db_status = "unhealthy"
 
+    # Test Redis connection
+    try:
+        from app.core.redis_client import get_redis_client
+        redis_client = get_redis_client()
+        if redis_client.is_connected():
+            redis_status = "healthy"
+        else:
+            redis_status = "unhealthy"
+    except Exception as e:
+        logger.error(f"Redis health check failed: {e}")
+        redis_status = "unhealthy"
+
+    # Determine overall status
+    overall_status = "healthy"
+    if db_status == "unhealthy":
+        overall_status = "unhealthy"
+    elif redis_status == "unhealthy":
+        overall_status = "degraded"
+
     return {
-        "status": "healthy" if db_status == "healthy" else "degraded",
+        "status": overall_status,
         "service": "nutrition-feedback-api",
         "version": "1.0.0",
         "timestamp": time.time(),
         "components": {
             "database": db_status,
+            "redis": redis_status,
             "api": "healthy"
         }
     }

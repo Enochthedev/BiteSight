@@ -1,5 +1,6 @@
 /**
  * API service configuration and base client
+ * Enhanced with performance optimizations and caching
  */
 
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
@@ -7,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiError, MealHistory, NutritionFeedback, WeeklyInsight } from '@/types';
 import { networkService } from './networkService';
 import { offlineStorage } from './offlineStorage';
+import { performanceService } from './performanceService';
 
 const API_BASE_URL = __DEV__
     ? 'http://localhost:8000/api/v1'
@@ -15,6 +17,8 @@ const API_BASE_URL = __DEV__
 class ApiService {
     private client: AxiosInstance;
     private retryQueue: Map<string, () => Promise<any>> = new Map();
+    private requestCache = new Map<string, { data: any; timestamp: number }>();
+    private pendingRequests = new Map<string, Promise<any>>();
 
     constructor() {
         this.client = axios.create({
@@ -27,6 +31,7 @@ class ApiService {
 
         this.setupInterceptors();
         this.initializeNetworkHandling();
+        this.initializePerformanceOptimizations();
     }
 
     private setupInterceptors(): void {
@@ -91,7 +96,10 @@ class ApiService {
     }
 
     public get<T>(url: string, params?: any): Promise<T> {
-        return this.client.get(url, { params }).then(response => response.data);
+        const cacheKey = this.generateCacheKey('GET', url, params);
+        return this.optimizedRequest(cacheKey, () =>
+            this.client.get(url, { params }).then(response => response.data)
+        );
     }
 
     public post<T>(url: string, data?: any): Promise<T> {
@@ -115,6 +123,43 @@ class ApiService {
         }).then(response => response.data);
     }
 
+    /**
+     * Optimized request with caching and deduplication
+     */
+    private async optimizedRequest<T>(
+        cacheKey: string,
+        requestFn: () => Promise<T>,
+        cacheTTL: number = 5 * 60 * 1000 // 5 minutes
+    ): Promise<T> {
+        return performanceService.optimizedApiCall(cacheKey, requestFn, cacheTTL);
+    }
+
+    /**
+     * Debounced search requests
+     */
+    public debouncedSearch<T>(
+        url: string,
+        query: string,
+        delay: number = 300
+    ): Promise<T> {
+        const searchKey = `search_${url}_${query}`;
+        return performanceService.debounceApiCall(
+            searchKey,
+            () => this.get<T>(url, { q: query }),
+            delay
+        );
+    }
+
+    /**
+     * Batch multiple requests
+     */
+    public async batchRequests<T>(
+        requests: Array<() => Promise<T>>,
+        batchSize: number = 5
+    ): Promise<T[]> {
+        return performanceService.batchApiRequests(requests, batchSize);
+    }
+
     private initializeNetworkHandling(): void {
         // Listen for network changes to process retry queue
         networkService.addListener((networkState) => {
@@ -122,6 +167,16 @@ class ApiService {
                 this.processRetryQueue();
             }
         });
+    }
+
+    private initializePerformanceOptimizations(): void {
+        // Initialize performance service
+        performanceService.initialize();
+    }
+
+    private generateCacheKey(method: string, url: string, params?: any): string {
+        const paramString = params ? JSON.stringify(params) : '';
+        return `${method}_${url}_${paramString}`;
     }
 
     private async processRetryQueue(): Promise<void> {
@@ -186,7 +241,7 @@ class ApiService {
         return this.post<T>(url, data);
     }
 
-    // Specific API methods with offline support
+    // Specific API methods with offline support and performance optimizations
     public async getMealHistory(
         limit: number = 20,
         offset: number = 0
@@ -195,7 +250,7 @@ class ApiService {
             return await this.getWithOfflineSupport<MealHistory>(
                 '/meals/history',
                 { limit, offset },
-                'meal_history'
+                `meal_history_${limit}_${offset}`
             );
         } catch (error) {
             // Fallback to cached meals
@@ -206,6 +261,24 @@ class ApiService {
                 hasMore: false,
             };
         }
+    }
+
+    /**
+     * Create lazy loader for meal history
+     */
+    public createMealHistoryLoader() {
+        return performanceService.createLazyLoader(
+            async (page: number, pageSize: number) => {
+                const offset = page * pageSize;
+                const history = await this.getMealHistory(pageSize, offset);
+                return history.meals;
+            },
+            {
+                pageSize: 15,
+                preloadPages: 2,
+                cacheSize: 50,
+            }
+        );
     }
 
     public async getMealFeedback(mealId: string): Promise<NutritionFeedback> {

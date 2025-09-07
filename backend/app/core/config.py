@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: List[str] = ["*"]
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
+    # Admin Settings
+    ADMIN_SESSION_EXPIRE_HOURS: int = 8  # 8 hours for admin sessions
+
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: str | List[str]) -> List[str] | str:
         if isinstance(v, str) and not v.startswith("["):

@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: nutrition-feedback
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: nutrition-feedback
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+
+      - job_name: 'nutrition-backend'
+        static_configs:
+          - targets: ['nutrition-backend:9090']
+        metrics_path: '/metrics'
+        scrape_interval: 30s
+
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+        - role: pod
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nutrition-prometheus
+  namespace: nutrition-feedback
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nutrition-prometheus
+  template:
+    metadata:
+      labels:
+        app: nutrition-prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        args:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--storage.tsdb.retention.time=200h'
+        - '--web.enable-lifecycle'
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        - name: prometheus-storage
+          mountPath: /prometheus
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "400m"
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage
+        persistentVolumeClaim:
+          claimName: prometheus-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nutrition-prometheus
+  namespace: nutrition-feedback
+spec:
+  selector:
+    app: nutrition-prometheus
+  ports:
+  - port: 9090
+    targetPort: 9090
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: nutrition-feedback
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nutrition-grafana
+  namespace: nutrition-feedback
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nutrition-grafana
+  template:
+    metadata:
+      labels:
+        app: nutrition-grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "admin"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: grafana-storage
+        persistentVolumeClaim:
+          claimName: grafana-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nutrition-grafana
+  namespace: nutrition-feedback
+spec:
+  selector:
+    app: nutrition-grafana
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: LoadBalancer

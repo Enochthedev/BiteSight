@@ -15,10 +15,12 @@ from dataclasses import dataclass
 import json
 from concurrent.futures import ThreadPoolExecutor
 import threading
+import hashlib
 
 from ..models.mobilenet_food_classifier import MobileNetV2FoodClassifier, load_pretrained_model
 from ..dataset.augmentation import get_inference_transforms
 from ..dataset.food_mapping import NigerianFoodMapper
+from ...core.cache_service import get_cache_service
 
 logger = logging.getLogger(__name__)
 
@@ -115,11 +117,13 @@ class FoodPredictor:
         self.model = None
         self.class_names = []
         self.transforms = None
+        self.model_version = None
         self._load_model()
 
-        # Setup cache
+        # Setup cache (both local and Redis)
         self.cache = ModelCache(
             config.cache_size) if config.enable_caching else None
+        self.redis_cache = get_cache_service()
 
         # Thread pool for parallel processing
         self.thread_pool = ThreadPoolExecutor(max_workers=config.num_threads)
@@ -144,6 +148,10 @@ class FoodPredictor:
                 num_classes = checkpoint['model_state_dict']['classifier.3.weight'].shape[0]
                 self.class_names = [f"class_{i}" for i in range(num_classes)]
 
+            # Generate model version for caching
+            model_hash = hashlib.md5(str(checkpoint).encode()).hexdigest()[:8]
+            self.model_version = f"mobilenet_v2_{model_hash}"
+
             # Create and load model
             self.model = MobileNetV2FoodClassifier(
                 num_classes=len(self.class_names))
@@ -159,7 +167,8 @@ class FoodPredictor:
             # Setup preprocessing
             self.transforms = get_inference_transforms()
 
-            logger.info(f"Loaded model with {len(self.class_names)} classes")
+            logger.info(
+                f"Loaded model with {len(self.class_names)} classes, version: {self.model_version}")
 
         except Exception as e:
             logger.error(f"Error loading model: {e}")
@@ -218,7 +227,9 @@ class FoodPredictor:
     def _create_cache_key(self, image_tensor: torch.Tensor) -> str:
         """Create cache key from image tensor."""
         # Use hash of tensor data for caching
-        return str(hash(image_tensor.cpu().numpy().tobytes()))
+        image_hash = hashlib.md5(
+            image_tensor.cpu().numpy().tobytes()).hexdigest()
+        return image_hash
 
     def predict_single(
         self,
@@ -238,13 +249,31 @@ class FoodPredictor:
         # Preprocess image
         image_tensor = self._preprocess_image(image).to(self.device)
 
-        # Check cache
+        # Create cache key from image hash
+        image_hash = hashlib.md5(
+            image_tensor.cpu().numpy().tobytes()).hexdigest()
+
+        # Check Redis cache first
+        cached_result = self.redis_cache.get_cached_inference(
+            image_hash, self.model_version)
+        if cached_result is not None:
+            logger.debug(f"Redis cache hit for image hash: {image_hash}")
+            # Convert cached dict back to PredictionResult objects
+            if return_all_scores and isinstance(cached_result, list):
+                return [PredictionResult(**result) for result in cached_result]
+            elif not return_all_scores and isinstance(cached_result, dict):
+                return PredictionResult(**cached_result)
+            elif cached_result is None:
+                return None
+
+        # Check local cache
         cache_key = None
         if self.cache:
-            cache_key = self._create_cache_key(image_tensor)
-            cached_result = self.cache.get(cache_key)
-            if cached_result is not None:
-                return cached_result
+            cache_key = image_hash
+            local_cached_result = self.cache.get(cache_key)
+            if local_cached_result is not None:
+                logger.debug(f"Local cache hit for image hash: {image_hash}")
+                return local_cached_result
 
         # Run inference
         with torch.no_grad():
@@ -281,15 +310,24 @@ class FoodPredictor:
                 )
                 results.append(result)
 
-        # Cache result
-        if self.cache and cache_key:
-            self.cache.put(
-                cache_key, results if return_all_scores else results[0] if results else None)
+        # Prepare result for caching and return
+        final_result = results if return_all_scores else (
+            results[0] if results else None)
 
-        if return_all_scores:
-            return results
-        else:
-            return results[0] if results else None
+        # Cache result in Redis (convert to dict for JSON serialization)
+        if final_result is not None:
+            if return_all_scores:
+                cache_data = [result.__dict__ for result in results]
+            else:
+                cache_data = final_result.__dict__
+            self.redis_cache.cache_model_inference(
+                image_hash, self.model_version, cache_data)
+
+        # Cache result locally
+        if self.cache and cache_key:
+            self.cache.put(cache_key, final_result)
+
+        return final_result
 
     def predict_batch(
         self,
