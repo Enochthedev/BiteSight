@@ -12,23 +12,20 @@ import {
   Alert,
   Animated,
 } from 'react-native';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { colors, typography, spacing } from '@/styles';
 import { NavigationParamList, MealAnalysis, FoodDetection, AnalysisStatus } from '@/types';
 import { apiService } from '@/services/api';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
-type AnalysisScreenRouteProp = RouteProp<NavigationParamList, 'Analysis'>;
-type AnalysisScreenNavigationProp = StackNavigationProp<NavigationParamList, 'Analysis'>;
+import { MaterialIcons } from '@expo/vector-icons';
 
 export const AnalysisScreen: React.FC = () => {
-  const route = useRoute<AnalysisScreenRouteProp>();
-  const navigation = useNavigation<AnalysisScreenNavigationProp>();
-  const { mealId, imageUri } = route.params;
+  const { mealId, imageUri } = useLocalSearchParams<{
+    mealId: string;
+    imageUri: string;
+  }>();
 
   const [analysis, setAnalysis] = useState<MealAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,8 +61,9 @@ export const AnalysisScreen: React.FC = () => {
             setLoading(false);
             // Navigate to feedback screen after a short delay
             setTimeout(() => {
-              navigation.navigate('Feedback', { 
-                feedbackData: {
+              router.push({
+                pathname: '/feedback',
+                params: {
                   mealId: result.id,
                   detectedFoods: result.detectedFoods,
                   missingFoodGroups: [],
@@ -122,7 +120,7 @@ export const AnalysisScreen: React.FC = () => {
         { 
           text: 'Cancel', 
           style: 'destructive',
-          onPress: () => navigation.goBack()
+          onPress: () => router.back()
         },
       ]
     );
@@ -179,7 +177,7 @@ export const AnalysisScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <Card style={styles.errorCard}>
-          <Icon name="error-outline" size={48} color={colors.error} />
+          <MaterialIcons name="error-outline" size={48} color={colors.error} />
           <Text style={styles.errorTitle}>Analysis Failed</Text>
           <Text style={styles.errorMessage}>{error}</Text>
           <View style={styles.errorActions}>
@@ -190,7 +188,7 @@ export const AnalysisScreen: React.FC = () => {
             />
             <Button
               title="Go Back"
-              onPress={() => navigation.goBack()}
+              onPress={() => router.back()}
               variant="outline"
               style={styles.backButton}
             />
@@ -223,7 +221,7 @@ export const AnalysisScreen: React.FC = () => {
         <>
           {renderDetectedFoods()}
           <Card style={styles.completedCard}>
-            <Icon name="check-circle" size={48} color={colors.success} />
+            <MaterialIcons name="check-circle" size={48} color={colors.success} />
             <Text style={styles.completedTitle}>Analysis Complete!</Text>
             <Text style={styles.completedMessage}>
               Your meal has been analyzed. Preparing your personalized feedback...

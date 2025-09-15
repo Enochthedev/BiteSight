@@ -14,7 +14,7 @@ import {
 import { Button } from './Button';
 import { colors, typography, spacing } from '@/styles';
 import { MealImage } from '@/types';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface ImagePreviewProps {
   image: MealImage;
@@ -50,7 +50,7 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
         
         {hasQualityIssues && (
           <View style={styles.qualityOverlay}>
-            <Icon name="warning" size={24} color={colors.warning} />
+            <MaterialIcons name="warning" size={24} color={colors.warning} />
           </View>
         )}
       </View>
@@ -67,7 +67,7 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
       {hasQualityIssues && (
         <View style={styles.qualityIssues}>
           <View style={styles.issueHeader}>
-            <Icon name="info" size={20} color={colors.warning} />
+            <MaterialIcons name="info" size={20} color={colors.warning} />
             <Text style={styles.issueTitle}>Image Quality Issues</Text>
           </View>
           {qualityIssues.map((issue, index) => (

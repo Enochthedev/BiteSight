@@ -12,7 +12,7 @@ import {
   ViewStyle,
   TouchableOpacity,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { colors, typography, spacing } from '@/styles';
 
 interface InputProps extends TextInputProps {
@@ -97,7 +97,7 @@ export const Input: React.FC<InputProps> = ({
         
         {rightIcon && !secureTextEntry && (
           <TouchableOpacity onPress={onRightIconPress} style={styles.rightIcon}>
-            <Icon name={rightIcon} size={20} color={colors.gray} />
+            <MaterialIcons name={rightIcon} size={20} color={colors.gray} />
           </TouchableOpacity>
         )}
       </View>

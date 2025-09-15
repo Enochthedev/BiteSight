@@ -12,13 +12,13 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router';
 import { Card } from '@/components/Card';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { colors, typography, spacing } from '@/styles';
 import { WeeklyInsight, FoodClass } from '@/types';
 import { apiService } from '@/services/api';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -32,11 +32,11 @@ const FOOD_CLASS_COLORS: Record<FoodClass, string> = {
 };
 
 const FOOD_CLASS_ICONS: Record<FoodClass, string> = {
-  carbohydrates: 'grain',
-  proteins: 'egg',
+  carbohydrates: 'restaurant',
+  proteins: 'fitness-center',
   fats: 'opacity',
   vitamins: 'local-florist',
-  minerals: 'diamond',
+  minerals: 'scatter-plot',
   water: 'water-drop',
 };
 
@@ -125,8 +125,8 @@ export const InsightsScreen: React.FC = () => {
         {Object.entries(nutritionBalance).map(([foodClass, percentage]) => (
           <View key={foodClass} style={styles.chartRow}>
             <View style={styles.chartLabel}>
-              <Icon
-                name={FOOD_CLASS_ICONS[foodClass as FoodClass]}
+              <MaterialIcons
+                name={FOOD_CLASS_ICONS[foodClass as FoodClass] as any}
                 size={16}
                 color={FOOD_CLASS_COLORS[foodClass as FoodClass]}
               />
@@ -160,7 +160,7 @@ export const InsightsScreen: React.FC = () => {
         {insight.positiveTrends.length > 0 && (
           <View style={styles.trendSection}>
             <View style={styles.trendHeader}>
-              <Icon name="trending-up" size={20} color={colors.success} />
+              <MaterialIcons name="trending-up" size={20} color={colors.success} />
               <Text style={[styles.trendTitle, { color: colors.success }]}>
                 Improving
               </Text>
@@ -180,7 +180,7 @@ export const InsightsScreen: React.FC = () => {
         {insight.improvementAreas.length > 0 && (
           <View style={styles.trendSection}>
             <View style={styles.trendHeader}>
-              <Icon name="trending-down" size={20} color={colors.warning} />
+              <MaterialIcons name="trending-down" size={20} color={colors.warning} />
               <Text style={[styles.trendTitle, { color: colors.warning }]}>
                 Needs Attention
               </Text>
@@ -228,7 +228,7 @@ export const InsightsScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Icon name="insights" size={80} color={colors.gray} />
+      <MaterialIcons name="insights" size={80} color={colors.gray} />
       <Text style={styles.emptyTitle}>No Insights Yet</Text>
       <Text style={styles.emptyMessage}>
         Take photos of your meals for a week to see your nutrition insights and trends!
@@ -248,7 +248,7 @@ export const InsightsScreen: React.FC = () => {
     return (
       <View style={styles.errorContainer}>
         <Card style={styles.errorCard}>
-          <Icon name="error-outline" size={48} color={colors.error} />
+          <MaterialIcons name="error-outline" size={48} color={colors.error} />
           <Text style={styles.errorTitle}>Failed to Load Insights</Text>
           <Text style={styles.errorMessage}>{error}</Text>
         </Card>
@@ -286,7 +286,7 @@ export const InsightsScreen: React.FC = () => {
         <View style={styles.summaryHeader}>
           <Text style={styles.summaryTitle}>{currentInsight.weekPeriod}</Text>
           <View style={styles.mealsCount}>
-            <Icon name="restaurant" size={16} color={colors.primary} />
+            <MaterialIcons name="restaurant" size={16} color={colors.primary} />
             <Text style={styles.mealsCountText}>
               {currentInsight.mealsAnalyzed} meals
             </Text>
@@ -302,7 +302,7 @@ export const InsightsScreen: React.FC = () => {
       <Card style={styles.recommendationsCard}>
         <Text style={styles.sectionTitle}>Recommendations</Text>
         <View style={styles.recommendationContent}>
-          <Icon name="lightbulb-outline" size={24} color={colors.secondary} />
+          <MaterialIcons name="lightbulb-outline" size={24} color={colors.secondary} />
           <Text style={styles.recommendationText}>
             {currentInsight.recommendations}
           </Text>

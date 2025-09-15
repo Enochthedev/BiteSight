@@ -12,11 +12,11 @@ import {
   FlatList,
   ViewToken
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { colors, typography, spacing } from '@/styles';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -146,7 +146,7 @@ export const OnboardingScreen: React.FC = () => {
       <Card style={styles.stepCard}>
         <View style={styles.stepHeader}>
           <View style={styles.iconContainer}>
-            <Icon name={item.icon} size={60} color={colors.primary} />
+            <MaterialIcons name={item.icon} size={60} color={colors.primary} />
           </View>
           <Text style={styles.stepTitle}>{item.title}</Text>
           <Text style={styles.stepDescription}>{item.description}</Text>
@@ -155,7 +155,7 @@ export const OnboardingScreen: React.FC = () => {
         <View style={styles.stepDetails}>
           {item.details.map((detail, index) => (
             <View key={index} style={styles.detailItem}>
-              <Icon name="check-circle" size={20} color={colors.success} />
+              <MaterialIcons name="check-circle" size={20} color={colors.success} />
               <Text style={styles.detailText}>{detail}</Text>
             </View>
           ))}

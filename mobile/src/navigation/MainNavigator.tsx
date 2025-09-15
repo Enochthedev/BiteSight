@@ -5,7 +5,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { HomeScreen } from '@/screens/main/HomeScreen';
 import { CameraScreen } from '@/screens/main/CameraScreen';
 import { HistoryScreen } from '@/screens/main/HistoryScreen';
@@ -56,7 +56,7 @@ const MainTabs: React.FC = () => {
               iconName = 'help';
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          return <MaterialIcons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.gray,

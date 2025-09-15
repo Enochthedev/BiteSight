@@ -11,18 +11,14 @@ import {
   TouchableOpacity,
   Share,
 } from 'react-native';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { colors, typography, spacing } from '@/styles';
 import { NavigationParamList, NutritionFeedback, FoodClass } from '@/types';
 import { apiService } from '@/services/api';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
-type FeedbackScreenRouteProp = RouteProp<NavigationParamList, 'Feedback'>;
-type FeedbackScreenNavigationProp = StackNavigationProp<NavigationParamList, 'Feedback'>;
+import { MaterialIcons } from '@expo/vector-icons';
 
 const NIGERIAN_FOOD_EXAMPLES: Record<FoodClass, string[]> = {
   carbohydrates: ['Rice', 'Yam', 'Plantain', 'Cassava', 'Bread'],
@@ -43,9 +39,24 @@ const FOOD_CLASS_COLORS: Record<FoodClass, string> = {
 };
 
 export const FeedbackScreen: React.FC = () => {
-  const route = useRoute<FeedbackScreenRouteProp>();
-  const navigation = useNavigation<FeedbackScreenNavigationProp>();
-  const { feedbackData } = route.params;
+  const params = useLocalSearchParams<{
+    mealId?: string;
+    detectedFoods?: string;
+    missingFoodGroups?: string;
+    recommendations?: string;
+    overallBalanceScore?: string;
+    feedbackMessage?: string;
+  }>();
+
+  // Parse the feedback data from params
+  const feedbackData = params.mealId ? {
+    mealId: params.mealId,
+    detectedFoods: params.detectedFoods ? JSON.parse(params.detectedFoods) : [],
+    missingFoodGroups: params.missingFoodGroups ? JSON.parse(params.missingFoodGroups) : [],
+    recommendations: params.recommendations ? JSON.parse(params.recommendations) : [],
+    overallBalanceScore: params.overallBalanceScore ? parseFloat(params.overallBalanceScore) : 0,
+    feedbackMessage: params.feedbackMessage || '',
+  } : null;
 
   const [feedback, setFeedback] = useState<NutritionFeedback | null>(feedbackData);
   const [loading, setLoading] = useState(!feedbackData);
@@ -129,7 +140,7 @@ export const FeedbackScreen: React.FC = () => {
         <View style={styles.scoreHeader}>
           <Text style={styles.scoreTitle}>Nutrition Balance</Text>
           <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-            <Icon name="share" size={24} color={colors.primary} />
+            <MaterialIcons name="share" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
         <View style={styles.scoreContainer}>
@@ -205,7 +216,7 @@ export const FeedbackScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Recommendations</Text>
         {feedback.recommendations.map((recommendation, index) => (
           <View key={index} style={styles.recommendationItem}>
-            <Icon name="lightbulb-outline" size={20} color={colors.secondary} />
+            <MaterialIcons name="lightbulb-outline" size={20} color={colors.secondary} />
             <Text style={styles.recommendationText}>{recommendation}</Text>
           </View>
         ))}
@@ -218,7 +229,7 @@ export const FeedbackScreen: React.FC = () => {
 
     return (
       <Card style={styles.messageCard}>
-        <Icon name="chat-bubble-outline" size={24} color={colors.primary} />
+        <MaterialIcons name="chat-bubble-outline" size={24} color={colors.primary} />
         <Text style={styles.messageText}>{feedback.feedbackMessage}</Text>
       </Card>
     );
@@ -236,7 +247,7 @@ export const FeedbackScreen: React.FC = () => {
     return (
       <View style={styles.errorContainer}>
         <Card style={styles.errorCard}>
-          <Icon name="error-outline" size={48} color={colors.error} />
+          <MaterialIcons name="error-outline" size={48} color={colors.error} />
           <Text style={styles.errorTitle}>Failed to Generate Feedback</Text>
           <Text style={styles.errorMessage}>{error}</Text>
           <Button
@@ -260,13 +271,13 @@ export const FeedbackScreen: React.FC = () => {
       <View style={styles.actions}>
         <Button
           title="View History"
-          onPress={() => navigation.navigate('History')}
+          onPress={() => router.push('/history')}
           variant="outline"
           style={styles.actionButton}
         />
         <Button
           title="Take Another Photo"
-          onPress={() => navigation.navigate('Camera')}
+          onPress={() => router.push('/camera')}
           style={styles.actionButton}
         />
       </View>

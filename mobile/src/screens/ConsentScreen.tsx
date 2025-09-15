@@ -11,11 +11,11 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { colors, typography, spacing } from '@/styles';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface ConsentOptions {
   mealHistory: boolean;
@@ -69,11 +69,11 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
         Alert.alert(
           'Consent Saved',
           'Your privacy preferences have been saved. You can change these anytime in settings.',
-          [{ text: 'Continue', onPress: () => navigation.goBack() }]
+          [{ text: 'Continue', onPress: () => router.back() }]
         );
       } else {
         Alert.alert('Success', 'Your consent preferences have been updated.');
-        navigation.goBack();
+        router.back();
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to save consent preferences. Please try again.');
@@ -98,7 +98,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
   ) => (
     <View style={styles.consentItem}>
       <View style={styles.consentHeader}>
-        <Icon name={icon} size={24} color={colors.primary} style={styles.consentIcon} />
+        <MaterialIcons name={icon} size={24} color={colors.primary} style={styles.consentIcon} />
         <View style={styles.consentInfo}>
           <View style={styles.titleRow}>
             <Text style={styles.consentTitle}>{title}</Text>
@@ -120,7 +120,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Icon name="security" size={60} color={colors.primary} />
+        <MaterialIcons name="security" size={60} color={colors.primary} />
         <Text style={styles.title}>Your Privacy Matters</Text>
         <Text style={styles.subtitle}>
           {isInitialSetup 
@@ -170,7 +170,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
         <Text style={styles.sectionTitle}>Privacy & Security</Text>
         
         <View style={styles.privacyInfo}>
-          <Icon name="lock" size={24} color={colors.success} />
+          <MaterialIcons name="lock" size={24} color={colors.success} />
           <View style={styles.privacyText}>
             <Text style={styles.privacyTitle}>Your Data is Secure</Text>
             <Text style={styles.privacyDescription}>
@@ -180,7 +180,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
         </View>
 
         <View style={styles.privacyInfo}>
-          <Icon name="delete" size={24} color={colors.primary} />
+          <MaterialIcons name="delete" size={24} color={colors.primary} />
           <View style={styles.privacyText}>
             <Text style={styles.privacyTitle}>Easy Data Deletion</Text>
             <Text style={styles.privacyDescription}>
@@ -190,7 +190,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
         </View>
 
         <View style={styles.privacyInfo}>
-          <Icon name="visibility-off" size={24} color={colors.secondary} />
+          <MaterialIcons name="visibility-off" size={24} color={colors.secondary} />
           <View style={styles.privacyText}>
             <Text style={styles.privacyTitle}>No Third-Party Sharing</Text>
             <Text style={styles.privacyDescription}>
@@ -230,7 +230,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
         {!isInitialSetup && (
           <Button
             title="Cancel"
-            onPress={() => navigation.goBack()}
+            onPress={() => router.back()}
             variant="text"
             style={styles.cancelButton}
           />

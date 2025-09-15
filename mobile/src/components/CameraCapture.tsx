@@ -10,12 +10,11 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  StatusBar,
 } from 'react-native';
-import { RNCamera } from 'react-native-camera';
+import { CameraView, CameraType, FlashMode, useCameraPermissions } from 'expo-camera';
 import { colors, spacing, typography } from '@/styles';
 import { MealImage } from '@/types';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface CameraCaptureProps {
   onImageCaptured: (image: MealImage) => void;
@@ -28,19 +27,17 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   onImageCaptured,
   onClose,
 }) => {
-  const cameraRef = useRef<RNCamera>(null);
+  const cameraRef = useRef<CameraView>(null);
   const [isCapturing, setIsCapturing] = useState(false);
-  const [flashMode, setFlashMode] = useState(RNCamera.Constants.FlashMode.auto);
-  const [cameraType, setCameraType] = useState(RNCamera.Constants.Type.back);
+  const [flashMode, setFlashMode] = useState<FlashMode>('auto');
+  const [cameraType, setCameraType] = useState<CameraType>('back');
+  const [permission, requestPermission] = useCameraPermissions();
 
   useEffect(() => {
-    // Set status bar to hidden for full screen camera
-    StatusBar.setHidden(true);
-    
-    return () => {
-      StatusBar.setHidden(false);
-    };
-  }, []);
+    if (!permission?.granted) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
 
   const captureImage = async () => {
     if (!cameraRef.current || isCapturing) return;
@@ -48,18 +45,13 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     try {
       setIsCapturing(true);
       
-      const options = {
+      const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         base64: false,
-        skipProcessing: false,
-        forceUpOrientation: true,
-        fixOrientation: true,
-      };
-
-      const data = await cameraRef.current.takePictureAsync(options);
+      });
       
       const mealImage: MealImage = {
-        uri: data.uri,
+        uri: photo.uri,
         type: 'image/jpeg',
         fileName: `meal_${Date.now()}.jpg`,
       };
@@ -78,60 +70,60 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   };
 
   const toggleFlash = () => {
-    const modes = [
-      RNCamera.Constants.FlashMode.auto,
-      RNCamera.Constants.FlashMode.on,
-      RNCamera.Constants.FlashMode.off,
-    ];
+    const modes: FlashMode[] = ['auto', 'on', 'off'];
     const currentIndex = modes.indexOf(flashMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setFlashMode(modes[nextIndex]);
   };
 
   const toggleCamera = () => {
-    setCameraType(
-      cameraType === RNCamera.Constants.Type.back
-        ? RNCamera.Constants.Type.front
-        : RNCamera.Constants.Type.back
-    );
+    setCameraType(cameraType === 'back' ? 'front' : 'back');
   };
 
   const getFlashIcon = () => {
     switch (flashMode) {
-      case RNCamera.Constants.FlashMode.on:
+      case 'on':
         return 'flash-on';
-      case RNCamera.Constants.FlashMode.off:
+      case 'off':
         return 'flash-off';
       default:
         return 'flash-auto';
     }
   };
 
+  if (!permission) {
+    return <View style={styles.container} />;
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={[styles.container, styles.permissionContainer]}>
+        <Text style={styles.permissionText}>We need your permission to show the camera</Text>
+        <TouchableOpacity onPress={requestPermission} style={styles.permissionButton}>
+          <Text style={styles.permissionButtonText}>Grant Permission</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <RNCamera
+      <CameraView
         ref={cameraRef}
         style={styles.camera}
-        type={cameraType}
-        flashMode={flashMode}
-        androidCameraPermissionOptions={{
-          title: 'Permission to use camera',
-          message: 'We need your permission to use your camera to capture meal photos',
-          buttonPositive: 'Ok',
-          buttonNegative: 'Cancel',
-        }}
-        captureAudio={false}
+        facing={cameraType}
+        flash={flashMode}
       >
         {/* Header with controls */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerButton} onPress={onClose}>
-            <Icon name="close" size={24} color={colors.white} />
+            <MaterialIcons name="close" size={24} color={colors.white} />
           </TouchableOpacity>
           
           <Text style={styles.headerTitle}>Capture Your Meal</Text>
           
           <TouchableOpacity style={styles.headerButton} onPress={toggleFlash}>
-            <Icon name={getFlashIcon()} size={24} color={colors.white} />
+            <MaterialIcons name={getFlashIcon()} size={24} color={colors.white} />
           </TouchableOpacity>
         </View>
 
@@ -147,7 +139,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         <View style={styles.controls}>
           <View style={styles.controlsRow}>
             <TouchableOpacity style={styles.controlButton} onPress={toggleCamera}>
-              <Icon name="flip-camera-android" size={28} color={colors.white} />
+              <MaterialIcons name="flip-camera-android" size={28} color={colors.white} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -165,7 +157,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
             <View style={styles.controlButton} />
           </View>
         </View>
-      </RNCamera>
+      </CameraView>
     </View>
   );
 };
@@ -174,6 +166,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.black,
+  },
+  permissionContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   camera: {
     flex: 1,
@@ -267,5 +263,21 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: colors.white,
+  },
+  permissionText: {
+    ...typography.body1,
+    color: colors.white,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  permissionButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+  },
+  permissionButtonText: {
+    ...typography.button,
+    color: colors.white,
   },
 });

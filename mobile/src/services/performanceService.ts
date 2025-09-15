@@ -3,7 +3,8 @@
  * Handles lazy loading, memory management, and API optimization
  */
 
-import { InteractionManager, AppState, NetInfo } from 'react-native';
+import { InteractionManager, AppState } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface PerformanceMetrics {

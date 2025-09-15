@@ -17,7 +17,7 @@ import { Card } from '@/components/Card';
 import { Input } from '@/components/Input';
 import { useAppContext } from '@/context/AppContext';
 import { colors, typography, spacing } from '@/styles';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface UserPreferences {
   historyEnabled: boolean;
@@ -128,7 +128,7 @@ export const ProfileScreen: React.FC = () => {
   ) => (
     <View style={styles.settingItem}>
       <View style={styles.settingInfo}>
-        <Icon name={icon} size={24} color={colors.primary} style={styles.settingIcon} />
+        <MaterialIcons name={icon} size={24} color={colors.primary} style={styles.settingIcon} />
         <View style={styles.settingText}>
           <Text style={styles.settingTitle}>{title}</Text>
           <Text style={styles.settingDescription}>{description}</Text>
@@ -151,7 +151,7 @@ export const ProfileScreen: React.FC = () => {
     destructive?: boolean
   ) => (
     <TouchableOpacity style={styles.actionItem} onPress={onPress}>
-      <Icon 
+      <MaterialIcons 
         name={icon} 
         size={24} 
         color={destructive ? colors.error : colors.primary} 
@@ -163,7 +163,7 @@ export const ProfileScreen: React.FC = () => {
         </Text>
         <Text style={styles.settingDescription}>{description}</Text>
       </View>
-      <Icon name="chevron-right" size={24} color={colors.gray} />
+      <MaterialIcons name="chevron-right" size={24} color={colors.gray} />
     </TouchableOpacity>
   );
 
@@ -181,7 +181,7 @@ export const ProfileScreen: React.FC = () => {
       <Card style={styles.profileCard}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <Icon name="person" size={40} color={colors.primary} />
+            <MaterialIcons name="person" size={40} color={colors.primary} />
           </View>
           <View style={styles.profileInfo}>
             {isEditing ? (

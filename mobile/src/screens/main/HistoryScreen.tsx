@@ -13,8 +13,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { router, useFocusEffect } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -22,9 +21,7 @@ import { colors, typography, spacing } from '@/styles';
 import { NavigationParamList, MealHistory, MealAnalysis } from '@/types';
 import { apiService } from '@/services/api';
 import { offlineStorage } from '@/services/offlineStorage';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
-type HistoryScreenNavigationProp = StackNavigationProp<NavigationParamList, 'History'>;
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface MealHistoryItem extends MealAnalysis {
   feedbackScore?: number;
@@ -32,7 +29,6 @@ interface MealHistoryItem extends MealAnalysis {
 }
 
 export const HistoryScreen: React.FC = () => {
-  const navigation = useNavigation<HistoryScreenNavigationProp>();
 
   const [meals, setMeals] = useState<MealHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,8 +120,9 @@ export const HistoryScreen: React.FC = () => {
 
   const handleMealPress = (meal: MealHistoryItem) => {
     // Navigate to feedback screen with meal data
-    navigation.navigate('Feedback', {
-      feedbackData: {
+    router.push({
+      pathname: '/feedback',
+      params: {
         mealId: meal.id,
         detectedFoods: meal.detectedFoods,
         missingFoodGroups: [],
@@ -230,7 +227,7 @@ export const HistoryScreen: React.FC = () => {
               onPress={() => handleDeleteMeal(item.id)}
               style={styles.deleteButton}
             >
-              <Icon name="delete-outline" size={20} color={colors.error} />
+              <MaterialIcons name="delete-outline" size={20} color={colors.error} />
             </TouchableOpacity>
           </View>
         </View>
@@ -256,14 +253,14 @@ export const HistoryScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Icon name="restaurant" size={80} color={colors.gray} />
+      <MaterialIcons name="restaurant" size={80} color={colors.gray} />
       <Text style={styles.emptyTitle}>No Meals Yet</Text>
       <Text style={styles.emptyMessage}>
         Start taking photos of your meals to build your nutrition history!
       </Text>
       <Button
         title="Take First Photo"
-        onPress={() => navigation.navigate('Camera')}
+        onPress={() => router.push('/camera')}
         style={styles.emptyButton}
       />
     </View>
@@ -290,7 +287,7 @@ export const HistoryScreen: React.FC = () => {
     return (
       <View style={styles.errorContainer}>
         <Card style={styles.errorCard}>
-          <Icon name="error-outline" size={48} color={colors.error} />
+          <MaterialIcons name="error-outline" size={48} color={colors.error} />
           <Text style={styles.errorTitle}>Failed to Load History</Text>
           <Text style={styles.errorMessage}>{error}</Text>
           <Button

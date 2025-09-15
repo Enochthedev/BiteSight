@@ -4,9 +4,8 @@
  */
 
 import { Platform, Alert, Linking } from 'react-native';
-import { check, request, PERMISSIONS, RESULTS, Permission } from 'react-native-permissions';
-import { launchCamera, launchImageLibrary, ImagePickerResponse, MediaType } from 'react-native-image-picker';
-import ImageResizer from 'react-native-image-resizer';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { MealImage, CameraPermissions } from '@/types';
 
 export interface ImageQualityResult {
@@ -15,8 +14,8 @@ export interface ImageQualityResult {
 }
 
 export interface CameraOptions {
-    mediaType: MediaType;
-    quality: 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0;
+    mediaTypes: ImagePicker.MediaTypeOptions;
+    quality: number;
     maxWidth: number;
     maxHeight: number;
     includeBase64: boolean;
@@ -39,7 +38,7 @@ export interface OptimizedImage extends MealImage {
 
 class CameraService {
     private defaultOptions: CameraOptions = {
-        mediaType: 'photo',
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
         maxWidth: 1024,
         maxHeight: 1024,
@@ -59,22 +58,14 @@ class CameraService {
      * Check camera and storage permissions
      */
     async checkPermissions(): Promise<CameraPermissions> {
-        const cameraPermission = Platform.OS === 'ios'
-            ? PERMISSIONS.IOS.CAMERA
-            : PERMISSIONS.ANDROID.CAMERA;
-
-        const storagePermission = Platform.OS === 'ios'
-            ? PERMISSIONS.IOS.PHOTO_LIBRARY
-            : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
-
-        const [cameraStatus, storageStatus] = await Promise.all([
-            check(cameraPermission),
-            check(storagePermission),
+        const [cameraStatus, mediaLibraryStatus] = await Promise.all([
+            ImagePicker.getCameraPermissionsAsync(),
+            ImagePicker.getMediaLibraryPermissionsAsync(),
         ]);
 
         return {
-            camera: cameraStatus === RESULTS.GRANTED,
-            storage: storageStatus === RESULTS.GRANTED,
+            camera: cameraStatus.status === 'granted',
+            storage: mediaLibraryStatus.status === 'granted',
         };
     }
 
@@ -82,23 +73,15 @@ class CameraService {
      * Request camera and storage permissions
      */
     async requestPermissions(): Promise<CameraPermissions> {
-        const cameraPermission = Platform.OS === 'ios'
-            ? PERMISSIONS.IOS.CAMERA
-            : PERMISSIONS.ANDROID.CAMERA;
-
-        const storagePermission = Platform.OS === 'ios'
-            ? PERMISSIONS.IOS.PHOTO_LIBRARY
-            : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
-
         try {
-            const [cameraStatus, storageStatus] = await Promise.all([
-                request(cameraPermission),
-                request(storagePermission),
+            const [cameraStatus, mediaLibraryStatus] = await Promise.all([
+                ImagePicker.requestCameraPermissionsAsync(),
+                ImagePicker.requestMediaLibraryPermissionsAsync(),
             ]);
 
             const permissions = {
-                camera: cameraStatus === RESULTS.GRANTED,
-                storage: storageStatus === RESULTS.GRANTED,
+                camera: cameraStatus.status === 'granted',
+                storage: mediaLibraryStatus.status === 'granted',
             };
 
             // If permissions are denied, show alert with settings option
@@ -143,31 +126,33 @@ class CameraService {
             }
         }
 
-        return new Promise((resolve) => {
+        try {
             const cameraOptions = { ...this.defaultOptions, ...options };
 
-            launchCamera(cameraOptions, (response: ImagePickerResponse) => {
-                if (response.didCancel || response.errorMessage) {
-                    resolve(null);
-                    return;
-                }
-
-                const asset = response.assets?.[0];
-                if (!asset) {
-                    resolve(null);
-                    return;
-                }
-
-                const mealImage: MealImage = {
-                    uri: asset.uri!,
-                    type: asset.type || 'image/jpeg',
-                    fileName: asset.fileName || `meal_${Date.now()}.jpg`,
-                    fileSize: asset.fileSize,
-                };
-
-                resolve(mealImage);
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: cameraOptions.mediaTypes,
+                quality: cameraOptions.quality,
+                base64: cameraOptions.includeBase64,
+                exif: false,
             });
-        });
+
+            if (result.canceled || !result.assets || result.assets.length === 0) {
+                return null;
+            }
+
+            const asset = result.assets[0];
+            const mealImage: MealImage = {
+                uri: asset.uri,
+                type: asset.type || 'image/jpeg',
+                fileName: asset.fileName || `meal_${Date.now()}.jpg`,
+                fileSize: asset.fileSize,
+            };
+
+            return mealImage;
+        } catch (error) {
+            console.error('Error capturing image:', error);
+            return null;
+        }
     }
 
     /**
@@ -183,31 +168,33 @@ class CameraService {
             }
         }
 
-        return new Promise((resolve) => {
+        try {
             const galleryOptions = { ...this.defaultOptions, ...options };
 
-            launchImageLibrary(galleryOptions, (response: ImagePickerResponse) => {
-                if (response.didCancel || response.errorMessage) {
-                    resolve(null);
-                    return;
-                }
-
-                const asset = response.assets?.[0];
-                if (!asset) {
-                    resolve(null);
-                    return;
-                }
-
-                const mealImage: MealImage = {
-                    uri: asset.uri!,
-                    type: asset.type || 'image/jpeg',
-                    fileName: asset.fileName || `meal_${Date.now()}.jpg`,
-                    fileSize: asset.fileSize,
-                };
-
-                resolve(mealImage);
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: galleryOptions.mediaTypes,
+                quality: galleryOptions.quality,
+                base64: galleryOptions.includeBase64,
+                exif: false,
             });
-        });
+
+            if (result.canceled || !result.assets || result.assets.length === 0) {
+                return null;
+            }
+
+            const asset = result.assets[0];
+            const mealImage: MealImage = {
+                uri: asset.uri,
+                type: asset.type || 'image/jpeg',
+                fileName: asset.fileName || `meal_${Date.now()}.jpg`,
+                fileSize: asset.fileSize,
+            };
+
+            return mealImage;
+        } catch (error) {
+            console.error('Error selecting image from gallery:', error);
+            return null;
+        }
     }
 
     /**
@@ -254,27 +241,30 @@ class CameraService {
         const compressionSettings = { ...this.compressionOptions, ...options };
 
         try {
-            const resizedImage = await ImageResizer.createResizedImage(
+            const manipulatedImage = await ImageManipulator.manipulateAsync(
                 image.uri,
-                compressionSettings.maxWidth,
-                compressionSettings.maxHeight,
-                compressionSettings.format,
-                compressionSettings.quality,
-                0, // rotation
-                undefined, // outputPath
-                false, // keepMeta
+                [
+                    {
+                        resize: {
+                            width: compressionSettings.maxWidth,
+                            height: compressionSettings.maxHeight,
+                        },
+                    },
+                ],
                 {
-                    mode: 'contain',
-                    onlyScaleDown: true,
+                    compress: compressionSettings.quality / 100,
+                    format: compressionSettings.format === 'JPEG'
+                        ? ImageManipulator.SaveFormat.JPEG
+                        : ImageManipulator.SaveFormat.PNG,
                 }
             );
 
             const originalSize = image.fileSize || 0;
-            const compressedSize = resizedImage.size;
+            const compressedSize = manipulatedImage.width * manipulatedImage.height * 3; // Rough estimate
             const compressionRatio = originalSize > 0 ? (originalSize - compressedSize) / originalSize : 0;
 
             return {
-                uri: resizedImage.uri,
+                uri: manipulatedImage.uri,
                 type: `image/${compressionSettings.format.toLowerCase()}`,
                 fileName: image.fileName.replace(/\.[^/.]+$/, `.${compressionSettings.format.toLowerCase()}`),
                 fileSize: compressedSize,
@@ -297,28 +287,32 @@ class CameraService {
      */
     async createThumbnail(image: MealImage, size: number = 200): Promise<OptimizedImage> {
         try {
-            const thumbnail = await ImageResizer.createResizedImage(
+            const thumbnail = await ImageManipulator.manipulateAsync(
                 image.uri,
-                size,
-                size,
-                'JPEG',
-                60, // Lower quality for thumbnails
-                0,
-                undefined,
-                false,
+                [
+                    {
+                        resize: {
+                            width: size,
+                            height: size,
+                        },
+                    },
+                ],
                 {
-                    mode: 'cover',
+                    compress: 0.6, // Lower quality for thumbnails
+                    format: ImageManipulator.SaveFormat.JPEG,
                 }
             );
+
+            const thumbnailSize = size * size * 3; // Rough estimate
 
             return {
                 uri: thumbnail.uri,
                 type: 'image/jpeg',
                 fileName: `thumb_${image.fileName}`,
-                fileSize: thumbnail.size,
+                fileSize: thumbnailSize,
                 originalSize: image.fileSize,
-                compressedSize: thumbnail.size,
-                compressionRatio: image.fileSize ? (image.fileSize - thumbnail.size) / image.fileSize : 0,
+                compressedSize: thumbnailSize,
+                compressionRatio: image.fileSize ? (image.fileSize - thumbnailSize) / image.fileSize : 0,
             };
         } catch (error) {
             console.error('Thumbnail creation failed:', error);
@@ -401,7 +395,7 @@ class CameraService {
      */
     getMealPhotoOptions(): CameraOptions {
         return {
-            mediaType: 'photo',
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 0.8,
             maxWidth: 1024,
             maxHeight: 1024,
@@ -417,7 +411,7 @@ class CameraService {
         const isLowEndDevice = Platform.OS === 'android'; // Simplified check
 
         return {
-            mediaType: 'photo',
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: isLowEndDevice ? 0.7 : 0.8,
             maxWidth: isLowEndDevice ? 800 : 1024,
             maxHeight: isLowEndDevice ? 800 : 1024,

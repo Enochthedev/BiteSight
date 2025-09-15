@@ -3,24 +3,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, SafeAreaView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import { NavigationParamList } from '@/types';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Button } from '@/components/Button';
 import { ImagePreview } from '@/components/ImagePreview';
 import { CameraCapture } from '@/components/CameraCapture';
 import { colors, typography, spacing } from '@/styles';
 import { MealImage, CameraPermissions } from '@/types';
 import { cameraService, ImageQualityResult } from '@/services/cameraService';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 type CameraMode = 'selection' | 'camera' | 'preview';
 
-type CameraScreenNavigationProp = StackNavigationProp<NavigationParamList, 'Camera'>;
-
 export const CameraScreen: React.FC = () => {
-  const navigation = useNavigation<CameraScreenNavigationProp>();
   const [mode, setMode] = useState<CameraMode>('selection');
   const [selectedImage, setSelectedImage] = useState<MealImage | null>(null);
   const [permissions, setPermissions] = useState<CameraPermissions>({ camera: false, storage: false });
@@ -112,9 +108,12 @@ export const CameraScreen: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Navigate to analysis screen with the image
-      navigation.navigate('Analysis', { 
-        mealId: `temp_${Date.now()}`,
-        imageUri: selectedImage.uri 
+      router.push({
+        pathname: '/analysis',
+        params: {
+          mealId: `temp_${Date.now()}`,
+          imageUri: selectedImage.uri 
+        }
       });
       
     } catch (error) {
@@ -160,7 +159,7 @@ export const CameraScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Icon name="camera-alt" size={80} color={colors.primary} />
+          <MaterialIcons name="camera-alt" size={80} color={colors.primary} />
           <Text style={styles.title}>Capture Your Meal</Text>
           <Text style={styles.subtitle}>
             Take a photo or select from your gallery to get instant nutrition feedback
@@ -191,26 +190,26 @@ export const CameraScreen: React.FC = () => {
         <View style={styles.tips}>
           <Text style={styles.tipsTitle}>For best results:</Text>
           <View style={styles.tipItem}>
-            <Icon name="wb-sunny" size={16} color={colors.textSecondary} />
+            <MaterialIcons name="wb-sunny" size={16} color={colors.textSecondary} />
             <Text style={styles.tipText}>Use good lighting</Text>
           </View>
           <View style={styles.tipItem}>
-            <Icon name="center-focus-strong" size={16} color={colors.textSecondary} />
+            <MaterialIcons name="center-focus-strong" size={16} color={colors.textSecondary} />
             <Text style={styles.tipText}>Keep food in center of frame</Text>
           </View>
           <View style={styles.tipItem}>
-            <Icon name="straighten" size={16} color={colors.textSecondary} />
+            <MaterialIcons name="straighten" size={16} color={colors.textSecondary} />
             <Text style={styles.tipText}>Hold camera steady</Text>
           </View>
           <View style={styles.tipItem}>
-            <Icon name="visibility" size={16} color={colors.textSecondary} />
+            <MaterialIcons name="visibility" size={16} color={colors.textSecondary} />
             <Text style={styles.tipText}>Ensure all food is visible</Text>
           </View>
         </View>
 
         {(!permissions.camera || !permissions.storage) && (
           <View style={styles.permissionNotice}>
-            <Icon name="info" size={20} color={colors.warning} />
+            <MaterialIcons name="info" size={20} color={colors.warning} />
             <Text style={styles.permissionText}>
               Camera and storage permissions are required to capture and save meal photos.
             </Text>

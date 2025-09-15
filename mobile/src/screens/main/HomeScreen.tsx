@@ -8,7 +8,7 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { useAppContext } from '@/context/AppContext';
 import { colors, typography, spacing } from '@/styles';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export const HomeScreen: React.FC = () => {
   const { state } = useAppContext();
@@ -21,7 +21,7 @@ export const HomeScreen: React.FC = () => {
       </View>
 
       <Card style={styles.quickActionCard}>
-        <Icon name="camera-alt" size={48} color={colors.primary} />
+        <MaterialIcons name="camera-alt" size={48} color={colors.primary} />
         <Text style={styles.quickActionTitle}>Analyze Your Meal</Text>
         <Text style={styles.quickActionDescription}>
           Take a photo of your food to get instant nutrition feedback
@@ -54,7 +54,7 @@ export const HomeScreen: React.FC = () => {
         
         <Card style={styles.activityCard}>
           <View style={styles.activityItem}>
-            <Icon name="restaurant" size={24} color={colors.secondary} />
+            <MaterialIcons name="restaurant" size={24} color={colors.secondary} />
             <View style={styles.activityContent}>
               <Text style={styles.activityTitle}>Jollof Rice & Chicken</Text>
               <Text style={styles.activityTime}>2 hours ago</Text>
