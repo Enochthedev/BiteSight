@@ -146,9 +146,12 @@ checkpoints/
 
 # Data files
 *.csv
-*.json
 data/
 datasets/
+# Exclude data JSON files but keep config files
+data/*.json
+datasets/*.json
+backend/dataset/*.json
 
 # Docker
 .dockerignore
