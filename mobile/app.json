@@ -1,60 +1,37 @@
 {
-    "expo": {
-        "name": "Nutrition Feedback App",
-        "slug": "nutrition-feedback-app",
-        "version": "1.0.0",
-        "orientation": "portrait",
-        "icon": "./assets/icon.png",
-        "userInterfaceStyle": "light",
-        "scheme": "nutrition-app",
-        "splash": {
-            "image": "./assets/splash.png",
-            "resizeMode": "contain",
-            "backgroundColor": "#ffffff"
-        },
-        "assetBundlePatterns": [
-            "**/*"
-        ],
-        "ios": {
-            "supportsTablet": true,
-            "bundleIdentifier": "com.nutritionfeedback.app"
-        },
-        "android": {
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
-            },
-            "package": "com.nutritionfeedback.app",
-            "permissions": [
-                "android.permission.CAMERA",
-                "android.permission.READ_EXTERNAL_STORAGE",
-                "android.permission.WRITE_EXTERNAL_STORAGE"
-            ]
-        },
-        "web": {
-            "favicon": "./assets/favicon.png",
-            "bundler": "metro"
-        },
-        "plugins": [
-            "expo-router",
-            [
-                "expo-camera",
-                {
-                    "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-                    "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
-                    "recordAudioAndroid": true
-                }
-            ],
-            [
-                "expo-image-picker",
-                {
-                    "photosPermission": "The app accesses your photos to let you share them.",
-                    "cameraPermission": "The app accesses your camera to let you take photos."
-                }
-            ]
-        ],
-        "experiments": {
-            "typedRoutes": true
+  "expo": {
+    "name": "PlateLensAI",
+    "slug": "PlateLensAI",
+    "scheme": "myapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "splash": {
+      "image": "./assets/logo.png",
+      "backgroundColor": "#5E7E98",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.anonymous.PlateLensAI"
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Nunito-Light.ttf",
+            "./assets/fonts/Nunito-Regular.ttf",
+            "./assets/fonts/Nunito-SemiBold.ttf",
+            "./assets/fonts/Nunito-Bold.ttf",
+            "./assets/fonts/Nunito-LightItalic.ttf",
+            "./assets/fonts/Nunito-Italic.ttf",
+            "./assets/fonts/Nunito-SemiBoldItalic.ttf",
+            "./assets/fonts/Nunito-BoldItalic.ttf"
+          ]
         }
-    }
+      ]
+    ]
+  }
 }

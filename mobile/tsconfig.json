@@ -2,35 +2,20 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "baseUrl": "./src",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["./src/types/declarations"],
     "paths": {
-      "@/*": [
-        "*"
-      ],
-      "@/components/*": [
-        "components/*"
-      ],
-      "@/screens/*": [
-        "screens/*"
-      ],
-      "@/services/*": [
-        "services/*"
-      ],
-      "@/types/*": [
-        "types/*"
-      ],
-      "@/utils/*": [
-        "utils/*"
-      ]
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/screens/*": ["src/screens/*"],
+      "@/services/*": ["src/services/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"]
     }
   },
-  "include": [
-    "src/**/*",
-    "App.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*", "App.tsx", "types/**/*"],
+  "exclude": ["node_modules"]
 }

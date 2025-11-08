@@ -1,5 +1,1 @@
-import { HistoryScreen } from '@/screens/main/HistoryScreen';
-
-export default function History() {
-  return <HistoryScreen />;
-}
+export { default } from "../../src/screens/main/MealHistory";

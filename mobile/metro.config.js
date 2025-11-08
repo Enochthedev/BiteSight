@@ -1,12 +1,10 @@
-const { getDefaultConfig } = require('expo/metro-config');
+const path = require("path");
+const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
 
 config.resolver.alias = {
-    '@': './src',
+  "@": path.resolve(__dirname, "src"),
 };
-
-// Enable support for Expo Router
-config.resolver.unstable_enableSymlinks = true;
 
 module.exports = config;
