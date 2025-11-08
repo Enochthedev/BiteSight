@@ -76,28 +76,98 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    // Basic validation still active
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
 
-    // AUTHENTICATION
-    try {
-      const storedEmail = await AsyncStorage.getItem('userEmail');
-      
-      // Simple validation (replace with real auth)
-      if (storedEmail === email) {
-        router.replace('/auth-splash');
-      } else {
-        Alert.alert('Error', 'Invalid credentials');
-      }
-    } catch (error) {
-      console.error('Error during login:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+  // Strong email format validation
+  const trimmedEmail = email.trim();
+  
+  // Check basic email pattern with strict ending
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (!emailRegex.test(trimmedEmail)) {
+    return false;
+  }
+  
+  // Split by @ to validate parts
+  const parts = trimmedEmail.split('@');
+  if (parts.length !== 2) return false;
+  
+  const localPart = parts[0];
+  const domainPart = parts[1];
+  
+  // Local part (before @) must be at least 1 character and only valid characters
+  if (localPart.length < 1 || !/^[a-zA-Z0-9._-]+$/.test(localPart)) {
+    return false;
+  }
+  
+  // Split domain by . to check extension
+  const domainParts = domainPart.split('.');
+  if (domainParts.length < 2) return false;
+  
+  // Check each domain part is valid
+  for (const part of domainParts) {
+    if (part.length < 1 || !/^[a-zA-Z0-9-]+$/.test(part)) {
+      return false;
     }
-  };
+  }
+  
+  // Check that the last part (extension) only contains letters and is 2-6 chars
+  const extension = domainParts[domainParts.length - 1];
+  if (!/^[a-zA-Z]{2,6}$/.test(extension)) {
+    return false;
+  }
+  
+  // Final check: make sure the email ends exactly with the extension (no extra chars)
+  if (!trimmedEmail.endsWith('.' + extension)) {
+    return false;
+  }
+  
+  return true;
+};
+
+  //Password validation function
+  const validatePassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+};
+
+const handleLogin = async () => {
+if (!email || !password) {
+  Alert.alert('Error', 'Please fill in all fields');
+  return;
+}
+
+// ADDED: Email validation
+if (!validateEmail(email)) {
+  Alert.alert('Invalid Email', 'Please enter a valid email address');
+  return;
+}
+
+// ADDED: Password format validation
+if (!validatePassword(password)) {
+  Alert.alert(
+    'Invalid Password Format', 
+    'Password must be at least 8 characters long and include:\n• At least one uppercase letter\n• At least one lowercase letter\n• At least one number\n• At least one special character (@$!%*?&)'
+  );
+  return;
+}
+
+  try {
+    const storedEmail = await AsyncStorage.getItem('userEmail');
+    const storedPassword = await AsyncStorage.getItem('userPassword'); // ADDED
+    
+    // UPDATED: Check both email AND password
+    if (storedEmail === email && storedPassword === password) {
+      router.replace('/auth-splash');
+    } else {
+      Alert.alert('Error', 'Invalid credentials');
+    }
+  } catch (error) {
+    console.error('Error during login:', error);
+    Alert.alert('Error', 'Something went wrong. Please try again.');
+  }
+};
+
 
   return (
     <KeyboardAvoidingView 
