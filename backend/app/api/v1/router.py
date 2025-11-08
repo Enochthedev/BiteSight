@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, meals, feedback, history, admin, consent, inference, monitoring, workflows, cache, dataset, nutrition_rules
+from app.api.v1.endpoints import auth, meals, feedback, history, admin, consent, inference, monitoring, workflows, cache, dataset, nutrition_rules, insights
 
 api_router = APIRouter()
 
@@ -12,6 +12,7 @@ api_router.include_router(meals.router, prefix="/meals", tags=["meals"])
 api_router.include_router(
     feedback.router, prefix="/feedback", tags=["feedback"])
 api_router.include_router(history.router, prefix="/history", tags=["history"])
+api_router.include_router(insights.router, prefix="/insights", tags=["insights"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(
     inference.router, prefix="/inference", tags=["inference"])

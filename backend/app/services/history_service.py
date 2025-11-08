@@ -43,7 +43,9 @@ class HistoryService:
             return MealHistoryResponse(
                 meals=[],
                 total_count=0,
-                has_more=False
+                has_more=False,
+                limit=request.limit,
+                offset=request.offset
             )
 
         # Build query with filters
@@ -103,7 +105,9 @@ class HistoryService:
         return MealHistoryResponse(
             meals=meal_data,
             total_count=total_count,
-            has_more=has_more
+            has_more=has_more,
+            limit=request.limit,
+            offset=request.offset
         )
 
     async def delete_meal_history(

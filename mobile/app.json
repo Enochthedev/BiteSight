@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "PlateLensAI",
-    "slug": "PlateLensAI",
-    "scheme": "myapp",
+    "name": "BiteSight",
+    "slug": "bitesight",
+    "scheme": "bitesight",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/logo.png",
       "backgroundColor": "#5E7E98",
@@ -13,8 +14,27 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "ios": {
+      "bundleIdentifier": "com.bitesight.app",
+      "supportsTablet": true,
+      "requireFullScreen": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "BiteSight needs access to your camera to capture meal photos for nutritional analysis.",
+        "NSPhotoLibraryUsageDescription": "BiteSight needs access to your photo library to select meal photos for analysis.",
+        "NSPhotoLibraryAddUsageDescription": "BiteSight needs permission to save meal photos to your library."
+      }
+    },
     "android": {
-      "package": "com.anonymous.PlateLensAI"
+      "package": "com.bitesight.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#5E7E98"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "plugins": [
       [

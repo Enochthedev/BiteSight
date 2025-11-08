@@ -9,10 +9,7 @@ import { ApiError, MealHistory, NutritionFeedback, WeeklyInsight } from '@/types
 import { networkService } from './networkService';
 import { offlineStorage } from './offlineStorage';
 import { performanceService } from './performanceService';
-
-const API_BASE_URL = __DEV__
-    ? 'http://localhost:8000/api/v1'
-    : 'https://api.nutritionfeedback.com/v1';
+import { apiBaseUrl, apiTimeout } from '../config/environment';
 
 class ApiService {
     private client: AxiosInstance;
@@ -22,8 +19,8 @@ class ApiService {
 
     constructor() {
         this.client = axios.create({
-            baseURL: API_BASE_URL,
-            timeout: 30000,
+            baseURL: apiBaseUrl,
+            timeout: apiTimeout,
             headers: {
                 'Content-Type': 'application/json',
             },

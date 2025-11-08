@@ -199,32 +199,75 @@ class NigerianFoodMapper:
             with open(metadata_path, 'r', encoding='utf-8') as f:
                 metadata = json.load(f)
 
-            for food_data in metadata.get('foods', []):
-                try:
-                    nutritional_cat = NutritionalCategory(
-                        food_data['nutritional_category'])
+            # Handle both old and new JSON formats
+            foods_dict = metadata.get('foods', {})
+            
+            # If foods is a dict (new format from our CSV)
+            if isinstance(foods_dict, dict):
+                for food_id, food_data in foods_dict.items():
+                    try:
+                        # Map category names
+                        category_name = food_data.get('category', '').lower()
+                        
+                        # Handle category name variations
+                        category_map = {
+                            'carbohydrates': 'carbohydrates',
+                            'protein': 'proteins',
+                            'proteins': 'proteins',
+                            'fats_oils': 'fats_oils',
+                            'fats_and_oils': 'fats_oils',
+                            'vitamins': 'vitamins',
+                            'minerals': 'minerals',
+                            'water': 'water',
+                            'snacks': 'carbohydrates'  # Map snacks to carbs for now
+                        }
+                        
+                        category_name = category_map.get(category_name, 'carbohydrates')
+                        nutritional_cat = NutritionalCategory(category_name)
 
-                    food_info = FoodClassInfo(
-                        name=food_data['name'],
-                        local_names=food_data.get('local_names', []),
-                        nutritional_category=nutritional_cat,
-                        cultural_context=food_data.get('cultural_context'),
-                        common_preparations=food_data.get(
-                            'common_preparations', []),
-                        typical_ingredients=food_data.get(
-                            'typical_ingredients', [])
-                    )
+                        food_info = FoodClassInfo(
+                            name=food_id,
+                            local_names=food_data.get('local_names', {}).values() if isinstance(food_data.get('local_names'), dict) else [],
+                            nutritional_category=nutritional_cat,
+                            cultural_context=food_data.get('description', ''),
+                            common_preparations=[food_data.get('preparation_method', '')],
+                            typical_ingredients=[]
+                        )
 
-                    self.add_food_class(food_info)
+                        self.add_food_class(food_info)
 
-                except (KeyError, ValueError) as e:
-                    logger.warning(f"Skipping invalid food entry: {e}")
+                    except (KeyError, ValueError) as e:
+                        logger.warning(f"Skipping invalid food entry {food_id}: {e}")
+            
+            # If foods is a list (old format)
+            elif isinstance(foods_dict, list):
+                for food_data in foods_dict:
+                    try:
+                        nutritional_cat = NutritionalCategory(
+                            food_data['nutritional_category'])
+
+                        food_info = FoodClassInfo(
+                            name=food_data['name'],
+                            local_names=food_data.get('local_names', []),
+                            nutritional_category=nutritional_cat,
+                            cultural_context=food_data.get('cultural_context'),
+                            common_preparations=food_data.get(
+                                'common_preparations', []),
+                            typical_ingredients=food_data.get(
+                                'typical_ingredients', [])
+                        )
+
+                        self.add_food_class(food_info)
+
+                    except (KeyError, ValueError) as e:
+                        logger.warning(f"Skipping invalid food entry: {e}")
 
             logger.info(
                 f"Loaded {len(self.food_classes)} food classes from metadata")
 
         except Exception as e:
             logger.error(f"Error loading metadata: {e}")
+            logger.exception(e)
             self._initialize_default_mappings()
 
     def get_food_class(self, food_name: str) -> Optional[FoodClassInfo]:

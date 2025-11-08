@@ -33,7 +33,27 @@ async def upload_meal_image(
             file, meal_id, current_user.id, db
         )
 
-        return {
+        # Run AI analysis on the uploaded image
+        ai_analysis = None
+        try:
+            from app.services.ai_service import get_ai_service
+            ai_service = get_ai_service()
+            
+            # Use processed image if available, otherwise raw
+            image_path = result.get("processed_path") or result.get("raw_path")
+            
+            if image_path:
+                ai_analysis = await ai_service.analyze_meal_image(
+                    image_path=image_path,
+                    meal_id=meal_id
+                )
+        except Exception as ai_error:
+            # Log AI error but don't fail the upload
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"AI analysis failed for meal {meal_id}: {ai_error}")
+
+        response = {
             "success": True,
             "meal_id": result["meal_id"],
             "message": "Image uploaded successfully",
@@ -45,6 +65,16 @@ async def upload_meal_image(
                 "has_thumbnail": result["thumbnail_path"] is not None
             }
         }
+        
+        # Add AI analysis if available
+        if ai_analysis:
+            response["ai_analysis"] = ai_analysis
+            response["analysis_status"] = ai_analysis.get("analysis_status", "completed")
+        else:
+            response["analysis_status"] = "pending"
+
+        return response
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -139,9 +169,42 @@ async def delete_meal_images(
 
 
 @router.get("/{meal_id}/analysis")
-async def get_meal_analysis():
+async def get_meal_analysis(
+    meal_id: UUID,
+    current_user: Student = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Get meal analysis results."""
-    return {"message": "Meal analysis endpoint - to be implemented"}
+    try:
+        from app.services.ai_service import get_ai_service
+        
+        # Get image paths for this meal
+        paths = image_service.get_image_paths(meal_id)
+        
+        if not paths.get("raw") and not paths.get("processed"):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Meal {meal_id} not found"
+            )
+        
+        # Run AI analysis
+        ai_service = get_ai_service()
+        image_path = paths.get("processed") or paths.get("raw")
+        
+        analysis = await ai_service.analyze_meal_image(
+            image_path=image_path,
+            meal_id=meal_id
+        )
+        
+        return analysis
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing meal: {str(e)}"
+        )
 
 
 @router.get("/search")
@@ -213,6 +276,77 @@ async def get_image_stats(
         raise HTTPException(
             status_code=500,
             detail=f"Error getting image statistics: {str(e)}"
+        )
+
+
+@router.get("/history", response_model=Dict[str, Any])
+async def get_meal_history(
+    limit: int = 50,
+    offset: int = 0,
+    current_user: Student = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get meal history for mobile app - alias for /history/meals endpoint."""
+    from app.services.history_service import history_service
+    from app.models.history import MealHistoryRequest
+    
+    request = MealHistoryRequest(
+        start_date=None,
+        end_date=None,
+        limit=limit,
+        offset=offset
+    )
+    
+    try:
+        history = await history_service.get_meal_history(
+            student_id=current_user.id,
+            db=db,
+            request=request
+        )
+        return history.dict()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving meal history: {str(e)}"
+        )
+
+
+@router.get("/{meal_id}/feedback")
+async def get_meal_feedback(
+    meal_id: UUID,
+    current_user: Student = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get nutrition feedback for a specific meal - mobile app compatible endpoint."""
+    from app.services.feedback_service import feedback_service
+    from app.models.feedback import NutritionFeedback
+    
+    try:
+        # Get feedback from the feedback service
+        feedback_record = await feedback_service.get_feedback_by_meal(
+            meal_id=meal_id,
+            db=db
+        )
+        
+        if not feedback_record:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No feedback found for meal {meal_id}"
+            )
+        
+        # Return in NutritionFeedback format expected by mobile app
+        return {
+            "detected_foods": feedback_record.recommendations.get("detected_foods", []) if isinstance(feedback_record.recommendations, dict) else [],
+            "missing_food_groups": feedback_record.recommendations.get("missing_food_groups", []) if isinstance(feedback_record.recommendations, dict) else [],
+            "recommendations": feedback_record.recommendations.get("recommendations", []) if isinstance(feedback_record.recommendations, dict) else [],
+            "overall_balance_score": feedback_record.recommendations.get("overall_balance_score", 0) if isinstance(feedback_record.recommendations, dict) else 0
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving meal feedback: {str(e)}"
         )
 
 

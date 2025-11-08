@@ -1,13 +1,55 @@
 """Test configuration and fixtures."""
 
 import pytest
-from sqlalchemy import create_engine
+import uuid
+from sqlalchemy import create_engine, TypeDecorator, CHAR
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
 from app.models.base import Base
 from app.core.database import get_db
 from app.main import app
+
+
+# Custom UUID type for SQLite compatibility
+class GUID(TypeDecorator):
+    """Platform-independent GUID type.
+    Uses PostgreSQL's UUID type, otherwise uses CHAR(36), storing as stringified hex values.
+    """
+    impl = CHAR
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(PG_UUID())
+        else:
+            return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return str(value)
+        else:
+            if not isinstance(value, uuid.UUID):
+                return str(uuid.UUID(value))
+            else:
+                return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            if not isinstance(value, uuid.UUID):
+                value = uuid.UUID(value)
+            return value
+
+
+# Monkey patch the UUID type for testing
+import sqlalchemy.dialects.postgresql as postgresql_dialect
+original_uuid = postgresql_dialect.UUID
+postgresql_dialect.UUID = GUID
 
 # Create in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

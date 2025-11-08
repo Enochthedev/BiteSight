@@ -134,6 +134,11 @@ class CameraService {
                 quality: cameraOptions.quality,
                 base64: cameraOptions.includeBase64,
                 exif: false,
+                // iOS specific options
+                allowsEditing: false,
+                aspect: Platform.OS === 'ios' ? [4, 3] : undefined,
+                // Ensure camera works on all iOS devices including iPad
+                cameraType: ImagePicker.CameraType.back,
             });
 
             if (result.canceled || !result.assets || result.assets.length === 0) {

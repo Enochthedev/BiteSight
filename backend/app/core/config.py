@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
 
     # Database
-    DATABASE_URL: str = "postgresql://nutrition_user:nutrition_pass@localhost:5432/nutrition_feedback"
+    DATABASE_URL: str = "postgresql://nutrition_user:nutrition_pass@127.0.0.1:5433/nutrition_feedback"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"

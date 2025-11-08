@@ -1,0 +1,2056 @@
+{
+  "version": "1.0",
+  "description": "Nigerian food classification and nutritional mapping",
+  "categories": {
+    "carbohydrates": {
+      "description": "Energy-providing foods",
+      "color": "#FFB74D",
+      "foods": [
+        "white_rice",
+        "ofada_rice",
+        "jollof_&_concoction_rice",
+        "boiled_rice_&_beans",
+        "fried_rice",
+        "boiled_yam",
+        "porridge_yam",
+        "fried_yam",
+        "pounded_yam",
+        "soaked_garri",
+        "eba",
+        "boiled_cocoyam",
+        "porridge_cocoyam",
+        "fufu",
+        "amala",
+        "semo",
+        "white_pap",
+        "brown_pap",
+        "boiled_corn",
+        "roasted_corn",
+        "boiled_plantains",
+        "kunu",
+        "porridge_plantains",
+        "boiled_sweet_potatoes",
+        "boiled_irish_potatoes",
+        "boiled_beans",
+        "moimoi",
+        "boiled_spaghetti",
+        "boiled_macaroni",
+        "semolina",
+        "semovita",
+        "oats"
+      ]
+    },
+    "protein": {
+      "description": "Body-building foods",
+      "color": "#E57373",
+      "foods": [
+        "boiled_red_meat_beef",
+        "boiled_red_meat_goat",
+        "boiled_white_meat_chicken",
+        "boiled_white_meat_turkey",
+        "boiled_white_meat_pork",
+        "fried_red_meat_beef",
+        "fried_red_meat_goat",
+        "grilled_red_meat_beef",
+        "grilled_red_meat_goat",
+        "fried_white_meat_chicken",
+        "fried_white_meat_turkey",
+        "fried_white_meat_pork",
+        "boiled_egg",
+        "beef_stew",
+        "chicken_stew",
+        "fish_stew",
+        "turkey_stew",
+        "goat_meat_stew",
+        "fried_egg_stew",
+        "boiled_egg_stew",
+        "fried_egg",
+        "wara",
+        "greek_yogurt_unsweetened",
+        "sweetened_yogurt",
+        "milk_sachet",
+        "glass_of_milk",
+        "tea_with_milk",
+        "boiled_groundnut",
+        "suya",
+        "kilishi"
+      ]
+    },
+    "fats_oils": {
+      "description": "Energy and vitamin absorption",
+      "color": "#FFF176",
+      "foods": []
+    },
+    "vitamins": {
+      "description": "Body-regulating foods",
+      "color": "#81C784",
+      "foods": [
+        "orange",
+        "mango",
+        "bananas",
+        "pawpaw",
+        "pineapple",
+        "watermelon",
+        "guava",
+        "efo_tete",
+        "ugu",
+        "bitterleaf",
+        "okra",
+        "tomatoes",
+        "carrots",
+        "cabbage",
+        "pepper_chilli",
+        "pepper_bell",
+        "pepper_habanero",
+        "zobo",
+        "plain_stew_tomato-pepper_blend"
+      ]
+    },
+    "water": {
+      "description": "Hydration",
+      "color": "#64B5F6",
+      "foods": [
+        "pure_water",
+        "bottled_water",
+        "cup_of_water"
+      ]
+    },
+    "snacks": {
+      "description": "Processed and snack foods",
+      "color": "#BA68C8",
+      "foods": [
+        "biscuits",
+        "puff-puff",
+        "buns",
+        "doughnut",
+        "samosa",
+        "springroll",
+        "soda_drinks",
+        "gala"
+      ]
+    }
+  },
+  "foods": {
+    "white_rice": {
+      "id": "white_rice",
+      "name": "White Rice",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Vitamin B1",
+        "B3",
+        "Magnesium"
+      ],
+      "additional_nutrients": [
+        "Small amounts"
+      ],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "White Rice - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "ofada_rice": {
+      "id": "ofada_rice",
+      "name": "Ofada Rice",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Vitamin B1",
+        "B3",
+        "Folate (B9)",
+        "Magnesium",
+        "Phosphorus",
+        "Iron"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Ofada Rice - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "jollof_&_concoction_rice": {
+      "id": "jollof_&_concoction_rice",
+      "name": "Jollof & Concoction Rice",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Vitamin A",
+        "C",
+        "E"
+      ],
+      "additional_nutrients": [
+        "Fats & Oils"
+      ],
+      "preparation_method": "Cooked",
+      "local_names": {},
+      "description": "Jollof & Concoction Rice - Cooked",
+      "tags": [
+        "carbohydrates",
+        "cooked"
+      ]
+    },
+    "boiled_rice_&_beans": {
+      "id": "boiled_rice_&_beans",
+      "name": "Boiled Rice & Beans",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Protein",
+        "Folate",
+        "Iron",
+        "Vitamin A",
+        "B vitamins",
+        "E"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Rice & Beans - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "fried_rice": {
+      "id": "fried_rice",
+      "name": "Fried Rice",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Vitamins A",
+        "C",
+        "Folate (B9)",
+        "Iron",
+        "Zinc",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Rice - Fried",
+      "tags": [
+        "carbohydrates",
+        "fried"
+      ]
+    },
+    "boiled_yam": {
+      "id": "boiled_yam",
+      "name": "Boiled Yam",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Potassium",
+        "Vitamin C",
+        "B6"
+      ],
+      "additional_nutrients": [
+        "Fiber"
+      ],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Yam - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "porridge_yam": {
+      "id": "porridge_yam",
+      "name": "Porridge Yam",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Vitamin A"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Porridge",
+      "local_names": {},
+      "description": "Porridge Yam - Porridge",
+      "tags": [
+        "carbohydrates",
+        "porridge"
+      ]
+    },
+    "fried_yam": {
+      "id": "fried_yam",
+      "name": "Fried Yam",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Yam - Fried",
+      "tags": [
+        "carbohydrates",
+        "fried"
+      ]
+    },
+    "pounded_yam": {
+      "id": "pounded_yam",
+      "name": "Pounded Yam",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Potassium",
+        "Manganese"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Pounded",
+      "local_names": {},
+      "description": "Pounded Yam - Pounded",
+      "tags": [
+        "carbohydrates",
+        "pounded"
+      ]
+    },
+    "soaked_garri": {
+      "id": "soaked_garri",
+      "name": "Soaked Garri",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Soaked",
+      "local_names": {},
+      "description": "Soaked Garri - Soaked",
+      "tags": [
+        "carbohydrates",
+        "soaked"
+      ]
+    },
+    "eba": {
+      "id": "eba",
+      "name": "Eba",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Eba - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "boiled_cocoyam": {
+      "id": "boiled_cocoyam",
+      "name": "Boiled Cocoyam",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Vitamin C",
+        "Potassium",
+        "Magnesium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Cocoyam - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "porridge_cocoyam": {
+      "id": "porridge_cocoyam",
+      "name": "Porridge Cocoyam",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Potassium",
+        "Vitamin C"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Porridge",
+      "local_names": {},
+      "description": "Porridge Cocoyam - Porridge",
+      "tags": [
+        "carbohydrates",
+        "porridge"
+      ]
+    },
+    "fufu": {
+      "id": "fufu",
+      "name": "Fufu",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Fufu - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "amala": {
+      "id": "amala",
+      "name": "Amala",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Potassium",
+        "Vitamin B1",
+        "B3",
+        "B6"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Amala - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "semo": {
+      "id": "semo",
+      "name": "Semo",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Iron",
+        "Vitamin B9"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Semo - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "white_pap": {
+      "id": "white_pap",
+      "name": "White Pap",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Vitamin B1",
+        "B3",
+        "B6"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "White Pap - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "brown_pap": {
+      "id": "brown_pap",
+      "name": "Brown Pap",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Vitamin B1",
+        "B3",
+        "B6"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Brown Pap - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "boiled_corn": {
+      "id": "boiled_corn",
+      "name": "Boiled Corn",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Vitamin B1",
+        "B3",
+        "B5",
+        "B6",
+        "B9",
+        "Magnesium",
+        "Potassium",
+        "Iron",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Corn - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "roasted_corn": {
+      "id": "roasted_corn",
+      "name": "Roasted Corn",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Vitamin B1",
+        "B3",
+        "B5",
+        "B6",
+        "B9",
+        "Magnesium",
+        "Potassium",
+        "Iron",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Roasted",
+      "local_names": {},
+      "description": "Roasted Corn - Roasted",
+      "tags": [
+        "carbohydrates",
+        "roasted"
+      ]
+    },
+    "boiled_plantains": {
+      "id": "boiled_plantains",
+      "name": "Boiled Plantains",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Vitamin A",
+        "B6",
+        "B9",
+        "Potassium",
+        "Magnesium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Plantains - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "kunu": {
+      "id": "kunu",
+      "name": "Kunu",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Iron"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Drink",
+      "local_names": {},
+      "description": "Kunu - Drink",
+      "tags": [
+        "carbohydrates",
+        "drink"
+      ]
+    },
+    "porridge_plantains": {
+      "id": "porridge_plantains",
+      "name": "Porridge Plantains",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin A",
+        "E"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Porridge",
+      "local_names": {},
+      "description": "Porridge Plantains - Porridge",
+      "tags": [
+        "carbohydrates",
+        "porridge"
+      ]
+    },
+    "boiled_sweet_potatoes": {
+      "id": "boiled_sweet_potatoes",
+      "name": "Boiled Sweet Potatoes",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Vitamin A",
+        "B3",
+        "B5",
+        "B6",
+        "Potassium",
+        "Manganese",
+        "Iron",
+        "Fiber"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Sweet Potatoes - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "boiled_irish_potatoes": {
+      "id": "boiled_irish_potatoes",
+      "name": "Boiled Irish Potatoes",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Potassium",
+        "Magnesium",
+        "Iron",
+        "Vitamins B3",
+        "B6",
+        "B9"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Irish Potatoes - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "boiled_beans": {
+      "id": "boiled_beans",
+      "name": "Boiled Beans",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Protein",
+        "Fiber",
+        "Folate"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Beans - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "moimoi": {
+      "id": "moimoi",
+      "name": "Moimoi",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Protein",
+        "Iron",
+        "Folate",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Steamed",
+      "local_names": {},
+      "description": "Moimoi - Steamed",
+      "tags": [
+        "carbohydrates",
+        "steamed"
+      ]
+    },
+    "boiled_spaghetti": {
+      "id": "boiled_spaghetti",
+      "name": "Boiled Spaghetti",
+      "category": "carbohydrates",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Spaghetti - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "boiled_macaroni": {
+      "id": "boiled_macaroni",
+      "name": "Boiled Macaroni",
+      "category": "carbohydrates",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Macaroni - Boiled",
+      "tags": [
+        "carbohydrates",
+        "boiled"
+      ]
+    },
+    "semolina": {
+      "id": "semolina",
+      "name": "Semolina",
+      "category": "carbohydrates",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Semolina - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "semovita": {
+      "id": "semovita",
+      "name": "Semovita",
+      "category": "carbohydrates",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Semovita - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "oats": {
+      "id": "oats",
+      "name": "Oats",
+      "category": "carbohydrates",
+      "primary_nutrients": [
+        "Fiber",
+        "Iron",
+        "Magnesium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Prepared",
+      "local_names": {},
+      "description": "Oats - Prepared",
+      "tags": [
+        "carbohydrates",
+        "prepared"
+      ]
+    },
+    "boiled_red_meat_beef": {
+      "id": "boiled_red_meat_beef",
+      "name": "Boiled Red Meat (Beef)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B2",
+        "B3",
+        "B6",
+        "B12",
+        "Iron",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Red Meat (Beef) - Boiled",
+      "tags": [
+        "protein",
+        "boiled"
+      ]
+    },
+    "boiled_red_meat_goat": {
+      "id": "boiled_red_meat_goat",
+      "name": "Boiled Red Meat (Goat)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B2",
+        "B3",
+        "B6",
+        "B12",
+        "Iron",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Red Meat (Goat) - Boiled",
+      "tags": [
+        "protein",
+        "boiled"
+      ]
+    },
+    "boiled_white_meat_chicken": {
+      "id": "boiled_white_meat_chicken",
+      "name": "Boiled White Meat (Chicken)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B6",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled White Meat (Chicken) - Boiled",
+      "tags": [
+        "protein",
+        "boiled"
+      ]
+    },
+    "boiled_white_meat_turkey": {
+      "id": "boiled_white_meat_turkey",
+      "name": "Boiled White Meat (Turkey)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B6",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled White Meat (Turkey) - Boiled",
+      "tags": [
+        "protein",
+        "boiled"
+      ]
+    },
+    "boiled_white_meat_pork": {
+      "id": "boiled_white_meat_pork",
+      "name": "Boiled White Meat (Pork)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B6",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled White Meat (Pork) - Boiled",
+      "tags": [
+        "protein",
+        "boiled"
+      ]
+    },
+    "fried_red_meat_beef": {
+      "id": "fried_red_meat_beef",
+      "name": "Fried Red Meat (Beef)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin B3",
+        "B6",
+        "B12",
+        "Iron",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Red Meat (Beef) - Fried",
+      "tags": [
+        "protein",
+        "fried"
+      ]
+    },
+    "fried_red_meat_goat": {
+      "id": "fried_red_meat_goat",
+      "name": "Fried Red Meat (Goat)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin B3",
+        "B6",
+        "B12",
+        "Iron",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Red Meat (Goat) - Fried",
+      "tags": [
+        "protein",
+        "fried"
+      ]
+    },
+    "grilled_red_meat_beef": {
+      "id": "grilled_red_meat_beef",
+      "name": "Grilled Red Meat (Beef)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin B3",
+        "B6",
+        "B12",
+        "Iron",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Grilled",
+      "local_names": {},
+      "description": "Grilled Red Meat (Beef) - Grilled",
+      "tags": [
+        "protein",
+        "grilled"
+      ]
+    },
+    "grilled_red_meat_goat": {
+      "id": "grilled_red_meat_goat",
+      "name": "Grilled Red Meat (Goat)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin B3",
+        "B6",
+        "B12",
+        "Iron",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Grilled",
+      "local_names": {},
+      "description": "Grilled Red Meat (Goat) - Grilled",
+      "tags": [
+        "protein",
+        "grilled"
+      ]
+    },
+    "fried_white_meat_chicken": {
+      "id": "fried_white_meat_chicken",
+      "name": "Fried White Meat (Chicken)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin B6",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried White Meat (Chicken) - Fried",
+      "tags": [
+        "protein",
+        "fried"
+      ]
+    },
+    "fried_white_meat_turkey": {
+      "id": "fried_white_meat_turkey",
+      "name": "Fried White Meat (Turkey)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin B6",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried White Meat (Turkey) - Fried",
+      "tags": [
+        "protein",
+        "fried"
+      ]
+    },
+    "fried_white_meat_pork": {
+      "id": "fried_white_meat_pork",
+      "name": "Fried White Meat (Pork)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Fats & Oils",
+        "Vitamin B6",
+        "Zinc",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried White Meat (Pork) - Fried",
+      "tags": [
+        "protein",
+        "fried"
+      ]
+    },
+    "boiled_egg": {
+      "id": "boiled_egg",
+      "name": "Boiled Egg",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B2",
+        "B7",
+        "B12",
+        "Selenium",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Egg - Boiled",
+      "tags": [
+        "protein",
+        "boiled"
+      ]
+    },
+    "beef_stew": {
+      "id": "beef_stew",
+      "name": "Beef Stew",
+      "category": "protein",
+      "primary_nutrients": [
+        "Iron",
+        "Vitamin B12",
+        "Zinc",
+        "Vitamin C",
+        "Vitamin A",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Beef Stew - Stew",
+      "tags": [
+        "protein",
+        "stew"
+      ]
+    },
+    "chicken_stew": {
+      "id": "chicken_stew",
+      "name": "Chicken Stew",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin A",
+        "B3",
+        "B6",
+        "C",
+        "Phosphorus",
+        "Selenium",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Chicken Stew - Stew",
+      "tags": [
+        "protein",
+        "stew"
+      ]
+    },
+    "fish_stew": {
+      "id": "fish_stew",
+      "name": "Fish Stew",
+      "category": "protein",
+      "primary_nutrients": [
+        "Omega-3",
+        "Vitamin D",
+        "Iodine",
+        "Selenium",
+        "Vitamin C",
+        "A",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Fish Stew - Stew",
+      "tags": [
+        "protein",
+        "stew"
+      ]
+    },
+    "turkey_stew": {
+      "id": "turkey_stew",
+      "name": "Turkey Stew",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B6",
+        "Zinc",
+        "Phosphorus",
+        "Vitamin C",
+        "A",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Turkey Stew - Stew",
+      "tags": [
+        "protein",
+        "stew"
+      ]
+    },
+    "goat_meat_stew": {
+      "id": "goat_meat_stew",
+      "name": "Goat Meat Stew",
+      "category": "protein",
+      "primary_nutrients": [
+        "Iron",
+        "Vitamin B12",
+        "Zinc",
+        "Vitamin C",
+        "A",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Goat Meat Stew - Stew",
+      "tags": [
+        "protein",
+        "stew"
+      ]
+    },
+    "fried_egg_stew": {
+      "id": "fried_egg_stew",
+      "name": "Fried Egg Stew",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B12",
+        "Choline",
+        "Vitamin D",
+        "Vitamin A",
+        "C",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Fried Egg Stew - Stew",
+      "tags": [
+        "protein",
+        "stew"
+      ]
+    },
+    "boiled_egg_stew": {
+      "id": "boiled_egg_stew",
+      "name": "Boiled Egg Stew",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B12",
+        "Choline",
+        "Vitamin D",
+        "Vitamin A",
+        "C",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Boiled Egg Stew - Stew",
+      "tags": [
+        "protein",
+        "stew"
+      ]
+    },
+    "fried_egg": {
+      "id": "fried_egg",
+      "name": "Fried Egg",
+      "category": "protein",
+      "primary_nutrients": [
+        "Vitamin B2",
+        "B7",
+        "B12",
+        "Selenium",
+        "Phosphorus",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Egg - Fried",
+      "tags": [
+        "protein",
+        "fried"
+      ]
+    },
+    "wara": {
+      "id": "wara",
+      "name": "Wara",
+      "category": "protein",
+      "primary_nutrients": [
+        "Calcium",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Wara - Fresh",
+      "tags": [
+        "protein",
+        "fresh"
+      ]
+    },
+    "greek_yogurt_unsweetened": {
+      "id": "greek_yogurt_unsweetened",
+      "name": "Greek Yogurt (unsweetened)",
+      "category": "protein",
+      "primary_nutrients": [
+        "Calcium",
+        "Vitamin B12",
+        "Probiotics"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Greek Yogurt (unsweetened) - Fresh",
+      "tags": [
+        "protein",
+        "fresh"
+      ]
+    },
+    "sweetened_yogurt": {
+      "id": "sweetened_yogurt",
+      "name": "Sweetened Yogurt",
+      "category": "protein",
+      "primary_nutrients": [
+        "Calcium",
+        "Vitamin B12"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Sweetened Yogurt - Fresh",
+      "tags": [
+        "protein",
+        "fresh"
+      ]
+    },
+    "milk_sachet": {
+      "id": "milk_sachet",
+      "name": "Milk Sachet",
+      "category": "protein",
+      "primary_nutrients": [
+        "Calcium",
+        "Vitamin D",
+        "Vitamin B2",
+        "B12",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Drink",
+      "local_names": {},
+      "description": "Milk Sachet - Drink",
+      "tags": [
+        "protein",
+        "drink"
+      ]
+    },
+    "glass_of_milk": {
+      "id": "glass_of_milk",
+      "name": "Glass of Milk",
+      "category": "protein",
+      "primary_nutrients": [
+        "Calcium",
+        "Vitamin D",
+        "Vitamin B2",
+        "B12",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Drink",
+      "local_names": {},
+      "description": "Glass of Milk - Drink",
+      "tags": [
+        "protein",
+        "drink"
+      ]
+    },
+    "tea_with_milk": {
+      "id": "tea_with_milk",
+      "name": "Tea with Milk",
+      "category": "protein",
+      "primary_nutrients": [
+        "Calcium",
+        "Vitamin D",
+        "Vitamin B2",
+        "B12",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Drink",
+      "local_names": {},
+      "description": "Tea with Milk - Drink",
+      "tags": [
+        "protein",
+        "drink"
+      ]
+    },
+    "boiled_groundnut": {
+      "id": "boiled_groundnut",
+      "name": "Boiled Groundnut",
+      "category": "protein",
+      "primary_nutrients": [
+        "Healthy fats",
+        "Vitamin B3",
+        "B9",
+        "E",
+        "Magnesium",
+        "Phosphorus"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Boiled",
+      "local_names": {},
+      "description": "Boiled Groundnut - Boiled",
+      "tags": [
+        "protein",
+        "boiled"
+      ]
+    },
+    "suya": {
+      "id": "suya",
+      "name": "Suya",
+      "category": "protein",
+      "primary_nutrients": [
+        "Iron",
+        "B vitamins",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Grilled",
+      "local_names": {},
+      "description": "Suya - Grilled",
+      "tags": [
+        "protein",
+        "grilled"
+      ]
+    },
+    "kilishi": {
+      "id": "kilishi",
+      "name": "Kilishi",
+      "category": "protein",
+      "primary_nutrients": [
+        "Iron",
+        "Zinc",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Dried",
+      "local_names": {},
+      "description": "Kilishi - Dried",
+      "tags": [
+        "protein",
+        "dried"
+      ]
+    },
+    "palm_oil": {
+      "id": "palm_oil",
+      "name": "Palm Oil",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Vitamin A",
+        "E"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Oil",
+      "local_names": {},
+      "description": "Palm Oil - Oil",
+      "tags": [
+        "fats_and_oils",
+        "oil"
+      ]
+    },
+    "groundnut_oil": {
+      "id": "groundnut_oil",
+      "name": "Groundnut Oil",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Vitamin E"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Oil",
+      "local_names": {},
+      "description": "Groundnut Oil - Oil",
+      "tags": [
+        "fats_and_oils",
+        "oil"
+      ]
+    },
+    "avocado": {
+      "id": "avocado",
+      "name": "Avocado",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Vitamin B9",
+        "C",
+        "E"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Avocado - Fresh",
+      "tags": [
+        "fats_and_oils",
+        "fresh"
+      ]
+    },
+    "cashew_nuts": {
+      "id": "cashew_nuts",
+      "name": "Cashew Nuts",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Vitamin B6",
+        "K",
+        "Magnesium",
+        "Zinc",
+        "Copper"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Roasted",
+      "local_names": {},
+      "description": "Cashew Nuts - Roasted",
+      "tags": [
+        "fats_and_oils",
+        "roasted"
+      ]
+    },
+    "fried_plantains": {
+      "id": "fried_plantains",
+      "name": "Fried Plantains",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Carbohydrates",
+        "Vitamin A",
+        "B6",
+        "E",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Plantains - Fried",
+      "tags": [
+        "fats_and_oils",
+        "fried"
+      ]
+    },
+    "fried_yams": {
+      "id": "fried_yams",
+      "name": "Fried Yams",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Fiber",
+        "Carbohydrates"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Yams - Fried",
+      "tags": [
+        "fats_and_oils",
+        "fried"
+      ]
+    },
+    "fried_sweet_potatoes": {
+      "id": "fried_sweet_potatoes",
+      "name": "Fried Sweet Potatoes",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Carbohydrates",
+        "Vitamin A",
+        "Potassium",
+        "Fiber"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Sweet Potatoes - Fried",
+      "tags": [
+        "fats_and_oils",
+        "fried"
+      ]
+    },
+    "fried_irish_potatoes": {
+      "id": "fried_irish_potatoes",
+      "name": "Fried Irish Potatoes",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Carbohydrates",
+        "Vitamin B6",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Fried Irish Potatoes - Fried",
+      "tags": [
+        "fats_and_oils",
+        "fried"
+      ]
+    },
+    "roasted_groundnuts": {
+      "id": "roasted_groundnuts",
+      "name": "Roasted Groundnuts",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Healthy fats",
+        "Protein",
+        "Vitamin B3",
+        "B9",
+        "E",
+        "Magnesium",
+        "Zinc"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Roasted",
+      "local_names": {},
+      "description": "Roasted Groundnuts - Roasted",
+      "tags": [
+        "fats_and_oils",
+        "roasted"
+      ]
+    },
+    "egusi_soup": {
+      "id": "egusi_soup",
+      "name": "Egusi Soup",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Healthy fats",
+        "Protein",
+        "Vitamin E",
+        "Magnesium",
+        "Iron",
+        "Zinc"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Soup",
+      "local_names": {},
+      "description": "Egusi Soup - Soup",
+      "tags": [
+        "fats_and_oils",
+        "soup"
+      ]
+    },
+    "beans_porridge_with_palm_oil": {
+      "id": "beans_porridge_with_palm_oil",
+      "name": "Beans Porridge (with Palm Oil)",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Protein",
+        "Carbohydrates",
+        "Fiber",
+        "Folate",
+        "Iron",
+        "Vitamin A"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Porridge",
+      "local_names": {},
+      "description": "Beans Porridge (with Palm Oil) - Porridge",
+      "tags": [
+        "fats_and_oils",
+        "porridge"
+      ]
+    },
+    "akara": {
+      "id": "akara",
+      "name": "Akara",
+      "category": "fats_and_oils",
+      "primary_nutrients": [
+        "Protein",
+        "Carbohydrates",
+        "Fiber",
+        "Folate",
+        "Iron"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Akara - Fried",
+      "tags": [
+        "fats_and_oils",
+        "fried"
+      ]
+    },
+    "orange": {
+      "id": "orange",
+      "name": "Orange",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "B9",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Orange - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "mango": {
+      "id": "mango",
+      "name": "Mango",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin A",
+        "C",
+        "E"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Mango - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "bananas": {
+      "id": "bananas",
+      "name": "Bananas",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Potassium",
+        "Vitamin B6",
+        "C"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Bananas - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "pawpaw": {
+      "id": "pawpaw",
+      "name": "Pawpaw",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin A",
+        "B9",
+        "C"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Pawpaw - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "pineapple": {
+      "id": "pineapple",
+      "name": "Pineapple",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "B6",
+        "Manganese"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Pineapple - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "watermelon": {
+      "id": "watermelon",
+      "name": "Watermelon",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin A",
+        "C",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Watermelon - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "guava": {
+      "id": "guava",
+      "name": "Guava",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "B9",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Guava - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "efo_tete": {
+      "id": "efo_tete",
+      "name": "Efo Tete",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Iron",
+        "Vitamin A",
+        "B9",
+        "K",
+        "Magnesium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Cooked",
+      "local_names": {},
+      "description": "Efo Tete - Cooked",
+      "tags": [
+        "vitamins",
+        "cooked"
+      ]
+    },
+    "ugu": {
+      "id": "ugu",
+      "name": "Ugu",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin B9",
+        "Iron",
+        "Vitamin A",
+        "C"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Cooked",
+      "local_names": {},
+      "description": "Ugu - Cooked",
+      "tags": [
+        "vitamins",
+        "cooked"
+      ]
+    },
+    "bitterleaf": {
+      "id": "bitterleaf",
+      "name": "Bitterleaf",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Iron",
+        "Vitamin C",
+        "Calcium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Cooked",
+      "local_names": {},
+      "description": "Bitterleaf - Cooked",
+      "tags": [
+        "vitamins",
+        "cooked"
+      ]
+    },
+    "okra": {
+      "id": "okra",
+      "name": "Okra",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin B9",
+        "C",
+        "Magnesium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Cooked",
+      "local_names": {},
+      "description": "Okra - Cooked",
+      "tags": [
+        "vitamins",
+        "cooked"
+      ]
+    },
+    "tomatoes": {
+      "id": "tomatoes",
+      "name": "Tomatoes",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "A",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Tomatoes - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "carrots": {
+      "id": "carrots",
+      "name": "Carrots",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin A",
+        "K",
+        "Potassium"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Carrots - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "cabbage": {
+      "id": "cabbage",
+      "name": "Cabbage",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin K",
+        "B9",
+        "C"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Cabbage - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "pepper_chilli": {
+      "id": "pepper_chilli",
+      "name": "Pepper (Chilli)",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "A",
+        "B6"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Pepper (Chilli) - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "pepper_bell": {
+      "id": "pepper_bell",
+      "name": "Pepper (Bell)",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "A",
+        "B6"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Pepper (Bell) - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "pepper_habanero": {
+      "id": "pepper_habanero",
+      "name": "Pepper (Habanero)",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "A",
+        "B6"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Fresh",
+      "local_names": {},
+      "description": "Pepper (Habanero) - Fresh",
+      "tags": [
+        "vitamins",
+        "fresh"
+      ]
+    },
+    "zobo": {
+      "id": "zobo",
+      "name": "Zobo",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "Iron"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Drink",
+      "local_names": {},
+      "description": "Zobo - Drink",
+      "tags": [
+        "vitamins",
+        "drink"
+      ]
+    },
+    "plain_stew_tomato-pepper_blend": {
+      "id": "plain_stew_tomato-pepper_blend",
+      "name": "Plain Stew (tomato-pepper blend)",
+      "category": "vitamins",
+      "primary_nutrients": [
+        "Vitamin C",
+        "A",
+        "Antioxidants",
+        "Fats & Oils"
+      ],
+      "additional_nutrients": [],
+      "preparation_method": "Stew",
+      "local_names": {},
+      "description": "Plain Stew (tomato-pepper blend) - Stew",
+      "tags": [
+        "vitamins",
+        "stew"
+      ]
+    },
+    "pure_water": {
+      "id": "pure_water",
+      "name": "Pure Water",
+      "category": "water",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Water",
+      "local_names": {},
+      "description": "Pure Water - Water",
+      "tags": [
+        "water",
+        "water"
+      ]
+    },
+    "bottled_water": {
+      "id": "bottled_water",
+      "name": "Bottled Water",
+      "category": "water",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Water",
+      "local_names": {},
+      "description": "Bottled Water - Water",
+      "tags": [
+        "water",
+        "water"
+      ]
+    },
+    "cup_of_water": {
+      "id": "cup_of_water",
+      "name": "Cup of Water",
+      "category": "water",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Water",
+      "local_names": {},
+      "description": "Cup of Water - Water",
+      "tags": [
+        "water",
+        "water"
+      ]
+    },
+    "biscuits": {
+      "id": "biscuits",
+      "name": "Biscuits",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Processed",
+      "local_names": {},
+      "description": "Biscuits - Processed",
+      "tags": [
+        "snacks",
+        "processed"
+      ]
+    },
+    "puff-puff": {
+      "id": "puff-puff",
+      "name": "Puff-Puff",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Puff-Puff - Fried",
+      "tags": [
+        "snacks",
+        "fried"
+      ]
+    },
+    "buns": {
+      "id": "buns",
+      "name": "Buns",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Baked",
+      "local_names": {},
+      "description": "Buns - Baked",
+      "tags": [
+        "snacks",
+        "baked"
+      ]
+    },
+    "doughnut": {
+      "id": "doughnut",
+      "name": "Doughnut",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Doughnut - Fried",
+      "tags": [
+        "snacks",
+        "fried"
+      ]
+    },
+    "samosa": {
+      "id": "samosa",
+      "name": "Samosa",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Samosa - Fried",
+      "tags": [
+        "snacks",
+        "fried"
+      ]
+    },
+    "springroll": {
+      "id": "springroll",
+      "name": "Springroll",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Fried",
+      "local_names": {},
+      "description": "Springroll - Fried",
+      "tags": [
+        "snacks",
+        "fried"
+      ]
+    },
+    "soda_drinks": {
+      "id": "soda_drinks",
+      "name": "Soda Drinks",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Drink",
+      "local_names": {},
+      "description": "Soda Drinks - Drink",
+      "tags": [
+        "snacks",
+        "drink"
+      ]
+    },
+    "gala": {
+      "id": "gala",
+      "name": "Gala",
+      "category": "snacks",
+      "primary_nutrients": [],
+      "additional_nutrients": [],
+      "preparation_method": "Processed",
+      "local_names": {},
+      "description": "Gala - Processed",
+      "tags": [
+        "snacks",
+        "processed"
+      ]
+    }
+  }
+}

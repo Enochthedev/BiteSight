@@ -76,6 +76,15 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize service orchestrator: {e}")
         raise
 
+    # Initialize AI service
+    try:
+        from app.services.ai_service import initialize_ai_service
+        initialize_ai_service()
+        logger.info("AI service initialized")
+    except Exception as e:
+        logger.warning(f"AI service initialization failed: {e}")
+        logger.warning("Application will continue without AI capabilities")
+
     yield
 
     # Shutdown
@@ -96,6 +105,14 @@ async def lifespan(app: FastAPI):
         logger.info("Async task processor stopped")
     except Exception as e:
         logger.error(f"Error stopping async task processor: {e}")
+
+    # Cleanup AI service
+    try:
+        from app.services.ai_service import cleanup_ai_service
+        cleanup_ai_service()
+        logger.info("AI service cleaned up")
+    except Exception as e:
+        logger.error(f"Error cleaning up AI service: {e}")
 
     # Cleanup orchestrator
     try:
@@ -241,6 +258,16 @@ async def health_check():
         logger.error(f"Redis health check failed: {e}")
         redis_status = "unhealthy"
 
+    # Test AI service
+    try:
+        from app.services.ai_service import get_ai_service
+        ai_service = get_ai_service()
+        ai_status_info = await ai_service.get_server_status()
+        ai_status = ai_status_info.get("status", "unavailable")
+    except Exception as e:
+        logger.error(f"AI service health check failed: {e}")
+        ai_status = "unavailable"
+
     # Determine overall status
     overall_status = "healthy"
     if db_status == "unhealthy":
@@ -256,6 +283,7 @@ async def health_check():
         "components": {
             "database": db_status,
             "redis": redis_status,
+            "ai": ai_status,
             "api": "healthy"
         }
     }
