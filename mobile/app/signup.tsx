@@ -78,30 +78,112 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSignUp = async () => {
-    // Basic validation still active
-    if (!fullName || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
 
-    // AUTHENTICATION LOGIC TO BE IMPLEMENTED
-    try {
-      await AsyncStorage.setItem('hasAccount', 'true');
-      await AsyncStorage.setItem('userEmail', email);
-      await AsyncStorage.setItem('userName', fullName);
-      
-      // Navigate to auth splash screen
-      router.replace('/auth-splash');
-    } catch (error) {
-      console.error('Error saving user data:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    }
+
+  // Validation functions
+  const validateFullName = (name: string): boolean => {
+  // only letters and spaces allowed
+  const nameRegex = /^[a-zA-Z\s]+$/;
+  return nameRegex.test(name) && name.trim().length > 0;
   };
+
+  const validateEmail = (email: string): boolean => {
+  // Strong email format validation
+  const trimmedEmail = email.trim();
+  
+  // Check basic email pattern with strict ending
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (!emailRegex.test(trimmedEmail)) {
+    return false;
+  }
+  
+  // Split by @ to validate parts
+  const parts = trimmedEmail.split('@');
+  if (parts.length !== 2) return false;
+  
+  const localPart = parts[0];
+  const domainPart = parts[1];
+  
+  // Local part (before @) must be at least 1 character and only valid characters
+  if (localPart.length < 1 || !/^[a-zA-Z0-9._-]+$/.test(localPart)) {
+    return false;
+  }
+  
+  // Split domain by . to check extension
+  const domainParts = domainPart.split('.');
+  if (domainParts.length < 2) return false;
+  
+  // Check each domain part is valid
+  for (const part of domainParts) {
+    if (part.length < 1 || !/^[a-zA-Z0-9-]+$/.test(part)) {
+      return false;
+    }
+  }
+  
+  // Check that the last part (extension) only contains letters and is 2-6 chars
+  const extension = domainParts[domainParts.length - 1];
+  if (!/^[a-zA-Z]{2,6}$/.test(extension)) {
+    return false;
+  }
+  
+  // Final check: make sure the email ends exactly with the extension (no extra chars)
+  if (!trimmedEmail.endsWith('.' + extension)) {
+    return false;
+  }
+  
+  return true;
+};
+
+  const validatePassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const handleSignUp = async () => {
+  if (!fullName || !email || !password || !confirmPassword) {
+    Alert.alert('Error', 'Please fill in all fields');
+    return;
+  }
+
+  // Full name validation
+  if (!validateFullName(fullName)) {
+    Alert.alert('Invalid Full Name', 'Full name should only contain letters and spaces');
+    return;
+  }
+
+  // Email validation
+  if (!validateEmail(email)) {
+    Alert.alert('Invalid Email', 'Please enter a valid email address');
+    return;
+  }
+
+  // Password strength validation
+  if (!validatePassword(password)) {
+    Alert.alert(
+      'Weak Password', 
+      'Password must be at least 8 characters long and include:\n• At least one uppercase letter\n• At least one lowercase letter\n• At least one number\n• At least one special character (@$!%*?&)'
+    );
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    Alert.alert('Error', 'Passwords do not match');
+    return;
+  }
+
+  try {
+    await AsyncStorage.setItem('hasAccount', 'true');
+    await AsyncStorage.setItem('userEmail', email);
+    await AsyncStorage.setItem('userName', fullName);
+    await AsyncStorage.setItem('userPassword', password);
+    
+    router.replace('/auth-splash');
+  } catch (error) {
+    console.error('Error saving user data:', error);
+    Alert.alert('Error', 'Something went wrong. Please try again.');
+  }
+};
+
 
   return (
     <KeyboardAvoidingView 
