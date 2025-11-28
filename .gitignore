@@ -215,8 +215,5 @@ celerybeat.pid
 *.tar
 *.zip
 
-# Alembic
-alembic.ini
-
 # FastAPI
 .pytest_cache
