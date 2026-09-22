@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
+from sqlalchemy import String, and_, cast, func, or_
 
 from app.models.meal import (
     NigerianFood, NigerianFoodCreate, NigerianFoodUpdate,
@@ -115,7 +115,7 @@ class NigerianFoodService:
                     func.lower(NigerianFood.food_name).like(search_term),
                     func.lower(NigerianFood.cultural_context).like(
                         search_term),
-                    NigerianFood.local_names.astext.ilike(search_term)
+                    func.lower(cast(NigerianFood.local_names, String)).like(search_term)
                 )
             )
 
