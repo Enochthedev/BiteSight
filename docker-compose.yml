@@ -37,7 +37,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://nutrition_user:nutrition_pass@postgres:5432/nutrition_feedback
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET_KEY=your-secret-key-change-in-production
+      - SECRET_KEY=your-secret-key-change-in-production
+      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
       - ENVIRONMENT=development
     ports:
       - "8000:8000"

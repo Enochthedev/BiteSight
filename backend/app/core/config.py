@@ -1,7 +1,7 @@
 """Application configuration."""
 
+import json
 from typing import List, Optional
-from pydantic import AnyHttpUrl, validator
 from pydantic_settings import BaseSettings
 
 
@@ -27,18 +27,22 @@ class Settings(BaseSettings):
 
     # Security
     ALLOWED_HOSTS: List[str] = ["*"]
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    # Comma-separated ("http://a,http://b") or JSON list. Kept as a string because
+    # pydantic-settings v2 JSON-decodes List fields from env vars before validators
+    # run, so the documented comma-separated form crashed startup.
+    BACKEND_CORS_ORIGINS: str = ""
 
     # Admin Settings
     ADMIN_SESSION_EXPIRE_HOURS: int = 8  # 8 hours for admin sessions
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: str | List[str]) -> List[str] | str:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    @property
+    def cors_origins(self) -> List[str]:
+        """Parsed CORS origins, without trailing slashes (browsers send none)."""
+        raw = self.BACKEND_CORS_ORIGINS.strip()
+        if not raw:
+            return []
+        items = json.loads(raw) if raw.startswith("[") else raw.split(",")
+        return [str(i).strip().rstrip("/") for i in items if str(i).strip()]
 
     # Rate Limiting
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = 60

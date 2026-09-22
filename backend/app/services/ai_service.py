@@ -91,7 +91,7 @@ class AIService:
         """
         if not self.is_initialized or not self.model_server:
             logger.warning("AI service not initialized, returning mock results")
-            return self._get_mock_results(meal_id)
+            return self._get_mock_results(meal_id, reason="AI service not initialized")
 
         try:
             logger.info(f"Analyzing meal image: {meal_id}")
@@ -106,7 +106,9 @@ class AIService:
 
             if not predictions or len(predictions) == 0:
                 logger.warning(f"No predictions for meal {meal_id}")
-                return self._get_mock_results(meal_id)
+                return self._get_mock_results(
+                    meal_id, reason="no prediction above the confidence threshold"
+                )
 
             # Format detected foods
             detected_foods = []
@@ -215,7 +217,9 @@ class AIService:
             "category_counts": categories,
         }
 
-    def _get_mock_results(self, meal_id: UUID) -> Dict[str, Any]:
+    def _get_mock_results(
+        self, meal_id: UUID, reason: str = "AI inference failed"
+    ) -> Dict[str, Any]:
         """
         Get mock results when AI is not available.
 
@@ -252,7 +256,7 @@ class AIService:
             },
             "analysis_status": "completed",
             "model_version": "mock",
-            "note": "AI service not initialized - using mock results",
+            "note": f"{reason} - using sample results",
         }
 
     async def get_server_status(self) -> Dict[str, Any]:
