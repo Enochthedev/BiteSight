@@ -241,11 +241,11 @@ boiled_egg_001.jpg
 
 1. Add images following this guide
 2. Verify your dataset structure
-3. See `TRAINING_GUIDE.md` to train the model
+3. See [docs/model-training.md](../../docs/model-training.md) to train the model
 4. Check `README.md` for data collection tips
 
 ## Need More Help?
 
 - See `class_names.txt` for exact food IDs
 - Check `nigerian_foods.json` for food categories
-- Read `TRAINING_GUIDE.md` for training instructions
+- Read [docs/model-training.md](../../docs/model-training.md) for training instructions

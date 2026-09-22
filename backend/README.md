@@ -507,11 +507,10 @@ python -m alembic upgrade head
 
 ## 📚 Additional Documentation
 
-- **AI Setup**: See `AI_SETUP_SUMMARY.md`
-- **Training Guide**: See `TRAINING_GUIDE.md`
-- **Dataset Guide**: See `dataset/README.md`
-- **Integration Status**: See `AI_INTEGRATION_COMPLETE.md`
-- **Mobile Testing**: See `MOBILE_INTEGRATION_TESTING.md`
+- **Model training**: [docs/model-training.md](../docs/model-training.md)
+- **Dataset guide**: [dataset/README.md](dataset/README.md)
+- **Mobile integration tests**: [docs/mobile-integration-testing.md](../docs/mobile-integration-testing.md)
+- **Deployment**: [docs/deployment.md](../docs/deployment.md)
 
 ---
 
