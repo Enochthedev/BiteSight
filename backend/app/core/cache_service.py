@@ -21,17 +21,17 @@ class CacheService:
         # Cache TTL configurations
         self.ttl_config = {
             # Model results cache for 24 hours
-            'model_inference': timedelta(hours=24),
+            "model_inference": timedelta(hours=24),
             # User sessions cache for 8 hours
-            'user_session': timedelta(hours=8),
+            "user_session": timedelta(hours=8),
             # API responses cache for 15 minutes
-            'api_response': timedelta(minutes=15),
+            "api_response": timedelta(minutes=15),
             # Food metadata cache for 12 hours
-            'food_metadata': timedelta(hours=12),
+            "food_metadata": timedelta(hours=12),
             # Weekly insights cache for 6 hours
-            'weekly_insights': timedelta(hours=6),
+            "weekly_insights": timedelta(hours=6),
             # User history cache for 2 hours
-            'user_history': timedelta(hours=2),
+            "user_history": timedelta(hours=2),
         }
 
     def _generate_cache_key(self, prefix: str, *args, **kwargs) -> str:
@@ -49,34 +49,23 @@ class CacheService:
         return f"{prefix}:{key_string}"
 
     def cache_model_inference(
-        self,
-        image_hash: str,
-        model_version: str,
-        results: dict
+        self, image_hash: str, model_version: str, results: dict
     ) -> bool:
         """Cache ML model inference results."""
         cache_key = self._generate_cache_key(
-            "model_inference",
-            image_hash,
-            model_version
+            "model_inference", image_hash, model_version
         )
 
         return self.redis_client.set(
-            cache_key,
-            results,
-            expire=self.ttl_config['model_inference']
+            cache_key, results, expire=self.ttl_config["model_inference"]
         )
 
     def get_cached_inference(
-        self,
-        image_hash: str,
-        model_version: str
+        self, image_hash: str, model_version: str
     ) -> Optional[dict]:
         """Retrieve cached ML model inference results."""
         cache_key = self._generate_cache_key(
-            "model_inference",
-            image_hash,
-            model_version
+            "model_inference", image_hash, model_version
         )
 
         return self.redis_client.get(cache_key)
@@ -86,9 +75,7 @@ class CacheService:
         cache_key = self._generate_cache_key("user_session", user_id)
 
         return self.redis_client.set(
-            cache_key,
-            session_data,
-            expire=self.ttl_config['user_session']
+            cache_key, session_data, expire=self.ttl_config["user_session"]
         )
 
     def get_user_session(self, user_id: str) -> Optional[dict]:
@@ -102,29 +89,18 @@ class CacheService:
         return bool(self.redis_client.delete(cache_key))
 
     def cache_api_response(
-        self,
-        endpoint: str,
-        params: dict,
-        response_data: Any
+        self, endpoint: str, params: dict, response_data: Any
     ) -> bool:
         """Cache API response data."""
-        cache_key = self._generate_cache_key(
-            "api_response", endpoint, **params)
+        cache_key = self._generate_cache_key("api_response", endpoint, **params)
 
         return self.redis_client.set(
-            cache_key,
-            response_data,
-            expire=self.ttl_config['api_response']
+            cache_key, response_data, expire=self.ttl_config["api_response"]
         )
 
-    def get_cached_api_response(
-        self,
-        endpoint: str,
-        params: dict
-    ) -> Optional[Any]:
+    def get_cached_api_response(self, endpoint: str, params: dict) -> Optional[Any]:
         """Retrieve cached API response."""
-        cache_key = self._generate_cache_key(
-            "api_response", endpoint, **params)
+        cache_key = self._generate_cache_key("api_response", endpoint, **params)
         return self.redis_client.get(cache_key)
 
     def cache_food_metadata(self, food_id: str, metadata: dict) -> bool:
@@ -132,9 +108,7 @@ class CacheService:
         cache_key = self._generate_cache_key("food_metadata", food_id)
 
         return self.redis_client.set(
-            cache_key,
-            metadata,
-            expire=self.ttl_config['food_metadata']
+            cache_key, metadata, expire=self.ttl_config["food_metadata"]
         )
 
     def get_cached_food_metadata(self, food_id: str) -> Optional[dict]:
@@ -143,67 +117,35 @@ class CacheService:
         return self.redis_client.get(cache_key)
 
     def cache_weekly_insights(
-        self,
-        user_id: str,
-        week_start: str,
-        insights: dict
+        self, user_id: str, week_start: str, insights: dict
     ) -> bool:
         """Cache weekly insights data."""
-        cache_key = self._generate_cache_key(
-            "weekly_insights",
-            user_id,
-            week_start
-        )
+        cache_key = self._generate_cache_key("weekly_insights", user_id, week_start)
 
         return self.redis_client.set(
-            cache_key,
-            insights,
-            expire=self.ttl_config['weekly_insights']
+            cache_key, insights, expire=self.ttl_config["weekly_insights"]
         )
 
     def get_cached_weekly_insights(
-        self,
-        user_id: str,
-        week_start: str
+        self, user_id: str, week_start: str
     ) -> Optional[dict]:
         """Retrieve cached weekly insights."""
-        cache_key = self._generate_cache_key(
-            "weekly_insights",
-            user_id,
-            week_start
-        )
+        cache_key = self._generate_cache_key("weekly_insights", user_id, week_start)
         return self.redis_client.get(cache_key)
 
     def cache_user_history(
-        self,
-        user_id: str,
-        date_range: str,
-        history_data: list
+        self, user_id: str, date_range: str, history_data: list
     ) -> bool:
         """Cache user meal history."""
-        cache_key = self._generate_cache_key(
-            "user_history",
-            user_id,
-            date_range
-        )
+        cache_key = self._generate_cache_key("user_history", user_id, date_range)
 
         return self.redis_client.set(
-            cache_key,
-            history_data,
-            expire=self.ttl_config['user_history']
+            cache_key, history_data, expire=self.ttl_config["user_history"]
         )
 
-    def get_cached_user_history(
-        self,
-        user_id: str,
-        date_range: str
-    ) -> Optional[list]:
+    def get_cached_user_history(self, user_id: str, date_range: str) -> Optional[list]:
         """Retrieve cached user meal history."""
-        cache_key = self._generate_cache_key(
-            "user_history",
-            user_id,
-            date_range
-        )
+        cache_key = self._generate_cache_key("user_history", user_id, date_range)
         return self.redis_client.get(cache_key)
 
     def invalidate_user_cache(self, user_id: str) -> int:
@@ -211,7 +153,7 @@ class CacheService:
         patterns = [
             f"user_session:{user_id}",
             f"weekly_insights:{user_id}:*",
-            f"user_history:{user_id}:*"
+            f"user_history:{user_id}:*",
         ]
 
         deleted_count = 0
@@ -220,7 +162,7 @@ class CacheService:
                 # Use scan for pattern matching
                 keys = []
                 for key in self.redis_client.client.scan_iter(match=pattern):
-                    keys.append(key.decode('utf-8'))
+                    keys.append(key.decode("utf-8"))
                 if keys:
                     deleted_count += self.redis_client.delete(*keys)
             else:
@@ -234,17 +176,16 @@ class CacheService:
             info = self.redis_client.get_info()
 
             return {
-                'connected_clients': info.get('connected_clients', 0),
-                'used_memory': info.get('used_memory_human', '0B'),
-                'used_memory_peak': info.get('used_memory_peak_human', '0B'),
-                'keyspace_hits': info.get('keyspace_hits', 0),
-                'keyspace_misses': info.get('keyspace_misses', 0),
-                'hit_rate': self._calculate_hit_rate(
-                    info.get('keyspace_hits', 0),
-                    info.get('keyspace_misses', 0)
+                "connected_clients": info.get("connected_clients", 0),
+                "used_memory": info.get("used_memory_human", "0B"),
+                "used_memory_peak": info.get("used_memory_peak_human", "0B"),
+                "keyspace_hits": info.get("keyspace_hits", 0),
+                "keyspace_misses": info.get("keyspace_misses", 0),
+                "hit_rate": self._calculate_hit_rate(
+                    info.get("keyspace_hits", 0), info.get("keyspace_misses", 0)
                 ),
-                'total_commands_processed': info.get('total_commands_processed', 0),
-                'uptime_in_seconds': info.get('uptime_in_seconds', 0)
+                "total_commands_processed": info.get("total_commands_processed", 0),
+                "uptime_in_seconds": info.get("uptime_in_seconds", 0),
             }
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
@@ -262,7 +203,7 @@ class CacheService:
         # This is mainly for monitoring purposes
         try:
             info = self.redis_client.get_info()
-            return info.get('expired_keys', 0)
+            return info.get("expired_keys", 0)
         except Exception as e:
             logger.error(f"Failed to get expired keys count: {e}")
             return 0
@@ -271,9 +212,10 @@ class CacheService:
 def cache_result(
     cache_type: str,
     ttl: Optional[Union[int, timedelta]] = None,
-    key_generator: Optional[Callable] = None
+    key_generator: Optional[Callable] = None,
 ):
     """Decorator for caching function results."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -284,9 +226,7 @@ def cache_result(
                 cache_key = key_generator(*args, **kwargs)
             else:
                 cache_key = cache_service._generate_cache_key(
-                    f"{cache_type}:{func.__name__}",
-                    *args,
-                    **kwargs
+                    f"{cache_type}:{func.__name__}", *args, **kwargs
                 )
 
             # Try to get from cache
@@ -300,7 +240,8 @@ def cache_result(
 
             # Cache the result
             cache_ttl = ttl or cache_service.ttl_config.get(
-                cache_type, timedelta(minutes=15))
+                cache_type, timedelta(minutes=15)
+            )
             cache_service.redis_client.set(cache_key, result, expire=cache_ttl)
 
             logger.debug(f"Cached result for key: {cache_key}")
@@ -315,9 +256,7 @@ def cache_result(
                 cache_key = key_generator(*args, **kwargs)
             else:
                 cache_key = cache_service._generate_cache_key(
-                    f"{cache_type}:{func.__name__}",
-                    *args,
-                    **kwargs
+                    f"{cache_type}:{func.__name__}", *args, **kwargs
                 )
 
             # Try to get from cache
@@ -331,7 +270,8 @@ def cache_result(
 
             # Cache the result
             cache_ttl = ttl or cache_service.ttl_config.get(
-                cache_type, timedelta(minutes=15))
+                cache_type, timedelta(minutes=15)
+            )
             cache_service.redis_client.set(cache_key, result, expire=cache_ttl)
 
             logger.debug(f"Cached result for key: {cache_key}")
@@ -339,6 +279,7 @@ def cache_result(
 
         # Return appropriate wrapper based on function type
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:

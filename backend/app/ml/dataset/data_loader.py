@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FoodItem:
     """Represents a Nigerian food item with metadata."""
+
     name: str
     local_names: List[str]
     food_class: str
@@ -37,7 +38,7 @@ class NigerianFoodDataset(Dataset):
         data_dir: Union[str, Path],
         transform=None,
         target_transform=None,
-        split: str = "train"
+        split: str = "train",
     ):
         """
         Initialize Nigerian food dataset.
@@ -66,21 +67,20 @@ class NigerianFoodDataset(Dataset):
         metadata_path = self.data_dir / "metadata" / "nigerian_foods.json"
 
         if not metadata_path.exists():
-            raise FileNotFoundError(
-                f"Metadata file not found: {metadata_path}")
+            raise FileNotFoundError(f"Metadata file not found: {metadata_path}")
 
-        with open(metadata_path, 'r', encoding='utf-8') as f:
+        with open(metadata_path, "r", encoding="utf-8") as f:
             metadata = json.load(f)
 
         food_items = {}
-        for item_data in metadata['foods']:
+        for item_data in metadata["foods"]:
             food_item = FoodItem(
-                name=item_data['name'],
-                local_names=item_data.get('local_names', []),
-                food_class=item_data['food_class'],
-                image_paths=item_data.get('image_paths', []),
-                nutritional_category=item_data['nutritional_category'],
-                cultural_context=item_data.get('cultural_context')
+                name=item_data["name"],
+                local_names=item_data.get("local_names", []),
+                food_class=item_data["food_class"],
+                image_paths=item_data.get("image_paths", []),
+                nutritional_category=item_data["nutritional_category"],
+                cultural_context=item_data.get("cultural_context"),
             )
             food_items[food_item.name] = food_item
 
@@ -88,9 +88,9 @@ class NigerianFoodDataset(Dataset):
 
     def _create_class_mapping(self) -> Dict[str, int]:
         """Create mapping from food class names to indices."""
-        unique_classes = sorted(set(
-            item.food_class for item in self.food_items.values()
-        ))
+        unique_classes = sorted(
+            set(item.food_class for item in self.food_items.values())
+        )
         return {cls_name: idx for idx, cls_name in enumerate(unique_classes)}
 
     def _load_samples(self) -> List[Tuple[str, int]]:
@@ -103,7 +103,7 @@ class NigerianFoodDataset(Dataset):
 
         for food_name, food_item in self.food_items.items():
             class_idx = self.class_to_idx[food_item.food_class]
-            food_dir = split_dir / food_name.replace(' ', '_').lower()
+            food_dir = split_dir / food_name.replace(" ", "_").lower()
 
             if food_dir.exists():
                 for img_path in food_dir.glob("*.jpg"):
@@ -123,11 +123,11 @@ class NigerianFoodDataset(Dataset):
 
         # Load image
         try:
-            image = Image.open(img_path).convert('RGB')
+            image = Image.open(img_path).convert("RGB")
         except Exception as e:
             logger.error(f"Error loading image {img_path}: {e}")
             # Return a black image as fallback
-            image = Image.new('RGB', (224, 224), color='black')
+            image = Image.new("RGB", (224, 224), color="black")
 
         # Apply transformations
         if self.transform:
@@ -165,31 +165,24 @@ class DatasetLoader:
 
     def _validate_dataset_structure(self):
         """Validate that dataset has required structure."""
-        required_dirs = [
-            "images/train",
-            "images/val",
-            "images/test",
-            "metadata"
-        ]
+        required_dirs = ["images/train", "images/val", "images/test", "metadata"]
 
         for dir_path in required_dirs:
             full_path = self.data_dir / dir_path
             if not full_path.exists():
-                raise FileNotFoundError(
-                    f"Required directory not found: {full_path}")
+                raise FileNotFoundError(f"Required directory not found: {full_path}")
 
         # Check for metadata file
         metadata_file = self.data_dir / "metadata" / "nigerian_foods.json"
         if not metadata_file.exists():
-            raise FileNotFoundError(
-                f"Metadata file not found: {metadata_file}")
+            raise FileNotFoundError(f"Metadata file not found: {metadata_file}")
 
     def create_dataloaders(
         self,
         batch_size: int = 32,
         num_workers: int = 4,
         train_transform=None,
-        val_transform=None
+        val_transform=None,
     ) -> Tuple[DataLoader, DataLoader, DataLoader]:
         """
         Create train, validation, and test dataloaders.
@@ -220,7 +213,7 @@ class DatasetLoader:
             batch_size=batch_size,
             shuffle=True,
             num_workers=num_workers,
-            pin_memory=torch.cuda.is_available()
+            pin_memory=torch.cuda.is_available(),
         )
 
         val_loader = DataLoader(
@@ -228,7 +221,7 @@ class DatasetLoader:
             batch_size=batch_size,
             shuffle=False,
             num_workers=num_workers,
-            pin_memory=torch.cuda.is_available()
+            pin_memory=torch.cuda.is_available(),
         )
 
         test_loader = DataLoader(
@@ -236,7 +229,7 @@ class DatasetLoader:
             batch_size=batch_size,
             shuffle=False,
             num_workers=num_workers,
-            pin_memory=torch.cuda.is_available()
+            pin_memory=torch.cuda.is_available(),
         )
 
         return train_loader, val_loader, test_loader
@@ -250,7 +243,7 @@ class DatasetLoader:
             stats[split] = {
                 "num_samples": len(dataset),
                 "num_classes": len(dataset.class_to_idx),
-                "class_names": dataset.get_class_names()
+                "class_names": dataset.get_class_names(),
             }
 
         return stats

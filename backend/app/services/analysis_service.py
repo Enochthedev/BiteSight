@@ -28,19 +28,21 @@ class AnalysisService:
                 food_name="jollof_rice",
                 confidence=0.95,
                 food_class="carbohydrates",
-                bounding_box={"x": 0.1, "y": 0.1, "width": 0.4, "height": 0.4}
+                bounding_box={"x": 0.1, "y": 0.1, "width": 0.4, "height": 0.4},
             ),
             FoodDetectionResult(
                 food_name="chicken",
                 confidence=0.88,
                 food_class="proteins",
-                bounding_box={"x": 0.5, "y": 0.2, "width": 0.3, "height": 0.3}
-            )
+                bounding_box={"x": 0.5, "y": 0.2, "width": 0.3, "height": 0.3},
+            ),
         ]
 
         return mock_detections
 
-    def classify_nutrition(self, detected_foods: List[FoodDetectionResult]) -> Dict[str, Any]:
+    def classify_nutrition(
+        self, detected_foods: List[FoodDetectionResult]
+    ) -> Dict[str, Any]:
         """Classify detected foods into nutritional categories using rule engine."""
         # Convert FoodDetectionResult objects to dictionaries
         foods_dict = [
@@ -48,7 +50,7 @@ class AnalysisService:
                 "food_name": food.food_name,
                 "confidence": food.confidence,
                 "food_class": food.food_class,
-                "bounding_box": food.bounding_box
+                "bounding_box": food.bounding_box,
             }
             for food in detected_foods
         ]
@@ -68,16 +70,18 @@ class AnalysisService:
             fats=nutrition_profile.get("fats", 0.0),
             vitamins=nutrition_profile.get("vitamins", 0.0),
             minerals=nutrition_profile.get("minerals", 0.0),
-            water=nutrition_profile.get("water", 0.0)
+            water=nutrition_profile.get("water", 0.0),
         )
 
         return {
             "missing_food_groups": profile.get_missing_groups(),
             "balance_score": profile.calculate_balance_score(),
-            "nutrition_distribution": nutrition_profile
+            "nutrition_distribution": nutrition_profile,
         }
 
-    async def analyze_nutrition_with_rules(self, detected_foods: List[FoodDetectionResult]) -> Dict[str, Any]:
+    async def analyze_nutrition_with_rules(
+        self, detected_foods: List[FoodDetectionResult]
+    ) -> Dict[str, Any]:
         """Perform complete nutrition analysis using rule engine."""
         try:
             # Convert to dictionary format
@@ -86,14 +90,13 @@ class AnalysisService:
                     "food_name": food.food_name,
                     "confidence": food.confidence,
                     "food_class": food.food_class,
-                    "bounding_box": food.bounding_box
+                    "bounding_box": food.bounding_box,
                 }
                 for food in detected_foods
             ]
 
             # Use nutrition engine for complete analysis
-            analysis_result = self.nutrition_engine.analyze_nutrition(
-                foods_dict)
+            analysis_result = self.nutrition_engine.analyze_nutrition(foods_dict)
 
             return analysis_result
 
@@ -109,7 +112,9 @@ class AnalysisService:
                 "missing_food_groups": insights["missing_food_groups"],
                 "matching_rules": [],
                 "detected_food_count": len(detected_foods),
-                "food_classes_present": list(set(food.food_class for food in detected_foods))
+                "food_classes_present": list(
+                    set(food.food_class for food in detected_foods)
+                ),
             }
 
 

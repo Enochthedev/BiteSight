@@ -78,32 +78,23 @@ def custom_openapi(app: FastAPI) -> Dict[str, Any]:
     openapi_schema["tags"] = [
         {
             "name": "authentication",
-            "description": "User registration, login, and authentication management"
+            "description": "User registration, login, and authentication management",
         },
         {
             "name": "consent",
-            "description": "Privacy consent management and data usage preferences"
+            "description": "Privacy consent management and data usage preferences",
         },
-        {
-            "name": "meals",
-            "description": "Meal image upload and management"
-        },
+        {"name": "meals", "description": "Meal image upload and management"},
         {
             "name": "inference",
-            "description": "AI-powered food recognition and analysis"
+            "description": "AI-powered food recognition and analysis",
         },
-        {
-            "name": "feedback",
-            "description": "Nutritional feedback and recommendations"
-        },
-        {
-            "name": "history",
-            "description": "Meal history tracking and weekly insights"
-        },
+        {"name": "feedback", "description": "Nutritional feedback and recommendations"},
+        {"name": "history", "description": "Meal history tracking and weekly insights"},
         {
             "name": "admin",
-            "description": "Administrative functions for dataset and rule management"
-        }
+            "description": "Administrative functions for dataset and rule management",
+        },
     ]
 
     # Add security schemes
@@ -112,73 +103,102 @@ def custom_openapi(app: FastAPI) -> Dict[str, Any]:
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-            "description": "JWT token obtained from the login endpoint"
+            "description": "JWT token obtained from the login endpoint",
         }
     }
 
     # Add common response schemas
-    openapi_schema["components"]["schemas"].update({
-        "ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "object",
-                    "properties": {
-                        "code": {"type": "integer", "example": 400},
-                        "message": {"type": "string", "example": "Error description"},
-                        "type": {"type": "string", "example": "validation_error"},
-                        "timestamp": {"type": "number", "example": 1234567890.123},
-                        "path": {"type": "string", "example": "/api/v1/endpoint"}
+    openapi_schema["components"]["schemas"].update(
+        {
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "object",
+                        "properties": {
+                            "code": {"type": "integer", "example": 400},
+                            "message": {
+                                "type": "string",
+                                "example": "Error description",
+                            },
+                            "type": {"type": "string", "example": "validation_error"},
+                            "timestamp": {"type": "number", "example": 1234567890.123},
+                            "path": {"type": "string", "example": "/api/v1/endpoint"},
+                        },
                     }
-                }
-            }
-        },
-        "SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "message": {"type": "string", "example": "Operation completed successfully"},
-                "data": {"type": "object", "description": "Response data"}
-            }
-        },
-        "NigerianFood": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string", "example": "Jollof Rice"},
-                "local_names": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "example": ["Jollof", "Party Rice"]
                 },
-                "food_class": {
-                    "type": "string",
-                    "enum": ["carbohydrates", "proteins", "fats_oils", "vitamins", "minerals", "water"],
-                    "example": "carbohydrates"
+            },
+            "SuccessResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Operation completed successfully",
+                    },
+                    "data": {"type": "object", "description": "Response data"},
                 },
-                "confidence": {"type": "number", "minimum": 0, "maximum": 1, "example": 0.95}
-            }
-        },
-        "NutritionFeedback": {
-            "type": "object",
-            "properties": {
-                "overall_balance": {"type": "string", "example": "Good balance with room for improvement"},
-                "missing_groups": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "example": ["vegetables", "fruits"]
+            },
+            "NigerianFood": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "example": "Jollof Rice"},
+                    "local_names": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "example": ["Jollof", "Party Rice"],
+                    },
+                    "food_class": {
+                        "type": "string",
+                        "enum": [
+                            "carbohydrates",
+                            "proteins",
+                            "fats_oils",
+                            "vitamins",
+                            "minerals",
+                            "water",
+                        ],
+                        "example": "carbohydrates",
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.95,
+                    },
                 },
-                "recommendations": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "example": ["Try adding some efo riro for vitamins", "Include fruits like orange or banana"]
+            },
+            "NutritionFeedback": {
+                "type": "object",
+                "properties": {
+                    "overall_balance": {
+                        "type": "string",
+                        "example": "Good balance with room for improvement",
+                    },
+                    "missing_groups": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "example": ["vegetables", "fruits"],
+                    },
+                    "recommendations": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "example": [
+                            "Try adding some efo riro for vitamins",
+                            "Include fruits like orange or banana",
+                        ],
+                    },
+                    "positive_aspects": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "example": [
+                            "Good protein source with chicken",
+                            "Adequate carbohydrates from rice",
+                        ],
+                    },
                 },
-                "positive_aspects": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "example": ["Good protein source with chicken", "Adequate carbohydrates from rice"]
-                }
-            }
+            },
         }
-    })
+    )
 
     # Add examples for common request/response patterns
     openapi_schema["components"]["examples"] = {
@@ -187,8 +207,8 @@ def custom_openapi(app: FastAPI) -> Dict[str, Any]:
             "value": {
                 "message": "Meal uploaded successfully",
                 "meal_id": "123e4567-e89b-12d3-a456-426614174000",
-                "status": "processing"
-            }
+                "status": "processing",
+            },
         },
         "FoodRecognitionResult": {
             "summary": "Food recognition results",
@@ -197,16 +217,16 @@ def custom_openapi(app: FastAPI) -> Dict[str, Any]:
                     {
                         "name": "Jollof Rice",
                         "confidence": 0.95,
-                        "food_class": "carbohydrates"
+                        "food_class": "carbohydrates",
                     },
                     {
                         "name": "Fried Chicken",
                         "confidence": 0.88,
-                        "food_class": "proteins"
-                    }
+                        "food_class": "proteins",
+                    },
                 ],
-                "analysis_complete": True
-            }
+                "analysis_complete": True,
+            },
         },
         "ValidationError": {
             "summary": "Validation error example",
@@ -219,12 +239,12 @@ def custom_openapi(app: FastAPI) -> Dict[str, Any]:
                         {
                             "loc": ["body", "email"],
                             "msg": "field required",
-                            "type": "value_error.missing"
+                            "type": "value_error.missing",
                         }
-                    ]
+                    ],
                 }
-            }
-        }
+            },
+        },
     }
 
     app.openapi_schema = openapi_schema
@@ -249,11 +269,11 @@ COMMON_RESPONSES = {
                         "message": "Invalid request data",
                         "type": "bad_request",
                         "timestamp": 1234567890.123,
-                        "path": "/api/v1/endpoint"
+                        "path": "/api/v1/endpoint",
                     }
-                }
+                },
             }
-        }
+        },
     },
     "401": {
         "description": "Unauthorized",
@@ -266,11 +286,11 @@ COMMON_RESPONSES = {
                         "message": "Authentication required",
                         "type": "authentication_error",
                         "timestamp": 1234567890.123,
-                        "path": "/api/v1/endpoint"
+                        "path": "/api/v1/endpoint",
                     }
-                }
+                },
             }
-        }
+        },
     },
     "403": {
         "description": "Forbidden",
@@ -283,11 +303,11 @@ COMMON_RESPONSES = {
                         "message": "Insufficient permissions or consent required",
                         "type": "permission_error",
                         "timestamp": 1234567890.123,
-                        "path": "/api/v1/endpoint"
+                        "path": "/api/v1/endpoint",
                     }
-                }
+                },
             }
-        }
+        },
     },
     "404": {
         "description": "Not Found",
@@ -300,11 +320,11 @@ COMMON_RESPONSES = {
                         "message": "Resource not found",
                         "type": "not_found",
                         "timestamp": 1234567890.123,
-                        "path": "/api/v1/endpoint"
+                        "path": "/api/v1/endpoint",
                     }
-                }
+                },
             }
-        }
+        },
     },
     "422": {
         "description": "Validation Error",
@@ -312,10 +332,12 @@ COMMON_RESPONSES = {
             "application/json": {
                 "schema": {"$ref": "#/components/schemas/ErrorResponse"},
                 "examples": {
-                    "validation_error": {"$ref": "#/components/examples/ValidationError"}
-                }
+                    "validation_error": {
+                        "$ref": "#/components/examples/ValidationError"
+                    }
+                },
             }
-        }
+        },
     },
     "429": {
         "description": "Rate Limit Exceeded",
@@ -329,11 +351,11 @@ COMMON_RESPONSES = {
                         "type": "rate_limit_error",
                         "retry_after": 60,
                         "timestamp": 1234567890.123,
-                        "path": "/api/v1/endpoint"
+                        "path": "/api/v1/endpoint",
                     }
-                }
+                },
             }
-        }
+        },
     },
     "500": {
         "description": "Internal Server Error",
@@ -346,10 +368,10 @@ COMMON_RESPONSES = {
                         "message": "Internal server error",
                         "type": "internal_error",
                         "timestamp": 1234567890.123,
-                        "path": "/api/v1/endpoint"
+                        "path": "/api/v1/endpoint",
                     }
-                }
+                },
             }
-        }
-    }
+        },
+    },
 }

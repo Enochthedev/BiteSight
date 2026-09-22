@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ModelInfo:
     """Information about a loaded model."""
+
     model_id: str
     model_path: str
     num_classes: int
@@ -37,6 +38,7 @@ class ModelInfo:
 @dataclass
 class ServingConfig:
     """Configuration for model serving."""
+
     model_path: str
     food_mapping_path: Optional[str] = None
     device: str = "auto"
@@ -62,14 +64,12 @@ class ModelManager:
         self.models: Dict[str, FoodPredictor] = {}
         self.model_info: Dict[str, ModelInfo] = {}
         self.lock = threading.RLock()
-        self.executor = ThreadPoolExecutor(
-            max_workers=config.max_concurrent_requests)
+        self.executor = ThreadPoolExecutor(max_workers=config.max_concurrent_requests)
 
         # Load food mapper if provided
         self.food_mapper = None
         if config.food_mapping_path:
-            self.food_mapper = NigerianFoodMapper(
-                Path(config.food_mapping_path))
+            self.food_mapper = NigerianFoodMapper(Path(config.food_mapping_path))
 
         # Load primary model
         self._load_primary_model()
@@ -88,12 +88,11 @@ class ModelManager:
                 confidence_threshold=self.config.confidence_threshold,
                 enable_caching=True,
                 cache_size=self.config.prediction_cache_size,
-                warmup_iterations=self.config.warmup_samples
+                warmup_iterations=self.config.warmup_samples,
             )
 
             predictor = FoodPredictor(
-                config=inference_config,
-                food_mapper=self.food_mapper
+                config=inference_config, food_mapper=self.food_mapper
             )
 
             # Store model and info
@@ -104,12 +103,12 @@ class ModelManager:
                 self.model_info[model_id] = ModelInfo(
                     model_id=model_id,
                     model_path=self.config.model_path,
-                    num_classes=model_info_dict['num_classes'],
-                    class_names=model_info_dict['class_names'],
+                    num_classes=model_info_dict["num_classes"],
+                    class_names=model_info_dict["class_names"],
                     loaded_at=time.time(),
                     last_used=time.time(),
                     prediction_count=0,
-                    average_inference_time=0.0
+                    average_inference_time=0.0,
                 )
 
             logger.info(f"Loaded primary model: {model_id}")
@@ -150,8 +149,8 @@ class ModelManager:
                     # Exponential moving average
                     alpha = 0.1
                     info.average_inference_time = (
-                        alpha * inference_time +
-                        (1 - alpha) * info.average_inference_time
+                        alpha * inference_time
+                        + (1 - alpha) * info.average_inference_time
                     )
 
     def cleanup(self):
@@ -173,8 +172,7 @@ class ModelServer:
     def __init__(self, config: ServingConfig):
         self.config = config
         self.model_manager = ModelManager(config)
-        self.request_semaphore = asyncio.Semaphore(
-            config.max_concurrent_requests)
+        self.request_semaphore = asyncio.Semaphore(config.max_concurrent_requests)
         self.is_healthy = True
         self.start_time = time.time()
 
@@ -184,7 +182,7 @@ class ModelServer:
         self,
         image_data: Any,
         model_id: str = "primary",
-        return_all_scores: bool = False
+        return_all_scores: bool = False,
     ) -> Union[PredictionResult, List[PredictionResult], None]:
         """
         Predict food class for single image.
@@ -210,7 +208,7 @@ class ModelServer:
                 loop = asyncio.get_event_loop()
                 result = await loop.run_in_executor(
                     self.model_manager.executor,
-                    lambda: model.predict_single(image_data, return_all_scores)
+                    lambda: model.predict_single(image_data, return_all_scores),
                 )
 
                 # Update stats
@@ -227,7 +225,7 @@ class ModelServer:
         self,
         images_data: List[Any],
         model_id: str = "primary",
-        return_all_scores: bool = False
+        return_all_scores: bool = False,
     ) -> List[Union[PredictionResult, List[PredictionResult], None]]:
         """
         Predict food classes for batch of images.
@@ -261,7 +259,7 @@ class ModelServer:
                 loop = asyncio.get_event_loop()
                 results = await loop.run_in_executor(
                     self.model_manager.executor,
-                    lambda: model.predict_batch(images_data, return_all_scores)
+                    lambda: model.predict_batch(images_data, return_all_scores),
                 )
 
                 # Update stats
@@ -275,9 +273,7 @@ class ModelServer:
                 return [None] * len(images_data)
 
     async def analyze_meal_nutrition(
-        self,
-        images_data: List[Any],
-        model_id: str = "primary"
+        self, images_data: List[Any], model_id: str = "primary"
     ) -> Optional[Dict[str, Any]]:
         """
         Analyze nutritional content of a meal from multiple images.
@@ -302,7 +298,7 @@ class ModelServer:
                 loop = asyncio.get_event_loop()
                 result = await loop.run_in_executor(
                     self.model_manager.executor,
-                    lambda: model.analyze_meal_nutrition(images_data)
+                    lambda: model.analyze_meal_nutrition(images_data),
                 )
 
                 # Update stats
@@ -318,8 +314,7 @@ class ModelServer:
     def get_server_status(self) -> Dict[str, Any]:
         """Get server status and statistics."""
         uptime = time.time() - self.start_time
-        models_info = [asdict(info)
-                       for info in self.model_manager.list_models()]
+        models_info = [asdict(info) for info in self.model_manager.list_models()]
 
         return {
             "status": "healthy" if self.is_healthy else "unhealthy",
@@ -329,8 +324,8 @@ class ModelServer:
                 "max_batch_size": self.config.max_batch_size,
                 "max_concurrent_requests": self.config.max_concurrent_requests,
                 "confidence_threshold": self.config.confidence_threshold,
-                "enable_batch_processing": self.config.enable_batch_processing
-            }
+                "enable_batch_processing": self.config.enable_batch_processing,
+            },
         }
 
     async def health_check(self) -> bool:
@@ -385,8 +380,7 @@ def get_server_instance(config: Optional[ServingConfig] = None) -> ModelServer:
     with _server_lock:
         if _server_instance is None:
             if config is None:
-                raise ValueError(
-                    "Config required for first server initialization")
+                raise ValueError("Config required for first server initialization")
             _server_instance = ModelServer(config)
 
         return _server_instance
@@ -425,7 +419,7 @@ async def quick_predict(
     image_data: Any,
     model_path: str,
     food_mapping_path: Optional[str] = None,
-    confidence_threshold: float = 0.1
+    confidence_threshold: float = 0.1,
 ) -> Optional[PredictionResult]:
     """
     Quick prediction utility for single images.
@@ -443,7 +437,7 @@ async def quick_predict(
         model_path=model_path,
         food_mapping_path=food_mapping_path,
         confidence_threshold=confidence_threshold,
-        warmup_samples=1
+        warmup_samples=1,
     )
 
     async with model_server_context(config) as server:
@@ -454,7 +448,7 @@ async def quick_meal_analysis(
     images_data: List[Any],
     model_path: str,
     food_mapping_path: str,
-    confidence_threshold: float = 0.1
+    confidence_threshold: float = 0.1,
 ) -> Optional[Dict[str, Any]]:
     """
     Quick meal analysis utility.
@@ -472,7 +466,7 @@ async def quick_meal_analysis(
         model_path=model_path,
         food_mapping_path=food_mapping_path,
         confidence_threshold=confidence_threshold,
-        warmup_samples=1
+        warmup_samples=1,
     )
 
     async with model_server_context(config) as server:

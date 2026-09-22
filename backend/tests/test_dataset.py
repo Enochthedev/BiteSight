@@ -14,14 +14,22 @@ import torch
 
 from app.ml.dataset.data_loader import NigerianFoodDataset, DatasetLoader, FoodItem
 from app.ml.dataset.augmentation import (
-    FoodAugmentation, FoodSpecificTransform, AugmentationConfig,
-    get_training_transforms, get_validation_transforms
+    FoodAugmentation,
+    FoodSpecificTransform,
+    AugmentationConfig,
+    get_training_transforms,
+    get_validation_transforms,
 )
 from app.ml.dataset.validation import (
-    ImageQualityChecker, DatasetValidator, ImageQualityMetrics
+    ImageQualityChecker,
+    DatasetValidator,
+    ImageQualityMetrics,
 )
 from app.ml.dataset.food_mapping import (
-    NigerianFoodMapper, NutritionalCategory, FoodClassInfo, create_sample_metadata_file
+    NigerianFoodMapper,
+    NutritionalCategory,
+    FoodClassInfo,
+    create_sample_metadata_file,
 )
 
 
@@ -35,9 +43,9 @@ class TestDataLoader:
             temp_path = Path(temp_dir)
 
             # Create directory structure
-            for split in ['train', 'val', 'test']:
-                (temp_path / 'images' / split).mkdir(parents=True)
-            (temp_path / 'metadata').mkdir()
+            for split in ["train", "val", "test"]:
+                (temp_path / "images" / split).mkdir(parents=True)
+            (temp_path / "metadata").mkdir()
 
             # Create sample metadata
             metadata = {
@@ -46,29 +54,29 @@ class TestDataLoader:
                         "name": "jollof_rice",
                         "local_names": ["jollof"],
                         "food_class": "jollof_rice",
-                        "nutritional_category": "carbohydrates"
+                        "nutritional_category": "carbohydrates",
                     },
                     {
                         "name": "beans",
                         "local_names": ["ewa"],
                         "food_class": "beans",
-                        "nutritional_category": "proteins"
-                    }
+                        "nutritional_category": "proteins",
+                    },
                 ]
             }
 
-            with open(temp_path / 'metadata' / 'nigerian_foods.json', 'w') as f:
+            with open(temp_path / "metadata" / "nigerian_foods.json", "w") as f:
                 json.dump(metadata, f)
 
             # Create sample images
-            for split in ['train', 'val', 'test']:
-                for food in ['jollof_rice', 'beans']:
-                    food_dir = temp_path / 'images' / split / food
+            for split in ["train", "val", "test"]:
+                for food in ["jollof_rice", "beans"]:
+                    food_dir = temp_path / "images" / split / food
                     food_dir.mkdir()
 
                     # Create dummy image
-                    img = Image.new('RGB', (224, 224), color='red')
-                    img.save(food_dir / 'sample.jpg')
+                    img = Image.new("RGB", (224, 224), color="red")
+                    img.save(food_dir / "sample.jpg")
 
             yield temp_path
 
@@ -79,7 +87,7 @@ class TestDataLoader:
             local_names=["jollof", "party rice"],
             food_class="jollof_rice",
             image_paths=["/path/to/image.jpg"],
-            nutritional_category="carbohydrates"
+            nutritional_category="carbohydrates",
         )
 
         assert food_item.name == "jollof_rice"
@@ -122,8 +130,7 @@ class TestDataLoader:
     def test_create_dataloaders(self, temp_dataset_dir):
         """Test dataloader creation."""
         loader = DatasetLoader(temp_dataset_dir)
-        train_loader, val_loader, test_loader = loader.create_dataloaders(
-            batch_size=2)
+        train_loader, val_loader, test_loader = loader.create_dataloaders(batch_size=2)
 
         assert train_loader.batch_size == 2
         assert val_loader.batch_size == 2
@@ -134,14 +141,14 @@ class TestDataLoader:
         loader = DatasetLoader(temp_dataset_dir)
         stats = loader.get_dataset_statistics()
 
-        assert 'train' in stats
-        assert 'val' in stats
-        assert 'test' in stats
+        assert "train" in stats
+        assert "val" in stats
+        assert "test" in stats
 
         for split_stats in stats.values():
-            assert 'num_samples' in split_stats
-            assert 'num_classes' in split_stats
-            assert 'class_names' in split_stats
+            assert "num_samples" in split_stats
+            assert "num_classes" in split_stats
+            assert "class_names" in split_stats
 
 
 class TestAugmentation:
@@ -150,7 +157,7 @@ class TestAugmentation:
     @pytest.fixture
     def sample_image(self):
         """Create sample PIL image for testing."""
-        return Image.new('RGB', (224, 224), color='blue')
+        return Image.new("RGB", (224, 224), color="blue")
 
     def test_random_lighting(self, sample_image):
         """Test random lighting augmentation."""
@@ -173,16 +180,14 @@ class TestAugmentation:
     def test_random_blur(self, sample_image):
         """Test random blur augmentation."""
         # Test with high probability to ensure blur is applied
-        augmented = FoodAugmentation.random_blur(
-            sample_image, blur_probability=1.0)
+        augmented = FoodAugmentation.random_blur(sample_image, blur_probability=1.0)
         assert isinstance(augmented, Image.Image)
         assert augmented.size == sample_image.size
 
     def test_random_noise(self, sample_image):
         """Test random noise augmentation."""
         # Test with high probability to ensure noise is applied
-        augmented = FoodAugmentation.random_noise(
-            sample_image, noise_probability=1.0)
+        augmented = FoodAugmentation.random_noise(sample_image, noise_probability=1.0)
         assert isinstance(augmented, Image.Image)
         assert augmented.size == sample_image.size
 
@@ -198,7 +203,7 @@ class TestAugmentation:
         transforms = get_training_transforms()
 
         # Create sample tensor input
-        sample_image = Image.new('RGB', (256, 256), color='green')
+        sample_image = Image.new("RGB", (256, 256), color="green")
         result = transforms(sample_image)
 
         assert isinstance(result, torch.Tensor)
@@ -208,7 +213,7 @@ class TestAugmentation:
         """Test validation transform pipeline."""
         transforms = get_validation_transforms()
 
-        sample_image = Image.new('RGB', (256, 256), color='green')
+        sample_image = Image.new("RGB", (256, 256), color="green")
         result = transforms(sample_image)
 
         assert isinstance(result, torch.Tensor)
@@ -217,9 +222,7 @@ class TestAugmentation:
     def test_augmentation_config(self):
         """Test AugmentationConfig class."""
         config = AugmentationConfig(
-            input_size=256,
-            horizontal_flip_prob=0.3,
-            rotation_degrees=10
+            input_size=256, horizontal_flip_prob=0.3, rotation_degrees=10
         )
 
         train_transforms = config.get_training_transforms()
@@ -235,8 +238,8 @@ class TestValidation:
     @pytest.fixture
     def sample_image_path(self):
         """Create temporary image file."""
-        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as f:
-            img = Image.new('RGB', (300, 300), color='red')
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
+            img = Image.new("RGB", (300, 300), color="red")
             img.save(f.name)
             yield Path(f.name)
             Path(f.name).unlink()
@@ -287,12 +290,12 @@ class TestValidation:
             temp_path = Path(temp_dir)
 
             # Create minimal structure
-            for split in ['train', 'val', 'test']:
-                (temp_path / 'images' / split).mkdir(parents=True)
-            (temp_path / 'metadata').mkdir()
+            for split in ["train", "val", "test"]:
+                (temp_path / "images" / split).mkdir(parents=True)
+            (temp_path / "metadata").mkdir()
 
             # Create metadata file
-            with open(temp_path / 'metadata' / 'nigerian_foods.json', 'w') as f:
+            with open(temp_path / "metadata" / "nigerian_foods.json", "w") as f:
                 json.dump({"foods": []}, f)
 
             validator = DatasetValidator(temp_path)
@@ -312,10 +315,10 @@ class TestValidation:
         """Test metadata validation."""
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            (temp_path / 'metadata').mkdir()
+            (temp_path / "metadata").mkdir()
 
             # Create invalid metadata
-            with open(temp_path / 'metadata' / 'nigerian_foods.json', 'w') as f:
+            with open(temp_path / "metadata" / "nigerian_foods.json", "w") as f:
                 json.dump({"invalid": "structure"}, f)
 
             validator = DatasetValidator(temp_path)
@@ -340,7 +343,7 @@ class TestFoodMapping:
             name="jollof_rice",
             local_names=["jollof"],
             nutritional_category=NutritionalCategory.CARBOHYDRATES,
-            cultural_context="Popular rice dish"
+            cultural_context="Popular rice dish",
         )
 
         assert food_info.name == "jollof_rice"
@@ -361,7 +364,7 @@ class TestFoodMapping:
         food_info = FoodClassInfo(
             name="test_food",
             local_names=["test"],
-            nutritional_category=NutritionalCategory.PROTEINS
+            nutritional_category=NutritionalCategory.PROTEINS,
         )
 
         initial_count = len(mapper.food_classes)
@@ -402,10 +405,8 @@ class TestFoodMapping:
         """Test getting classes by nutritional category."""
         mapper = NigerianFoodMapper()
 
-        carb_classes = mapper.get_classes_by_category(
-            NutritionalCategory.CARBOHYDRATES)
-        protein_classes = mapper.get_classes_by_category(
-            NutritionalCategory.PROTEINS)
+        carb_classes = mapper.get_classes_by_category(NutritionalCategory.CARBOHYDRATES)
+        protein_classes = mapper.get_classes_by_category(NutritionalCategory.PROTEINS)
 
         assert len(carb_classes) > 0
         assert len(protein_classes) > 0
@@ -430,21 +431,17 @@ class TestFoodMapping:
         """Test meal nutrition analysis."""
         mapper = NigerianFoodMapper()
 
-        detected_foods = [
-            ("jollof_rice", 0.9),
-            ("beans", 0.8),
-            ("unknown_food", 0.7)
-        ]
+        detected_foods = [("jollof_rice", 0.9), ("beans", 0.8), ("unknown_food", 0.7)]
 
         analysis = mapper.analyze_meal_nutrition(detected_foods)
 
-        assert 'detected_foods' in analysis
-        assert 'category_distribution' in analysis
-        assert 'missing_categories' in analysis
-        assert 'balance_score' in analysis
+        assert "detected_foods" in analysis
+        assert "category_distribution" in analysis
+        assert "missing_categories" in analysis
+        assert "balance_score" in analysis
 
-        assert len(analysis['detected_foods']) == 2  # Only known foods
-        assert analysis['balance_score'] > 0
+        assert len(analysis["detected_foods"]) == 2  # Only known foods
+        assert analysis["balance_score"] > 0
 
     def test_get_recommendations(self):
         """Test getting recommendations for missing categories."""
@@ -452,7 +449,8 @@ class TestFoodMapping:
 
         missing_categories = ["vitamins", "fats_oils"]
         recommendations = mapper.get_recommendations_for_missing_categories(
-            missing_categories)
+            missing_categories
+        )
 
         assert isinstance(recommendations, dict)
         for category in missing_categories:
@@ -461,7 +459,7 @@ class TestFoodMapping:
 
     def test_create_sample_metadata_file(self):
         """Test sample metadata file creation."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             output_path = Path(f.name)
 
         try:
@@ -469,11 +467,11 @@ class TestFoodMapping:
 
             assert output_path.exists()
 
-            with open(output_path, 'r') as f:
+            with open(output_path, "r") as f:
                 data = json.load(f)
 
-            assert 'foods' in data
-            assert len(data['foods']) > 0
+            assert "foods" in data
+            assert len(data["foods"]) > 0
 
         finally:
             output_path.unlink()
@@ -482,7 +480,7 @@ class TestFoodMapping:
         """Test exporting food mappings."""
         mapper = NigerianFoodMapper()
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             output_path = Path(f.name)
 
         try:
@@ -490,12 +488,12 @@ class TestFoodMapping:
 
             assert output_path.exists()
 
-            with open(output_path, 'r') as f:
+            with open(output_path, "r") as f:
                 data = json.load(f)
 
-            assert 'food_classes' in data
-            assert 'nutritional_categories' in data
-            assert 'model_class_mapping' in data
+            assert "food_classes" in data
+            assert "nutritional_categories" in data
+            assert "model_class_mapping" in data
 
         finally:
             output_path.unlink()

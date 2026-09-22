@@ -17,11 +17,12 @@ class GUID(TypeDecorator):
     """Platform-independent GUID type.
     Uses PostgreSQL's UUID type, otherwise uses CHAR(36), storing as stringified hex values.
     """
+
     impl = CHAR
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(PG_UUID())
         else:
             return dialect.type_descriptor(CHAR(36))
@@ -29,7 +30,7 @@ class GUID(TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
-        elif dialect.name == 'postgresql':
+        elif dialect.name == "postgresql":
             return str(value)
         else:
             if not isinstance(value, uuid.UUID):
@@ -48,6 +49,7 @@ class GUID(TypeDecorator):
 
 # Monkey patch the UUID type for testing
 import sqlalchemy.dialects.postgresql as postgresql_dialect
+
 original_uuid = postgresql_dialect.UUID
 postgresql_dialect.UUID = GUID
 
@@ -60,8 +62,7 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 
-TestingSessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=engine)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @pytest.fixture(scope="function")
@@ -84,6 +85,7 @@ def db_session():
 @pytest.fixture(scope="function")
 def client(db_session):
     """Create a test client with database dependency override."""
+
     def override_get_db():
         try:
             yield db_session
@@ -93,6 +95,7 @@ def client(db_session):
     app.dependency_overrides[get_db] = override_get_db
 
     from fastapi.testclient import TestClient
+
     with TestClient(app) as test_client:
         yield test_client
 
@@ -105,7 +108,7 @@ def sample_student_data():
     return {
         "email": "test@example.com",
         "name": "Test Student",
-        "password": "TestPassword123"
+        "password": "TestPassword123",
     }
 
 
@@ -117,7 +120,7 @@ def sample_nigerian_food_data():
         "local_names": {"yoruba": "Test Jollof"},
         "food_class": "carbohydrates",
         "nutritional_info": {"calories_per_100g": 150},
-        "cultural_context": "Test food for unit testing"
+        "cultural_context": "Test food for unit testing",
     }
 
 
@@ -129,5 +132,5 @@ def sample_nutrition_rule_data():
         "condition_logic": {"missing_food_groups": ["proteins"]},
         "feedback_template": "Test feedback message",
         "priority": 1,
-        "is_active": True
+        "is_active": True,
     }

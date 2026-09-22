@@ -9,7 +9,17 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID as PyUUID
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    func,
+)
 
 
 from sqlalchemy.dialects.postgresql import JSON
@@ -21,8 +31,16 @@ class ImageMetadata(Base, TimestampMixin):
     __tablename__ = "image_metadata"
 
     id = uuid_pk()
-    meal_id = Column(UUID(as_uuid=True), ForeignKey("meals.id"), nullable=False, unique=True, index=True)
-    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True)
+    meal_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("meals.id"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    student_id = Column(
+        UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True
+    )
     original_filename = Column(String(255))
     file_size = Column(Integer)
     mime_type = Column(String(100))
@@ -91,7 +109,9 @@ class ImageSearchQuery(BaseModel):
     min_quality_score: Optional[float] = Field(None, ge=0, le=1)
     has_processing_errors: Optional[bool] = None
     image_format: Optional[str] = None
-    min_resolution: Optional[int] = Field(None, ge=0, description="Minimum width*height in pixels")
+    min_resolution: Optional[int] = Field(
+        None, ge=0, description="Minimum width*height in pixels"
+    )
     limit: int = Field(50, ge=1, le=500)
     offset: int = Field(0, ge=0)
 

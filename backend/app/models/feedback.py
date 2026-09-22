@@ -5,7 +5,16 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID as PyUUID
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    func,
+)
 
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
@@ -17,12 +26,18 @@ class FeedbackRecord(Base, TimestampMixin):
     __tablename__ = "feedback_records"
 
     id = uuid_pk()
-    meal_id = Column(UUID(as_uuid=True), ForeignKey("meals.id"), nullable=False, index=True)
-    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True)
+    meal_id = Column(
+        UUID(as_uuid=True), ForeignKey("meals.id"), nullable=False, index=True
+    )
+    student_id = Column(
+        UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True
+    )
     feedback_text = Column(Text, nullable=False)
     feedback_type = Column(String(100))
     recommendations = Column(JSON)
-    feedback_date = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    feedback_date = Column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
 
     meal = relationship("Meal", back_populates="feedback_records")
     student = relationship("Student", back_populates="feedback_records")

@@ -15,19 +15,38 @@ from .base import UUID, Base, uuid_pk
 class ConsentRecord(Base):
     __tablename__ = "consent_records"
     __table_args__ = (
-        Index("ix_consent_records_student_type_date", "student_id", "consent_type", "consent_date"),
+        Index(
+            "ix_consent_records_student_type_date",
+            "student_id",
+            "consent_type",
+            "consent_date",
+        ),
     )
 
     id = uuid_pk()
-    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("students.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     consent_type = Column(String(100), nullable=False, index=True)
     consent_given = Column(Boolean, nullable=False)
-    consent_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    consent_date = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
     consent_version = Column(String(50))
     ip_address = Column(String(45))
     user_agent = Column(Text)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     student = relationship("Student", back_populates="consent_records")
 

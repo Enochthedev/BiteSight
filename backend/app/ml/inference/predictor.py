@@ -17,7 +17,10 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 import hashlib
 
-from ..models.mobilenet_food_classifier import MobileNetV2FoodClassifier, load_pretrained_model
+from ..models.mobilenet_food_classifier import (
+    MobileNetV2FoodClassifier,
+    load_pretrained_model,
+)
 from ..dataset.augmentation import get_inference_transforms
 from ..dataset.food_mapping import NigerianFoodMapper
 from ...core.cache_service import get_cache_service
@@ -28,6 +31,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PredictionResult:
     """Result of food recognition prediction."""
+
     class_name: str
     confidence: float
     class_index: int
@@ -38,6 +42,7 @@ class PredictionResult:
 @dataclass
 class InferenceConfig:
     """Configuration for inference."""
+
     model_path: str
     device: str = "auto"  # "auto", "cpu", "cuda"
     batch_size: int = 8
@@ -95,7 +100,9 @@ class FoodPredictor:
     Handles model loading, preprocessing, and batch inference.
     """
 
-    def __init__(self, config: InferenceConfig, food_mapper: Optional[NigerianFoodMapper] = None):
+    def __init__(
+        self, config: InferenceConfig, food_mapper: Optional[NigerianFoodMapper] = None
+    ):
         """
         Initialize food predictor.
 
@@ -108,8 +115,7 @@ class FoodPredictor:
 
         # Setup device
         if config.device == "auto":
-            self.device = torch.device(
-                "cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         else:
             self.device = torch.device(config.device)
 
@@ -121,8 +127,7 @@ class FoodPredictor:
         self._load_model()
 
         # Setup cache (both local and Redis)
-        self.cache = ModelCache(
-            config.cache_size) if config.enable_caching else None
+        self.cache = ModelCache(config.cache_size) if config.enable_caching else None
         self.redis_cache = get_cache_service()
 
         # Thread pool for parallel processing
@@ -137,15 +142,16 @@ class FoodPredictor:
         """Load model and setup preprocessing."""
         try:
             # Load model checkpoint
-            checkpoint = torch.load(
-                self.config.model_path, map_location=self.device)
+            checkpoint = torch.load(self.config.model_path, map_location=self.device)
 
             # Extract model info
-            if 'class_names' in checkpoint:
-                self.class_names = checkpoint['class_names']
+            if "class_names" in checkpoint:
+                self.class_names = checkpoint["class_names"]
             else:
                 # Fallback: generate class names
-                num_classes = checkpoint['model_state_dict']['classifier.3.weight'].shape[0]
+                num_classes = checkpoint["model_state_dict"][
+                    "classifier.3.weight"
+                ].shape[0]
                 self.class_names = [f"class_{i}" for i in range(num_classes)]
 
             # Generate model version for caching
@@ -153,11 +159,10 @@ class FoodPredictor:
             self.model_version = f"mobilenet_v2_{model_hash}"
 
             # Create and load model
-            self.model = MobileNetV2FoodClassifier(
-                num_classes=len(self.class_names))
+            self.model = MobileNetV2FoodClassifier(num_classes=len(self.class_names))
 
-            if 'model_state_dict' in checkpoint:
-                self.model.load_state_dict(checkpoint['model_state_dict'])
+            if "model_state_dict" in checkpoint:
+                self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
                 self.model.load_state_dict(checkpoint)
 
@@ -168,7 +173,8 @@ class FoodPredictor:
             self.transforms = get_inference_transforms()
 
             logger.info(
-                f"Loaded model with {len(self.class_names)} classes, version: {self.model_version}")
+                f"Loaded model with {len(self.class_names)} classes, version: {self.model_version}"
+            )
 
         except Exception as e:
             logger.error(f"Error loading model: {e}")
@@ -186,7 +192,9 @@ class FoodPredictor:
 
         logger.info("Model warmup completed")
 
-    def _preprocess_image(self, image: Union[Image.Image, np.ndarray, str]) -> torch.Tensor:
+    def _preprocess_image(
+        self, image: Union[Image.Image, np.ndarray, str]
+    ) -> torch.Tensor:
         """
         Preprocess single image for inference.
 
@@ -197,9 +205,9 @@ class FoodPredictor:
             Preprocessed tensor
         """
         if isinstance(image, str):
-            image = Image.open(image).convert('RGB')
+            image = Image.open(image).convert("RGB")
         elif isinstance(image, np.ndarray):
-            image = Image.fromarray(image).convert('RGB')
+            image = Image.fromarray(image).convert("RGB")
         elif not isinstance(image, Image.Image):
             raise ValueError(f"Unsupported image type: {type(image)}")
 
@@ -207,7 +215,9 @@ class FoodPredictor:
         tensor = self.transforms(image)
         return tensor.unsqueeze(0)  # Add batch dimension
 
-    def _preprocess_batch(self, images: List[Union[Image.Image, np.ndarray, str]]) -> torch.Tensor:
+    def _preprocess_batch(
+        self, images: List[Union[Image.Image, np.ndarray, str]]
+    ) -> torch.Tensor:
         """
         Preprocess batch of images for inference.
 
@@ -227,14 +237,13 @@ class FoodPredictor:
     def _create_cache_key(self, image_tensor: torch.Tensor) -> str:
         """Create cache key from image tensor."""
         # Use hash of tensor data for caching
-        image_hash = hashlib.md5(
-            image_tensor.cpu().numpy().tobytes()).hexdigest()
+        image_hash = hashlib.md5(image_tensor.cpu().numpy().tobytes()).hexdigest()
         return image_hash
 
     def predict_single(
         self,
         image: Union[Image.Image, np.ndarray, str],
-        return_all_scores: bool = False
+        return_all_scores: bool = False,
     ) -> Union[PredictionResult, List[PredictionResult]]:
         """
         Predict food class for single image.
@@ -250,12 +259,12 @@ class FoodPredictor:
         image_tensor = self._preprocess_image(image).to(self.device)
 
         # Create cache key from image hash
-        image_hash = hashlib.md5(
-            image_tensor.cpu().numpy().tobytes()).hexdigest()
+        image_hash = hashlib.md5(image_tensor.cpu().numpy().tobytes()).hexdigest()
 
         # Check Redis cache first
         cached_result = self.redis_cache.get_cached_inference(
-            image_hash, self.model_version)
+            image_hash, self.model_version
+        )
         if cached_result is not None:
             logger.debug(f"Redis cache hit for image hash: {image_hash}")
             # Convert cached dict back to PredictionResult objects
@@ -281,8 +290,7 @@ class FoodPredictor:
             probabilities = F.softmax(logits, dim=1)
 
             # Get top-k predictions
-            top_probs, top_indices = torch.topk(
-                probabilities, self.config.top_k, dim=1)
+            top_probs, top_indices = torch.topk(probabilities, self.config.top_k, dim=1)
             top_probs = top_probs.squeeze().cpu().numpy()
             top_indices = top_indices.squeeze().cpu().numpy()
 
@@ -306,13 +314,14 @@ class FoodPredictor:
                     confidence=float(prob),
                     class_index=int(idx),
                     nutritional_category=nutritional_category,
-                    local_names=local_names
+                    local_names=local_names,
                 )
                 results.append(result)
 
         # Prepare result for caching and return
-        final_result = results if return_all_scores else (
-            results[0] if results else None)
+        final_result = (
+            results if return_all_scores else (results[0] if results else None)
+        )
 
         # Cache result in Redis (convert to dict for JSON serialization)
         if final_result is not None:
@@ -321,7 +330,8 @@ class FoodPredictor:
             else:
                 cache_data = final_result.__dict__
             self.redis_cache.cache_model_inference(
-                image_hash, self.model_version, cache_data)
+                image_hash, self.model_version, cache_data
+            )
 
         # Cache result locally
         if self.cache and cache_key:
@@ -332,7 +342,7 @@ class FoodPredictor:
     def predict_batch(
         self,
         images: List[Union[Image.Image, np.ndarray, str]],
-        return_all_scores: bool = False
+        return_all_scores: bool = False,
     ) -> List[Union[PredictionResult, List[PredictionResult]]]:
         """
         Predict food classes for batch of images.
@@ -351,7 +361,7 @@ class FoodPredictor:
         all_results = []
 
         for i in range(0, len(images), self.config.batch_size):
-            batch_images = images[i:i + self.config.batch_size]
+            batch_images = images[i : i + self.config.batch_size]
 
             # Preprocess batch
             batch_tensor = self._preprocess_batch(batch_images).to(self.device)
@@ -363,7 +373,8 @@ class FoodPredictor:
 
                 # Get top-k predictions for each image in batch
                 top_probs, top_indices = torch.topk(
-                    probabilities, self.config.top_k, dim=1)
+                    probabilities, self.config.top_k, dim=1
+                )
                 top_probs = top_probs.cpu().numpy()
                 top_indices = top_indices.cpu().numpy()
 
@@ -379,10 +390,11 @@ class FoodPredictor:
                         nutritional_category = None
                         local_names = None
                         if self.food_mapper:
-                            food_info = self.food_mapper.get_food_class(
-                                class_name)
+                            food_info = self.food_mapper.get_food_class(class_name)
                             if food_info:
-                                nutritional_category = food_info.nutritional_category.value
+                                nutritional_category = (
+                                    food_info.nutritional_category.value
+                                )
                                 local_names = food_info.local_names
 
                         result = PredictionResult(
@@ -390,7 +402,7 @@ class FoodPredictor:
                             confidence=float(prob),
                             class_index=int(idx),
                             nutritional_category=nutritional_category,
-                            local_names=local_names
+                            local_names=local_names,
                         )
                         results.append(result)
 
@@ -402,8 +414,7 @@ class FoodPredictor:
         return all_results
 
     def analyze_meal_nutrition(
-        self,
-        images: List[Union[Image.Image, np.ndarray, str]]
+        self, images: List[Union[Image.Image, np.ndarray, str]]
     ) -> Dict[str, any]:
         """
         Analyze nutritional content of a meal from multiple images.
@@ -427,15 +438,16 @@ class FoodPredictor:
                 detected_foods.append((pred.class_name, pred.confidence))
 
         # Analyze nutrition using food mapper
-        nutrition_analysis = self.food_mapper.analyze_meal_nutrition(
-            detected_foods)
+        nutrition_analysis = self.food_mapper.analyze_meal_nutrition(detected_foods)
 
         # Add recommendations for missing categories
-        if nutrition_analysis['missing_categories']:
-            recommendations = self.food_mapper.get_recommendations_for_missing_categories(
-                nutrition_analysis['missing_categories']
+        if nutrition_analysis["missing_categories"]:
+            recommendations = (
+                self.food_mapper.get_recommendations_for_missing_categories(
+                    nutrition_analysis["missing_categories"]
+                )
             )
-            nutrition_analysis['recommendations'] = recommendations
+            nutrition_analysis["recommendations"] = recommendations
 
         return nutrition_analysis
 
@@ -452,22 +464,20 @@ class FoodPredictor:
         logger.info(f"Benchmarking performance with {num_images} images...")
 
         # Create dummy images
-        dummy_images = [
-            torch.randn(3, 224, 224) for _ in range(num_images)
-        ]
+        dummy_images = [torch.randn(3, 224, 224) for _ in range(num_images)]
 
         # Single image inference benchmark
         start_time = time.time()
         for img in dummy_images[:10]:  # Test with 10 images
             img_pil = Image.fromarray(
-                (img.permute(1, 2, 0).numpy() * 255).astype(np.uint8))
+                (img.permute(1, 2, 0).numpy() * 255).astype(np.uint8)
+            )
             _ = self.predict_single(img_pil)
         single_time = (time.time() - start_time) / 10
 
         # Batch inference benchmark
         batch_images = [
-            Image.fromarray(
-                (img.permute(1, 2, 0).numpy() * 255).astype(np.uint8))
+            Image.fromarray((img.permute(1, 2, 0).numpy() * 255).astype(np.uint8))
             for img in dummy_images
         ]
 
@@ -476,11 +486,11 @@ class FoodPredictor:
         batch_time = time.time() - start_time
 
         results = {
-            'single_image_time': single_time,
-            'batch_total_time': batch_time,
-            'batch_per_image_time': batch_time / num_images,
-            'batch_speedup': single_time / (batch_time / num_images),
-            'throughput_fps': num_images / batch_time
+            "single_image_time": single_time,
+            "batch_total_time": batch_time,
+            "batch_per_image_time": batch_time / num_images,
+            "batch_speedup": single_time / (batch_time / num_images),
+            "throughput_fps": num_images / batch_time,
         }
 
         logger.info(f"Performance results: {results}")
@@ -489,17 +499,17 @@ class FoodPredictor:
     def get_model_info(self) -> Dict[str, any]:
         """Get model information."""
         return {
-            'model_type': 'MobileNetV2FoodClassifier',
-            'num_classes': len(self.class_names),
-            'class_names': self.class_names,
-            'device': str(self.device),
-            'model_parameters': sum(p.numel() for p in self.model.parameters()),
-            'config': self.config
+            "model_type": "MobileNetV2FoodClassifier",
+            "num_classes": len(self.class_names),
+            "class_names": self.class_names,
+            "device": str(self.device),
+            "model_parameters": sum(p.numel() for p in self.model.parameters()),
+            "config": self.config,
         }
 
     def cleanup(self):
         """Cleanup resources."""
-        if hasattr(self, 'thread_pool'):
+        if hasattr(self, "thread_pool"):
             self.thread_pool.shutdown(wait=True)
 
         if self.cache:
@@ -509,7 +519,7 @@ class FoodPredictor:
 def create_predictor(
     model_path: str,
     food_mapper: Optional[NigerianFoodMapper] = None,
-    config: Optional[InferenceConfig] = None
+    config: Optional[InferenceConfig] = None,
 ) -> FoodPredictor:
     """
     Factory function to create a food predictor.
@@ -533,7 +543,7 @@ def create_predictor(
 def load_predictor_from_checkpoint(
     checkpoint_dir: str,
     food_mapper: Optional[NigerianFoodMapper] = None,
-    use_best: bool = True
+    use_best: bool = True,
 ) -> FoodPredictor:
     """
     Load predictor from training checkpoint directory.
@@ -554,11 +564,10 @@ def load_predictor_from_checkpoint(
         # Find latest checkpoint
         checkpoints = list(checkpoint_path.glob("checkpoint_epoch_*.pth"))
         if not checkpoints:
-            raise FileNotFoundError(
-                f"No checkpoints found in {checkpoint_dir}")
+            raise FileNotFoundError(f"No checkpoints found in {checkpoint_dir}")
 
         # Sort by epoch number
-        checkpoints.sort(key=lambda x: int(x.stem.split('_')[-1]))
+        checkpoints.sort(key=lambda x: int(x.stem.split("_")[-1]))
         model_file = checkpoints[-1]
 
     if not model_file.exists():

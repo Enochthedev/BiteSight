@@ -17,21 +17,29 @@ class Meal(Base, TimestampMixin):
     __tablename__ = "meals"
 
     id = uuid_pk()
-    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True)
+    student_id = Column(
+        UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True
+    )
     image_path = Column(String(500), nullable=False)
     upload_date = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     analysis_status = Column(String(50), default="pending", index=True)
 
     student = relationship("Student", back_populates="meals")
-    detected_foods = relationship("DetectedFood", back_populates="meal", cascade="all, delete-orphan")
-    feedback_records = relationship("FeedbackRecord", back_populates="meal", cascade="all, delete-orphan")
+    detected_foods = relationship(
+        "DetectedFood", back_populates="meal", cascade="all, delete-orphan"
+    )
+    feedback_records = relationship(
+        "FeedbackRecord", back_populates="meal", cascade="all, delete-orphan"
+    )
 
 
 class DetectedFood(Base, TimestampMixin):
     __tablename__ = "detected_foods"
 
     id = uuid_pk()
-    meal_id = Column(UUID(as_uuid=True), ForeignKey("meals.id"), nullable=False, index=True)
+    meal_id = Column(
+        UUID(as_uuid=True), ForeignKey("meals.id"), nullable=False, index=True
+    )
     food_name = Column(String(255), nullable=False)
     confidence_score = Column(Numeric(3, 2))
     food_class = Column(String(100), nullable=False, index=True)

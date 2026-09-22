@@ -8,7 +8,10 @@ import logging
 from app.models.feedback import FeedbackRecord, NutritionFeedback
 from app.models.meal import FoodDetectionResult
 from app.services.analysis_service import analysis_service
-from app.services.feedback_generation_service import nigerian_feedback_generator, CulturalContext
+from app.services.feedback_generation_service import (
+    nigerian_feedback_generator,
+    CulturalContext,
+)
 from app.core.nutrition_engine import nutrition_engine, NutritionProfile
 from app.core.database import get_db
 
@@ -23,12 +26,14 @@ class FeedbackService:
         self.feedback_generator = nigerian_feedback_generator
         self.nutrition_engine = nutrition_engine
 
-    async def generate_feedback(self,
-                                meal_id: UUID,
-                                student_id: UUID,
-                                detected_foods: List[FoodDetectionResult],
-                                db: Session,
-                                cultural_context: str = "nigerian_general") -> NutritionFeedback:
+    async def generate_feedback(
+        self,
+        meal_id: UUID,
+        student_id: UUID,
+        detected_foods: List[FoodDetectionResult],
+        db: Session,
+        cultural_context: str = "nigerian_general",
+    ) -> NutritionFeedback:
         """Generate comprehensive nutrition feedback for a meal."""
 
         try:
@@ -39,32 +44,33 @@ class FeedbackService:
 
         try:
             # Perform complete nutrition analysis using rule engine
-            analysis_result = await self.analysis_service.analyze_nutrition_with_rules(detected_foods)
+            analysis_result = await self.analysis_service.analyze_nutrition_with_rules(
+                detected_foods
+            )
 
             # Extract nutrition profile
             nutrition_profile = NutritionProfile(
                 carbohydrates=analysis_result["nutrition_profile"].get(
-                    "carbohydrates", 0.0),
-                proteins=analysis_result["nutrition_profile"].get(
-                    "proteins", 0.0),
+                    "carbohydrates", 0.0
+                ),
+                proteins=analysis_result["nutrition_profile"].get("proteins", 0.0),
                 fats=analysis_result["nutrition_profile"].get("fats", 0.0),
-                vitamins=analysis_result["nutrition_profile"].get(
-                    "vitamins", 0.0),
-                minerals=analysis_result["nutrition_profile"].get(
-                    "minerals", 0.0),
-                water=analysis_result["nutrition_profile"].get("water", 0.0)
+                vitamins=analysis_result["nutrition_profile"].get("vitamins", 0.0),
+                minerals=analysis_result["nutrition_profile"].get("minerals", 0.0),
+                water=analysis_result["nutrition_profile"].get("water", 0.0),
             )
 
             # Convert matching rules to NutritionRule objects for feedback generation
             matching_rules = []
             for rule_data in analysis_result.get("matching_rules", []):
                 from app.core.nutrition_engine import NutritionRule
+
                 rule = NutritionRule(
                     rule_id=rule_data["rule_id"],
                     name=rule_data["name"],
                     conditions=[],  # Not needed for feedback generation
                     feedback_template=rule_data["feedback_template"],
-                    priority=rule_data["priority"]
+                    priority=rule_data["priority"],
                 )
                 matching_rules.append(rule)
 
@@ -74,22 +80,18 @@ class FeedbackService:
                     "food_name": food.food_name,
                     "confidence": food.confidence,
                     "food_class": food.food_class,
-                    "bounding_box": food.bounding_box
+                    "bounding_box": food.bounding_box,
                 }
                 for food in detected_foods
             ]
 
             # Generate culturally relevant feedback
             feedback_data = self.feedback_generator.generate_feedback(
-                nutrition_profile,
-                foods_dict,
-                matching_rules,
-                context_enum
+                nutrition_profile, foods_dict, matching_rules, context_enum
             )
 
             # Create comprehensive feedback message
-            feedback_message = self._create_comprehensive_message(
-                feedback_data)
+            feedback_message = self._create_comprehensive_message(feedback_data)
 
             # Extract recommendations
             recommendations = feedback_data.get("recommendations", [])
@@ -104,8 +106,8 @@ class FeedbackService:
                     "suggestions": recommendations,
                     "specific_feedback": feedback_data.get("specific_feedback", []),
                     "cultural_context": cultural_context,
-                    "balance_score": feedback_data.get("balance_score", 0.0)
-                }
+                    "balance_score": feedback_data.get("balance_score", 0.0),
+                },
             )
 
             db.add(feedback_record)
@@ -116,17 +118,18 @@ class FeedbackService:
             return NutritionFeedback(
                 meal_id=meal_id,
                 detected_foods=[food.dict() for food in detected_foods],
-                missing_food_groups=analysis_result.get(
-                    "missing_food_groups", []),
+                missing_food_groups=analysis_result.get("missing_food_groups", []),
                 recommendations=recommendations,
                 overall_balance_score=feedback_data.get("balance_score", 0.0),
-                feedback_message=feedback_message
+                feedback_message=feedback_message,
             )
 
         except Exception as e:
             logger.error(f"Error generating feedback for meal {meal_id}: {e}")
             # Fallback to basic feedback
-            return await self._generate_basic_feedback(meal_id, student_id, detected_foods, db)
+            return await self._generate_basic_feedback(
+                meal_id, student_id, detected_foods, db
+            )
 
     def _create_comprehensive_message(self, feedback_data: Dict[str, Any]) -> str:
         """Create comprehensive feedback message from feedback data."""
@@ -141,7 +144,8 @@ class FeedbackService:
         if specific_feedback:
             # Sort by priority and take top 2
             sorted_feedback = sorted(
-                specific_feedback, key=lambda x: x.get("priority", 0), reverse=True)
+                specific_feedback, key=lambda x: x.get("priority", 0), reverse=True
+            )
             for feedback in sorted_feedback[:2]:
                 message_parts.append(feedback.get("message", ""))
 
@@ -151,16 +155,17 @@ class FeedbackService:
 
         return " ".join(filter(None, message_parts))
 
-    async def _generate_basic_feedback(self,
-                                       meal_id: UUID,
-                                       student_id: UUID,
-                                       detected_foods: List[FoodDetectionResult],
-                                       db: Session) -> NutritionFeedback:
+    async def _generate_basic_feedback(
+        self,
+        meal_id: UUID,
+        student_id: UUID,
+        detected_foods: List[FoodDetectionResult],
+        db: Session,
+    ) -> NutritionFeedback:
         """Generate basic feedback as fallback."""
 
         # Use basic analysis service
-        nutrition_profile = self.analysis_service.classify_nutrition(
-            detected_foods)
+        nutrition_profile = self.analysis_service.classify_nutrition(detected_foods)
         insights = self.analysis_service.generate_insights(nutrition_profile)
 
         # Generate basic recommendations
@@ -168,16 +173,18 @@ class FeedbackService:
         for missing_group in insights["missing_food_groups"]:
             if missing_group == "proteins":
                 recommendations.append(
-                    "Add protein sources like beans, fish, or chicken")
+                    "Add protein sources like beans, fish, or chicken"
+                )
             elif missing_group == "vitamins":
                 recommendations.append(
-                    "Include fruits like oranges, bananas, or mangoes")
+                    "Include fruits like oranges, bananas, or mangoes"
+                )
             elif missing_group == "minerals":
                 recommendations.append(
-                    "Add vegetables like efo riro, ugwu, or okra soup")
+                    "Add vegetables like efo riro, ugwu, or okra soup"
+                )
             elif missing_group == "carbohydrates":
-                recommendations.append(
-                    "Include energy foods like rice, yam, or amala")
+                recommendations.append("Include energy foods like rice, yam, or amala")
 
         # Create basic feedback message
         balance_score = insights["balance_score"]
@@ -186,7 +193,9 @@ class FeedbackService:
         elif balance_score > 0.6:
             feedback_message = "Good meal choice! Consider adding a bit more variety."
         elif balance_score > 0.4:
-            feedback_message = "Your meal has some good elements. Try to include more food groups."
+            feedback_message = (
+                "Your meal has some good elements. Try to include more food groups."
+            )
         else:
             feedback_message = "This meal could be more balanced. Consider adding variety from different food groups."
 
@@ -196,7 +205,7 @@ class FeedbackService:
             student_id=student_id,
             feedback_text=feedback_message,
             feedback_type="basic_nutrition_analysis",
-            recommendations={"suggestions": recommendations}
+            recommendations={"suggestions": recommendations},
         )
 
         db.add(feedback_record)
@@ -209,35 +218,37 @@ class FeedbackService:
             missing_food_groups=insights["missing_food_groups"],
             recommendations=recommendations,
             overall_balance_score=balance_score,
-            feedback_message=feedback_message
+            feedback_message=feedback_message,
         )
 
-    async def get_feedback_history(self,
-                                   student_id: UUID,
-                                   db: Session,
-                                   limit: int = 10) -> List[FeedbackRecord]:
+    async def get_feedback_history(
+        self, student_id: UUID, db: Session, limit: int = 10
+    ) -> List[FeedbackRecord]:
         """Get feedback history for a student."""
-        return db.query(FeedbackRecord).filter(
-            FeedbackRecord.student_id == student_id
-        ).order_by(FeedbackRecord.feedback_date.desc()).limit(limit).all()
+        return (
+            db.query(FeedbackRecord)
+            .filter(FeedbackRecord.student_id == student_id)
+            .order_by(FeedbackRecord.feedback_date.desc())
+            .limit(limit)
+            .all()
+        )
 
-    async def get_feedback_by_meal(self,
-                                   meal_id: UUID,
-                                   db: Session) -> Optional[FeedbackRecord]:
+    async def get_feedback_by_meal(
+        self, meal_id: UUID, db: Session
+    ) -> Optional[FeedbackRecord]:
         """Get feedback for a specific meal."""
-        return db.query(FeedbackRecord).filter(
-            FeedbackRecord.meal_id == meal_id
-        ).first()
+        return (
+            db.query(FeedbackRecord).filter(FeedbackRecord.meal_id == meal_id).first()
+        )
 
-    async def update_feedback(self,
-                              feedback_id: UUID,
-                              updated_data: Dict[str, Any],
-                              db: Session) -> Optional[FeedbackRecord]:
+    async def update_feedback(
+        self, feedback_id: UUID, updated_data: Dict[str, Any], db: Session
+    ) -> Optional[FeedbackRecord]:
         """Update existing feedback record."""
 
-        feedback_record = db.query(FeedbackRecord).filter(
-            FeedbackRecord.id == feedback_id
-        ).first()
+        feedback_record = (
+            db.query(FeedbackRecord).filter(FeedbackRecord.id == feedback_id).first()
+        )
 
         if not feedback_record:
             return None
@@ -254,14 +265,12 @@ class FeedbackService:
 
         return feedback_record
 
-    async def delete_feedback(self,
-                              feedback_id: UUID,
-                              db: Session) -> bool:
+    async def delete_feedback(self, feedback_id: UUID, db: Session) -> bool:
         """Delete feedback record."""
 
-        feedback_record = db.query(FeedbackRecord).filter(
-            FeedbackRecord.id == feedback_id
-        ).first()
+        feedback_record = (
+            db.query(FeedbackRecord).filter(FeedbackRecord.id == feedback_id).first()
+        )
 
         if not feedback_record:
             return False
@@ -271,10 +280,9 @@ class FeedbackService:
 
         return True
 
-    async def get_student_nutrition_trends(self,
-                                           student_id: UUID,
-                                           db: Session,
-                                           days: int = 30) -> Dict[str, Any]:
+    async def get_student_nutrition_trends(
+        self, student_id: UUID, db: Session, days: int = 30
+    ) -> Dict[str, Any]:
         """Get nutrition trends for a student over specified days."""
 
         from datetime import datetime, timedelta
@@ -283,12 +291,17 @@ class FeedbackService:
         # Get recent feedback records
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
-        feedback_records = db.query(FeedbackRecord).filter(
-            and_(
-                FeedbackRecord.student_id == student_id,
-                FeedbackRecord.feedback_date >= cutoff_date
+        feedback_records = (
+            db.query(FeedbackRecord)
+            .filter(
+                and_(
+                    FeedbackRecord.student_id == student_id,
+                    FeedbackRecord.feedback_date >= cutoff_date,
+                )
             )
-        ).order_by(FeedbackRecord.feedback_date.desc()).all()
+            .order_by(FeedbackRecord.feedback_date.desc())
+            .all()
+        )
 
         if not feedback_records:
             return {
@@ -296,7 +309,7 @@ class FeedbackService:
                 "average_balance_score": 0.0,
                 "improvement_trend": "no_data",
                 "common_missing_groups": [],
-                "recommendations_given": 0
+                "recommendations_given": 0,
             }
 
         # Calculate trends
@@ -316,15 +329,17 @@ class FeedbackService:
                 all_recommendations.extend(suggestions)
 
         # Calculate average balance score
-        avg_balance_score = sum(balance_scores) / \
-            len(balance_scores) if balance_scores else 0.0
+        avg_balance_score = (
+            sum(balance_scores) / len(balance_scores) if balance_scores else 0.0
+        )
 
         # Determine improvement trend (simple: compare first half vs second half)
         if len(balance_scores) >= 4:
             mid_point = len(balance_scores) // 2
             first_half_avg = sum(balance_scores[:mid_point]) / mid_point
-            second_half_avg = sum(
-                balance_scores[mid_point:]) / (len(balance_scores) - mid_point)
+            second_half_avg = sum(balance_scores[mid_point:]) / (
+                len(balance_scores) - mid_point
+            )
 
             if second_half_avg > first_half_avg + 0.1:
                 trend = "improving"
@@ -340,7 +355,7 @@ class FeedbackService:
             "average_balance_score": avg_balance_score,
             "improvement_trend": trend,
             "recommendations_given": len(all_recommendations),
-            "period_days": days
+            "period_days": days,
         }
 
 

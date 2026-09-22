@@ -9,7 +9,7 @@ from app.core.database_utils import (
     drop_database_tables,
     check_database_connection,
     initialize_sample_data,
-    reset_database
+    reset_database,
 )
 from app.models.meal import NigerianFood
 from app.models.feedback import NutritionRule
@@ -23,7 +23,7 @@ class TestDatabaseUtils:
         # The db_session fixture ensures we have a working connection
         assert check_database_connection() is True
 
-    @patch('app.core.database_utils.engine')
+    @patch("app.core.database_utils.engine")
     def test_check_database_connection_failure(self, mock_engine):
         """Test failed database connection check."""
         mock_engine.connect.side_effect = SQLAlchemyError("Connection failed")
@@ -43,15 +43,19 @@ class TestDatabaseUtils:
         assert len(rules) > 0
 
         # Verify specific sample data
-        jollof = db_session.query(NigerianFood).filter(
-            NigerianFood.food_name == "Jollof Rice"
-        ).first()
+        jollof = (
+            db_session.query(NigerianFood)
+            .filter(NigerianFood.food_name == "Jollof Rice")
+            .first()
+        )
         assert jollof is not None
         assert jollof.food_class == "carbohydrates"
 
-        protein_rule = db_session.query(NutritionRule).filter(
-            NutritionRule.rule_name == "Missing Protein Check"
-        ).first()
+        protein_rule = (
+            db_session.query(NutritionRule)
+            .filter(NutritionRule.rule_name == "Missing Protein Check")
+            .first()
+        )
         assert protein_rule is not None
         assert protein_rule.is_active is True
 
@@ -70,7 +74,9 @@ class TestDatabaseUtils:
     def test_initialize_sample_data_failure(self, db_session):
         """Test sample data initialization failure."""
         # Mock a database error during commit
-        with patch.object(db_session, 'commit', side_effect=SQLAlchemyError("Commit failed")):
+        with patch.object(
+            db_session, "commit", side_effect=SQLAlchemyError("Commit failed")
+        ):
             assert initialize_sample_data(db_session) is False
 
     def test_sample_data_content(self, db_session):
@@ -81,8 +87,7 @@ class TestDatabaseUtils:
         foods = db_session.query(NigerianFood).all()
         food_names = [food.food_name for food in foods]
 
-        expected_foods = ["Jollof Rice", "Amala",
-                          "Efo Riro", "Suya", "Moi Moi"]
+        expected_foods = ["Jollof Rice", "Amala", "Efo Riro", "Suya", "Moi Moi"]
         for expected_food in expected_foods:
             assert expected_food in food_names
 
@@ -100,7 +105,7 @@ class TestDatabaseUtils:
             "Missing Protein Check",
             "Missing Vegetables Check",
             "Balanced Meal Praise",
-            "Too Much Carbs Warning"
+            "Too Much Carbs Warning",
         ]
         for expected_rule in expected_rules:
             assert expected_rule in rule_names
@@ -119,25 +124,31 @@ class TestDatabaseUtils:
         assert initialize_sample_data(db_session) is True
 
         # Test Jollof Rice local names
-        jollof = db_session.query(NigerianFood).filter(
-            NigerianFood.food_name == "Jollof Rice"
-        ).first()
+        jollof = (
+            db_session.query(NigerianFood)
+            .filter(NigerianFood.food_name == "Jollof Rice")
+            .first()
+        )
         assert jollof.local_names is not None
         assert "yoruba" in jollof.local_names
         assert "igbo" in jollof.local_names
         assert "hausa" in jollof.local_names
 
         # Test Amala local names (Yoruba specific)
-        amala = db_session.query(NigerianFood).filter(
-            NigerianFood.food_name == "Amala"
-        ).first()
+        amala = (
+            db_session.query(NigerianFood)
+            .filter(NigerianFood.food_name == "Amala")
+            .first()
+        )
         assert amala.local_names is not None
         assert "yoruba" in amala.local_names
 
         # Test Suya local names (Hausa specific)
-        suya = db_session.query(NigerianFood).filter(
-            NigerianFood.food_name == "Suya"
-        ).first()
+        suya = (
+            db_session.query(NigerianFood)
+            .filter(NigerianFood.food_name == "Suya")
+            .first()
+        )
         assert suya.local_names is not None
         assert "hausa" in suya.local_names
 
@@ -146,25 +157,31 @@ class TestDatabaseUtils:
         assert initialize_sample_data(db_session) is True
 
         # Test missing protein rule
-        protein_rule = db_session.query(NutritionRule).filter(
-            NutritionRule.rule_name == "Missing Protein Check"
-        ).first()
+        protein_rule = (
+            db_session.query(NutritionRule)
+            .filter(NutritionRule.rule_name == "Missing Protein Check")
+            .first()
+        )
         assert protein_rule.condition_logic is not None
         assert "missing_food_groups" in protein_rule.condition_logic
         assert "proteins" in protein_rule.condition_logic["missing_food_groups"]
 
         # Test balanced meal rule
-        balanced_rule = db_session.query(NutritionRule).filter(
-            NutritionRule.rule_name == "Balanced Meal Praise"
-        ).first()
+        balanced_rule = (
+            db_session.query(NutritionRule)
+            .filter(NutritionRule.rule_name == "Balanced Meal Praise")
+            .first()
+        )
         assert balanced_rule.condition_logic is not None
         assert "all_food_groups_present" in balanced_rule.condition_logic
         assert balanced_rule.condition_logic["all_food_groups_present"] is True
 
         # Test carb ratio rule
-        carb_rule = db_session.query(NutritionRule).filter(
-            NutritionRule.rule_name == "Too Much Carbs Warning"
-        ).first()
+        carb_rule = (
+            db_session.query(NutritionRule)
+            .filter(NutritionRule.rule_name == "Too Much Carbs Warning")
+            .first()
+        )
         assert carb_rule.condition_logic is not None
         assert "carbohydrate_ratio" in carb_rule.condition_logic
         assert carb_rule.condition_logic["carbohydrate_ratio"] == ">0.7"
@@ -181,14 +198,18 @@ class TestDatabaseUtils:
             assert len(food.cultural_context) > 10
 
         # Test specific cultural contexts
-        jollof = db_session.query(NigerianFood).filter(
-            NigerianFood.food_name == "Jollof Rice"
-        ).first()
+        jollof = (
+            db_session.query(NigerianFood)
+            .filter(NigerianFood.food_name == "Jollof Rice")
+            .first()
+        )
         assert "celebration" in jollof.cultural_context.lower()
 
-        moi_moi = db_session.query(NigerianFood).filter(
-            NigerianFood.food_name == "Moi Moi"
-        ).first()
+        moi_moi = (
+            db_session.query(NigerianFood)
+            .filter(NigerianFood.food_name == "Moi Moi")
+            .first()
+        )
         assert "protein" in moi_moi.cultural_context.lower()
 
     def test_nutritional_info_structure(self, db_session):
@@ -200,13 +221,14 @@ class TestDatabaseUtils:
         for food in foods:
             assert food.nutritional_info is not None
             assert "calories_per_100g" in food.nutritional_info
-            assert isinstance(
-                food.nutritional_info["calories_per_100g"], (int, float))
+            assert isinstance(food.nutritional_info["calories_per_100g"], (int, float))
             assert food.nutritional_info["calories_per_100g"] > 0
 
         # Test specific nutritional values
-        suya = db_session.query(NigerianFood).filter(
-            NigerianFood.food_name == "Suya"
-        ).first()
+        suya = (
+            db_session.query(NigerianFood)
+            .filter(NigerianFood.food_name == "Suya")
+            .first()
+        )
         # Suya should be high in protein
         assert suya.nutritional_info["protein"] > suya.nutritional_info["carbs"]

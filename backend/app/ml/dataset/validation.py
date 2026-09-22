@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ImageQualityMetrics:
     """Metrics for image quality assessment."""
+
     path: str
     width: int
     height: int
@@ -37,6 +38,7 @@ class ImageQualityMetrics:
 @dataclass
 class DatasetValidationReport:
     """Comprehensive dataset validation report."""
+
     total_images: int
     corrupted_images: int
     missing_images: int
@@ -56,7 +58,7 @@ class ImageQualityChecker:
         max_file_size_mb: float = 10.0,
         min_brightness: float = 0.1,
         max_brightness: float = 0.9,
-        min_contrast: float = 20.0
+        min_contrast: float = 20.0,
     ):
         """
         Initialize quality checker with thresholds.
@@ -94,8 +96,8 @@ class ImageQualityChecker:
                 channels = len(img.getbands())
 
                 # Convert to RGB for analysis
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
 
                 # Calculate quality metrics
                 img_array = np.array(img)
@@ -123,7 +125,7 @@ class ImageQualityChecker:
                     brightness_mean=brightness_mean,
                     contrast_std=contrast_std,
                     blur_score=blur_score,
-                    aspect_ratio=aspect_ratio
+                    aspect_ratio=aspect_ratio,
                 )
 
         except Exception as e:
@@ -138,7 +140,7 @@ class ImageQualityChecker:
                 brightness_mean=0.0,
                 contrast_std=0.0,
                 blur_score=0.0,
-                aspect_ratio=0.0
+                aspect_ratio=0.0,
             )
 
     def _calculate_blur_score(self, gray_image: np.ndarray) -> float:
@@ -151,16 +153,19 @@ class ImageQualityChecker:
             h, w = gray_image.shape
             result = np.zeros_like(gray_image)
 
-            for i in range(1, h-1):
-                for j in range(1, w-1):
+            for i in range(1, h - 1):
+                for j in range(1, w - 1):
                     result[i, j] = np.sum(
-                        gray_image[i-1:i+2, j-1:j+2] * laplacian_kernel)
+                        gray_image[i - 1 : i + 2, j - 1 : j + 2] * laplacian_kernel
+                    )
 
             return float(np.var(result))
         except Exception:
             return 0.0
 
-    def is_quality_acceptable(self, metrics: ImageQualityMetrics) -> Tuple[bool, List[str]]:
+    def is_quality_acceptable(
+        self, metrics: ImageQualityMetrics
+    ) -> Tuple[bool, List[str]]:
         """
         Check if image quality meets acceptance criteria.
 
@@ -175,28 +180,28 @@ class ImageQualityChecker:
         if metrics.is_corrupted:
             issues.append("Image is corrupted or unreadable")
 
-        if metrics.width < self.min_resolution[0] or metrics.height < self.min_resolution[1]:
-            issues.append(
-                f"Resolution too low: {metrics.width}x{metrics.height}")
+        if (
+            metrics.width < self.min_resolution[0]
+            or metrics.height < self.min_resolution[1]
+        ):
+            issues.append(f"Resolution too low: {metrics.width}x{metrics.height}")
 
         if metrics.file_size > self.max_file_size_mb * 1024 * 1024:
             issues.append(
-                f"File size too large: {metrics.file_size / (1024*1024):.1f}MB")
+                f"File size too large: {metrics.file_size / (1024 * 1024):.1f}MB"
+            )
 
         if metrics.brightness_mean < self.min_brightness:
-            issues.append(
-                f"Image too dark: brightness {metrics.brightness_mean:.2f}")
+            issues.append(f"Image too dark: brightness {metrics.brightness_mean:.2f}")
 
         if metrics.brightness_mean > self.max_brightness:
-            issues.append(
-                f"Image too bright: brightness {metrics.brightness_mean:.2f}")
+            issues.append(f"Image too bright: brightness {metrics.brightness_mean:.2f}")
 
         if metrics.contrast_std < self.min_contrast:
             issues.append(f"Low contrast: {metrics.contrast_std:.1f}")
 
         if metrics.blur_score < 100:  # Threshold for blur detection
-            issues.append(
-                f"Image appears blurry: score {metrics.blur_score:.1f}")
+            issues.append(f"Image appears blurry: score {metrics.blur_score:.1f}")
 
         return len(issues) == 0, issues
 
@@ -224,26 +229,19 @@ class DatasetValidator:
         issues = []
 
         # Check required directories
-        required_dirs = [
-            "images/train",
-            "images/val",
-            "images/test",
-            "metadata"
-        ]
+        required_dirs = ["images/train", "images/val", "images/test", "metadata"]
 
         for dir_path in required_dirs:
             full_path = self.dataset_root / dir_path
             if not full_path.exists():
                 issues.append(f"Missing required directory: {dir_path}")
             elif not full_path.is_dir():
-                issues.append(
-                    f"Path exists but is not a directory: {dir_path}")
+                issues.append(f"Path exists but is not a directory: {dir_path}")
 
         # Check metadata file
         metadata_file = self.dataset_root / "metadata" / "nigerian_foods.json"
         if not metadata_file.exists():
-            issues.append(
-                "Missing metadata file: metadata/nigerian_foods.json")
+            issues.append("Missing metadata file: metadata/nigerian_foods.json")
 
         return len(issues) == 0, issues
 
@@ -258,31 +256,35 @@ class DatasetValidator:
         metadata_file = self.dataset_root / "metadata" / "nigerian_foods.json"
 
         try:
-            with open(metadata_file, 'r', encoding='utf-8') as f:
+            with open(metadata_file, "r", encoding="utf-8") as f:
                 metadata = json.load(f)
 
             # Check required top-level keys
-            if 'foods' not in metadata:
+            if "foods" not in metadata:
                 issues.append("Metadata missing 'foods' key")
                 return False, issues
 
             # Validate each food item
-            required_fields = ['name', 'food_class', 'nutritional_category']
+            required_fields = ["name", "food_class", "nutritional_category"]
 
-            for i, food_item in enumerate(metadata['foods']):
+            for i, food_item in enumerate(metadata["foods"]):
                 for field in required_fields:
                     if field not in food_item:
-                        issues.append(
-                            f"Food item {i} missing required field: {field}")
+                        issues.append(f"Food item {i} missing required field: {field}")
 
                 # Check for valid nutritional categories
                 valid_categories = [
-                    'carbohydrates', 'proteins', 'fats_oils',
-                    'vitamins', 'minerals', 'water'
+                    "carbohydrates",
+                    "proteins",
+                    "fats_oils",
+                    "vitamins",
+                    "minerals",
+                    "water",
                 ]
-                if food_item.get('nutritional_category') not in valid_categories:
+                if food_item.get("nutritional_category") not in valid_categories:
                     issues.append(
-                        f"Invalid nutritional category for {food_item.get('name', f'item {i}')}")
+                        f"Invalid nutritional category for {food_item.get('name', f'item {i}')}"
+                    )
 
         except json.JSONDecodeError as e:
             issues.append(f"Invalid JSON in metadata file: {e}")
@@ -300,21 +302,26 @@ class DatasetValidator:
         """
         distribution = defaultdict(lambda: defaultdict(int))
 
-        for split in ['train', 'val', 'test']:
+        for split in ["train", "val", "test"]:
             split_dir = self.dataset_root / "images" / split
             if split_dir.exists():
                 for class_dir in split_dir.iterdir():
                     if class_dir.is_dir():
                         # Count images in class directory
-                        image_count = len([
-                            f for f in class_dir.iterdir()
-                            if f.suffix.lower() in ['.jpg', '.jpeg', '.png']
-                        ])
+                        image_count = len(
+                            [
+                                f
+                                for f in class_dir.iterdir()
+                                if f.suffix.lower() in [".jpg", ".jpeg", ".png"]
+                            ]
+                        )
                         distribution[split][class_dir.name] = image_count
 
         return dict(distribution)
 
-    def validate_images(self, sample_size: Optional[int] = None) -> List[ImageQualityMetrics]:
+    def validate_images(
+        self, sample_size: Optional[int] = None
+    ) -> List[ImageQualityMetrics]:
         """
         Validate image quality across the dataset.
 
@@ -326,7 +333,7 @@ class DatasetValidator:
         """
         all_metrics = []
 
-        for split in ['train', 'val', 'test']:
+        for split in ["train", "val", "test"]:
             split_dir = self.dataset_root / "images" / split
             if not split_dir.exists():
                 continue
@@ -336,12 +343,13 @@ class DatasetValidator:
             for class_dir in split_dir.iterdir():
                 if class_dir.is_dir():
                     for img_path in class_dir.iterdir():
-                        if img_path.suffix.lower() in ['.jpg', '.jpeg', '.png']:
+                        if img_path.suffix.lower() in [".jpg", ".jpeg", ".png"]:
                             image_paths.append(img_path)
 
             # Sample if requested
             if sample_size and len(image_paths) > sample_size:
                 import random
+
                 image_paths = random.sample(image_paths, sample_size)
 
             # Check quality for each image
@@ -351,7 +359,9 @@ class DatasetValidator:
 
         return all_metrics
 
-    def generate_validation_report(self, sample_size: Optional[int] = 100) -> DatasetValidationReport:
+    def generate_validation_report(
+        self, sample_size: Optional[int] = 100
+    ) -> DatasetValidationReport:
         """
         Generate comprehensive validation report.
 
@@ -383,10 +393,10 @@ class DatasetValidator:
         valid_metrics = [m for m in quality_metrics if not m.is_corrupted]
         if valid_metrics:
             quality_stats = {
-                'mean_brightness': np.mean([m.brightness_mean for m in valid_metrics]),
-                'mean_contrast': np.mean([m.contrast_std for m in valid_metrics]),
-                'mean_blur_score': np.mean([m.blur_score for m in valid_metrics]),
-                'mean_aspect_ratio': np.mean([m.aspect_ratio for m in valid_metrics])
+                "mean_brightness": np.mean([m.brightness_mean for m in valid_metrics]),
+                "mean_contrast": np.mean([m.contrast_std for m in valid_metrics]),
+                "mean_blur_score": np.mean([m.blur_score for m in valid_metrics]),
+                "mean_aspect_ratio": np.mean([m.aspect_ratio for m in valid_metrics]),
             }
         else:
             quality_stats = {}
@@ -396,8 +406,7 @@ class DatasetValidator:
 
         recommendations = []
         if corrupted_images > 0:
-            recommendations.append(
-                f"Remove or fix {corrupted_images} corrupted images")
+            recommendations.append(f"Remove or fix {corrupted_images} corrupted images")
 
         if not structure_valid:
             recommendations.append("Fix dataset directory structure")
@@ -425,23 +434,25 @@ class DatasetValidator:
             quality_issues=all_issues,
             recommendations=recommendations,
             split_distribution=class_distribution,
-            image_quality_stats=quality_stats
+            image_quality_stats=quality_stats,
         )
 
-    def save_validation_report(self, report: DatasetValidationReport, output_path: Path):
+    def save_validation_report(
+        self, report: DatasetValidationReport, output_path: Path
+    ):
         """Save validation report to JSON file."""
         report_dict = {
-            'total_images': report.total_images,
-            'corrupted_images': report.corrupted_images,
-            'missing_images': report.missing_images,
-            'class_distribution': report.class_distribution,
-            'quality_issues': report.quality_issues,
-            'recommendations': report.recommendations,
-            'split_distribution': report.split_distribution,
-            'image_quality_stats': report.image_quality_stats
+            "total_images": report.total_images,
+            "corrupted_images": report.corrupted_images,
+            "missing_images": report.missing_images,
+            "class_distribution": report.class_distribution,
+            "quality_issues": report.quality_issues,
+            "recommendations": report.recommendations,
+            "split_distribution": report.split_distribution,
+            "image_quality_stats": report.image_quality_stats,
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report_dict, f, indent=2, ensure_ascii=False)
 
         logger.info(f"Validation report saved to {output_path}")

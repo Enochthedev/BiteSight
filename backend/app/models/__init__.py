@@ -6,11 +6,30 @@ from .meal import DetectedFood, Meal, NigerianFood
 from .feedback import FeedbackRecord, NutritionRule
 from .history import WeeklyInsight
 from .consent import ConsentRecord
-from .admin import AdminPermission, AdminRole, AdminRolePermission, AdminSession, AdminUser
+from .admin import (
+    AdminPermission,
+    AdminRole,
+    AdminRolePermission,
+    AdminSession,
+    AdminUser,
+)
 from .image_metadata import ImageMetadata
 
 __all__ = [
-    "Base", "Student", "User", "Meal", "DetectedFood", "NigerianFood", "FeedbackRecord",
-    "NutritionRule", "WeeklyInsight", "ConsentRecord", "AdminUser", "AdminRole",
-    "AdminPermission", "AdminRolePermission", "AdminSession", "ImageMetadata",
+    "Base",
+    "Student",
+    "User",
+    "Meal",
+    "DetectedFood",
+    "NigerianFood",
+    "FeedbackRecord",
+    "NutritionRule",
+    "WeeklyInsight",
+    "ConsentRecord",
+    "AdminUser",
+    "AdminRole",
+    "AdminPermission",
+    "AdminRolePermission",
+    "AdminSession",
+    "ImageMetadata",
 ]

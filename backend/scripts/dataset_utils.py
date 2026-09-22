@@ -34,9 +34,9 @@ def validate_dataset(dataset_path: Path, sample_size: int = 100):
         report = validator.generate_validation_report(sample_size=sample_size)
 
         # Print summary
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("DATASET VALIDATION REPORT")
-        print("="*50)
+        print("=" * 50)
 
         print(f"Total images checked: {report.total_images}")
         print(f"Corrupted images: {report.corrupted_images}")
@@ -82,9 +82,9 @@ def show_dataset_stats(dataset_path: Path):
         loader = DatasetLoader(dataset_path)
         stats = loader.get_dataset_statistics()
 
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("DATASET STATISTICS")
-        print("="*50)
+        print("=" * 50)
 
         total_images = 0
         total_classes = set()
@@ -93,11 +93,10 @@ def show_dataset_stats(dataset_path: Path):
             print(f"\n{split.upper()} Split:")
             print(f"  Images: {split_stats['num_samples']}")
             print(f"  Classes: {split_stats['num_classes']}")
-            print(
-                f"  Class names: {', '.join(split_stats['class_names'][:5])}...")
+            print(f"  Class names: {', '.join(split_stats['class_names'][:5])}...")
 
-            total_images += split_stats['num_samples']
-            total_classes.update(split_stats['class_names'])
+            total_images += split_stats["num_samples"]
+            total_classes.update(split_stats["class_names"])
 
         print(f"\nOVERALL:")
         print(f"  Total images: {total_images}")
@@ -114,9 +113,9 @@ def test_food_mapping(metadata_path: Path):
     try:
         mapper = NigerianFoodMapper(metadata_path)
 
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("FOOD MAPPING TEST")
-        print("="*50)
+        print("=" * 50)
 
         print(f"Loaded {len(mapper.get_all_classes())} food classes")
 
@@ -128,7 +127,8 @@ def test_food_mapping(metadata_path: Path):
             food_info = mapper.get_food_class(food)
             if food_info:
                 print(
-                    f"  '{food}' -> {food_info.name} ({food_info.nutritional_category.value})")
+                    f"  '{food}' -> {food_info.name} ({food_info.nutritional_category.value})"
+                )
             else:
                 print(f"  '{food}' -> Not found")
 
@@ -142,9 +142,9 @@ def test_food_mapping(metadata_path: Path):
         print(f"  Missing categories: {analysis['missing_categories']}")
 
         # Get recommendations
-        if analysis['missing_categories']:
+        if analysis["missing_categories"]:
             recommendations = mapper.get_recommendations_for_missing_categories(
-                analysis['missing_categories']
+                analysis["missing_categories"]
             )
             print(f"  Recommendations: {recommendations}")
 
@@ -158,35 +158,37 @@ def create_sample_dataset(output_path: Path):
 
     try:
         # Create directory structure
-        for split in ['train', 'val', 'test']:
-            (output_path / 'images' / split).mkdir(parents=True, exist_ok=True)
+        for split in ["train", "val", "test"]:
+            (output_path / "images" / split).mkdir(parents=True, exist_ok=True)
 
-        (output_path / 'metadata').mkdir(exist_ok=True)
+        (output_path / "metadata").mkdir(exist_ok=True)
 
         # Create sample metadata
-        metadata_path = output_path / 'metadata' / 'nigerian_foods.json'
+        metadata_path = output_path / "metadata" / "nigerian_foods.json"
         create_sample_metadata_file(metadata_path)
 
         # Create sample class directories
         mapper = NigerianFoodMapper(metadata_path)
         food_classes = mapper.get_all_classes()
 
-        for split in ['train', 'val', 'test']:
+        for split in ["train", "val", "test"]:
             # Create dirs for first 5 classes
             for food_class in food_classes[:5]:
-                class_dir = output_path / 'images' / split / food_class
+                class_dir = output_path / "images" / split / food_class
                 class_dir.mkdir(exist_ok=True)
 
                 # Create a README in each class directory
-                readme_path = class_dir / 'README.md'
-                with open(readme_path, 'w') as f:
+                readme_path = class_dir / "README.md"
+                with open(readme_path, "w") as f:
                     f.write(f"# {food_class.replace('_', ' ').title()}\n\n")
                     f.write(f"Place {food_class} images in this directory.\n")
                     f.write(f"Supported formats: .jpg, .jpeg, .png\n")
 
         print(f"Sample dataset structure created at {output_path}")
         print(f"Metadata file: {metadata_path}")
-        print(f"Add images to the appropriate class directories under images/train/, images/val/, images/test/")
+        print(
+            f"Add images to the appropriate class directories under images/train/, images/val/, images/test/"
+        )
 
     except Exception as e:
         logger.error(f"Error creating sample dataset: {e}")
@@ -201,7 +203,7 @@ def test_augmentation():
         import torch
 
         # Create sample image
-        sample_image = Image.new('RGB', (256, 256), color='blue')
+        sample_image = Image.new("RGB", (256, 256), color="blue")
 
         # Test augmentation config
         config = AugmentationConfig()
@@ -212,17 +214,19 @@ def test_augmentation():
         train_result = train_transforms(sample_image)
         val_result = val_transforms(sample_image)
 
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("AUGMENTATION TEST")
-        print("="*50)
+        print("=" * 50)
 
         print(f"Original image size: {sample_image.size}")
         print(f"Training transform output: {train_result.shape}")
         print(f"Validation transform output: {val_result.shape}")
         print(
-            f"Training tensor range: [{train_result.min():.3f}, {train_result.max():.3f}]")
+            f"Training tensor range: [{train_result.min():.3f}, {train_result.max():.3f}]"
+        )
         print(
-            f"Validation tensor range: [{val_result.min():.3f}, {val_result.max():.3f}]")
+            f"Validation tensor range: [{val_result.min():.3f}, {val_result.max():.3f}]"
+        )
 
         print("Augmentation pipeline test completed successfully!")
 
@@ -232,57 +236,58 @@ def test_augmentation():
 
 def main():
     """Main CLI function."""
-    parser = argparse.ArgumentParser(
-        description="Nigerian Food Dataset Utilities")
-    subparsers = parser.add_subparsers(
-        dest='command', help='Available commands')
+    parser = argparse.ArgumentParser(description="Nigerian Food Dataset Utilities")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Validate command
-    validate_parser = subparsers.add_parser(
-        'validate', help='Validate dataset')
+    validate_parser = subparsers.add_parser("validate", help="Validate dataset")
     validate_parser.add_argument(
-        'dataset_path', type=Path, help='Path to dataset directory')
-    validate_parser.add_argument('--sample-size', type=int, default=100,
-                                 help='Number of images to sample for quality check')
+        "dataset_path", type=Path, help="Path to dataset directory"
+    )
+    validate_parser.add_argument(
+        "--sample-size",
+        type=int,
+        default=100,
+        help="Number of images to sample for quality check",
+    )
 
     # Stats command
-    stats_parser = subparsers.add_parser(
-        'stats', help='Show dataset statistics')
+    stats_parser = subparsers.add_parser("stats", help="Show dataset statistics")
     stats_parser.add_argument(
-        'dataset_path', type=Path, help='Path to dataset directory')
+        "dataset_path", type=Path, help="Path to dataset directory"
+    )
 
     # Test mapping command
-    mapping_parser = subparsers.add_parser(
-        'test-mapping', help='Test food mapping')
+    mapping_parser = subparsers.add_parser("test-mapping", help="Test food mapping")
     mapping_parser.add_argument(
-        'metadata_path', type=Path, help='Path to metadata file')
+        "metadata_path", type=Path, help="Path to metadata file"
+    )
 
     # Create sample command
-    create_parser = subparsers.add_parser(
-        'create-sample', help='Create sample dataset')
+    create_parser = subparsers.add_parser("create-sample", help="Create sample dataset")
     create_parser.add_argument(
-        'output_path', type=Path, help='Output directory for sample dataset')
+        "output_path", type=Path, help="Output directory for sample dataset"
+    )
 
     # Test augmentation command
-    subparsers.add_parser('test-augmentation',
-                          help='Test augmentation pipeline')
+    subparsers.add_parser("test-augmentation", help="Test augmentation pipeline")
 
     args = parser.parse_args()
 
-    if args.command == 'validate':
+    if args.command == "validate":
         success = validate_dataset(args.dataset_path, args.sample_size)
         sys.exit(0 if success else 1)
 
-    elif args.command == 'stats':
+    elif args.command == "stats":
         show_dataset_stats(args.dataset_path)
 
-    elif args.command == 'test-mapping':
+    elif args.command == "test-mapping":
         test_food_mapping(args.metadata_path)
 
-    elif args.command == 'create-sample':
+    elif args.command == "create-sample":
         create_sample_dataset(args.output_path)
 
-    elif args.command == 'test-augmentation':
+    elif args.command == "test-augmentation":
         test_augmentation()
 
     else:

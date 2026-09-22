@@ -35,7 +35,7 @@ async def health_check():
             "message": result.message,
             "response_time": result.response_time,
             "timestamp": result.timestamp,
-            "details": result.details
+            "details": result.details,
         }
 
     response_data = {
@@ -45,10 +45,16 @@ async def health_check():
         "checks": health_data,
         "summary": {
             "total_checks": len(results),
-            "healthy": sum(1 for r in results.values() if r.status == HealthStatus.HEALTHY),
-            "degraded": sum(1 for r in results.values() if r.status == HealthStatus.DEGRADED),
-            "unhealthy": sum(1 for r in results.values() if r.status == HealthStatus.UNHEALTHY)
-        }
+            "healthy": sum(
+                1 for r in results.values() if r.status == HealthStatus.HEALTHY
+            ),
+            "degraded": sum(
+                1 for r in results.values() if r.status == HealthStatus.DEGRADED
+            ),
+            "unhealthy": sum(
+                1 for r in results.values() if r.status == HealthStatus.UNHEALTHY
+            ),
+        },
     }
 
     # Set appropriate HTTP status code
@@ -76,7 +82,7 @@ async def specific_health_check(check_name: str):
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Health check '{check_name}' not found"
+            detail=f"Health check '{check_name}' not found",
         )
 
     response_data = {
@@ -85,7 +91,7 @@ async def specific_health_check(check_name: str):
         "message": result.message,
         "response_time": result.response_time,
         "timestamp": result.timestamp,
-        "details": result.details
+        "details": result.details,
     }
 
     # Set appropriate HTTP status code
@@ -116,25 +122,25 @@ async def system_metrics():
         orchestrator_stats = {
             "running_tasks": len(orchestrator.running_tasks),
             "completed_tasks": len(orchestrator.task_results),
-            "max_concurrent": orchestrator.max_concurrent_tasks
+            "max_concurrent": orchestrator.max_concurrent_tasks,
         }
 
         return {
             "service": "nutrition-feedback-api",
-            "timestamp": __import__('time').time(),
+            "timestamp": __import__("time").time(),
             "async_tasks": task_stats,
             "orchestration": orchestrator_stats,
             "system": {
                 "uptime": "calculated_at_runtime",  # Would need startup time tracking
-                "version": "1.0.0"
-            }
+                "version": "1.0.0",
+            },
         }
 
     except Exception as e:
         logger.error(f"Failed to get system metrics: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve system metrics"
+            detail="Failed to retrieve system metrics",
         )
 
 
@@ -150,14 +156,14 @@ async def task_queue_status():
         return {
             "queue_status": "operational" if stats["running"] else "stopped",
             "statistics": stats,
-            "timestamp": __import__('time').time()
+            "timestamp": __import__("time").time(),
         }
 
     except Exception as e:
         logger.error(f"Failed to get task queue status: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve task queue status"
+            detail="Failed to retrieve task queue status",
         )
 
 
@@ -176,7 +182,7 @@ async def get_task_status(task_id: str):
         if task_status is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task {task_id} not found"
+                detail=f"Task {task_id} not found",
             )
 
         return task_status
@@ -184,19 +190,15 @@ async def get_task_status(task_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            f"Failed to get task status for {task_id}: {e}", exc_info=True)
+        logger.error(f"Failed to get task status for {task_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve task status"
+            detail="Failed to retrieve task status",
         )
 
 
 @router.delete("/tasks/{task_id}")
-async def cancel_task(
-    task_id: str,
-    current_user: Student = Depends(get_current_user)
-):
+async def cancel_task(task_id: str, current_user: Student = Depends(get_current_user)):
     """
     Cancel a running async task.
 
@@ -210,13 +212,13 @@ async def cancel_task(
         if not cancelled:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task {task_id} not found or cannot be cancelled"
+                detail=f"Task {task_id} not found or cannot be cancelled",
             )
 
         return {
             "message": f"Task {task_id} cancelled successfully",
             "task_id": task_id,
-            "timestamp": __import__('time').time()
+            "timestamp": __import__("time").time(),
         }
 
     except HTTPException:
@@ -225,15 +227,14 @@ async def cancel_task(
         logger.error(f"Failed to cancel task {task_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cancel task"
+            detail="Failed to cancel task",
         )
 
 
 @router.post("/maintenance/cleanup")
 async def cleanup_old_data(
-    max_age_hours: int = Query(
-        24, description="Maximum age of data to keep in hours"),
-    current_user: Student = Depends(get_current_user)
+    max_age_hours: int = Query(24, description="Maximum age of data to keep in hours"),
+    current_user: Student = Depends(get_current_user),
 ):
     """
     Clean up old completed tasks and temporary data.
@@ -255,14 +256,14 @@ async def cleanup_old_data(
         return {
             "message": f"Cleanup completed for data older than {max_age_hours} hours",
             "max_age_hours": max_age_hours,
-            "timestamp": __import__('time').time()
+            "timestamp": __import__("time").time(),
         }
 
     except Exception as e:
         logger.error(f"Failed to cleanup old data: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cleanup old data"
+            detail="Failed to cleanup old data",
         )
 
 
@@ -276,7 +277,7 @@ async def ping():
     return {
         "status": "ok",
         "service": "nutrition-feedback-api",
-        "timestamp": __import__('time').time()
+        "timestamp": __import__("time").time(),
     }
 
 
@@ -301,10 +302,7 @@ async def readiness_check():
                 results[check_name] = result.status
 
         # Service is ready if all critical checks pass
-        all_healthy = all(
-            status == HealthStatus.HEALTHY
-            for status in results.values()
-        )
+        all_healthy = all(status == HealthStatus.HEALTHY for status in results.values())
 
         if all_healthy:
             return JSONResponse(
@@ -312,9 +310,9 @@ async def readiness_check():
                     "status": "ready",
                     "service": "nutrition-feedback-api",
                     "checks": {name: status.value for name, status in results.items()},
-                    "timestamp": __import__('time').time()
+                    "timestamp": __import__("time").time(),
                 },
-                status_code=200
+                status_code=200,
             )
         else:
             return JSONResponse(
@@ -322,9 +320,9 @@ async def readiness_check():
                     "status": "not_ready",
                     "service": "nutrition-feedback-api",
                     "checks": {name: status.value for name, status in results.items()},
-                    "timestamp": __import__('time').time()
+                    "timestamp": __import__("time").time(),
                 },
-                status_code=503
+                status_code=503,
             )
 
     except Exception as e:
@@ -333,7 +331,7 @@ async def readiness_check():
             content={
                 "status": "not_ready",
                 "error": str(e),
-                "timestamp": __import__('time').time()
+                "timestamp": __import__("time").time(),
             },
-            status_code=503
+            status_code=503,
         )

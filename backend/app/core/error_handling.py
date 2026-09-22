@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ErrorCategory(Enum):
     """Error categories for classification."""
+
     VALIDATION = "validation"
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
@@ -31,6 +32,7 @@ class ErrorCategory(Enum):
 @dataclass
 class ErrorDetail:
     """Detailed error information."""
+
     code: str
     message: str
     field: Optional[str] = None
@@ -41,6 +43,7 @@ class ErrorDetail:
 @dataclass
 class StandardError:
     """Standardized error response format."""
+
     category: ErrorCategory
     code: str
     message: str
@@ -66,10 +69,10 @@ class StandardError:
                         "message": detail.message,
                         "field": detail.field,
                         "value": detail.value,
-                        "context": detail.context
+                        "context": detail.context,
                     }
                     for detail in self.details
-                ]
+                ],
             }
         }
 
@@ -101,7 +104,7 @@ class ErrorHandler:
             409: ErrorCategory.CONFLICT,
             429: ErrorCategory.RATE_LIMIT,
             503: ErrorCategory.SERVICE_UNAVAILABLE,
-            500: ErrorCategory.INTERNAL_ERROR
+            500: ErrorCategory.INTERNAL_ERROR,
         }
 
     def create_error_response(
@@ -113,7 +116,7 @@ class ErrorHandler:
         status_code: int = 500,
         user_message: Optional[str] = None,
         retry_after: Optional[int] = None,
-        request_id: Optional[str] = None
+        request_id: Optional[str] = None,
     ) -> JSONResponse:
         """Create a standardized error response."""
 
@@ -125,18 +128,13 @@ class ErrorHandler:
             timestamp=time.time(),
             request_id=request_id,
             user_message=user_message,
-            retry_after=retry_after
+            retry_after=retry_after,
         )
 
-        return JSONResponse(
-            status_code=status_code,
-            content=error.to_dict()
-        )
+        return JSONResponse(status_code=status_code, content=error.to_dict())
 
     def handle_validation_error(
-        self,
-        errors: List[Dict[str, Any]],
-        request_id: Optional[str] = None
+        self, errors: List[Dict[str, Any]], request_id: Optional[str] = None
     ) -> JSONResponse:
         """Handle validation errors from Pydantic."""
 
@@ -147,7 +145,7 @@ class ErrorHandler:
                 message=error.get("msg", "Validation failed"),
                 field=".".join(str(loc) for loc in error.get("loc", [])),
                 value=error.get("input"),
-                context={"type": error.get("type")}
+                context={"type": error.get("type")},
             )
             details.append(detail)
 
@@ -158,14 +156,14 @@ class ErrorHandler:
             details=details,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             user_message="Please check your input and try again",
-            request_id=request_id
+            request_id=request_id,
         )
 
     def handle_workflow_error(
         self,
         workflow_error: Exception,
         workflow_name: str,
-        request_id: Optional[str] = None
+        request_id: Optional[str] = None,
     ) -> JSONResponse:
         """Handle workflow execution errors."""
 
@@ -179,8 +177,10 @@ class ErrorHandler:
                     field=workflow_error.step_name,
                     context={
                         "workflow": workflow_name,
-                        "original_error": str(workflow_error.original_error) if workflow_error.original_error else None
-                    }
+                        "original_error": str(workflow_error.original_error)
+                        if workflow_error.original_error
+                        else None,
+                    },
                 )
             ]
 
@@ -191,16 +191,13 @@ class ErrorHandler:
                 details=details,
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 user_message="The requested operation could not be completed. Please try again later.",
-                request_id=request_id
+                request_id=request_id,
             )
         else:
             return self.handle_internal_error(workflow_error, request_id)
 
     def handle_ml_error(
-        self,
-        ml_error: Exception,
-        operation: str,
-        request_id: Optional[str] = None
+        self, ml_error: Exception, operation: str, request_id: Optional[str] = None
     ) -> JSONResponse:
         """Handle machine learning related errors."""
 
@@ -208,35 +205,33 @@ class ErrorHandler:
             ErrorDetail(
                 code="ML_OPERATION_FAILED",
                 message=str(ml_error),
-                context={
-                    "operation": operation,
-                    "error_type": type(ml_error).__name__
-                }
+                context={"operation": operation, "error_type": type(ml_error).__name__},
             )
         ]
 
         # Determine if this is a temporary or permanent error
-        temporary_errors = ["TimeoutError",
-                            "ConnectionError", "ResourceExhaustedError"]
-        is_temporary = any(error_type in str(type(ml_error))
-                           for error_type in temporary_errors)
+        temporary_errors = ["TimeoutError", "ConnectionError", "ResourceExhaustedError"]
+        is_temporary = any(
+            error_type in str(type(ml_error)) for error_type in temporary_errors
+        )
 
         return self.create_error_response(
             category=ErrorCategory.ML_ERROR,
             code="ML_PROCESSING_FAILED",
             message=f"Machine learning operation '{operation}' failed",
             details=details,
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE if is_temporary else status.HTTP_500_INTERNAL_SERVER_ERROR,
-            user_message="Image analysis is temporarily unavailable. Please try again in a few moments." if is_temporary else "Image analysis failed. Please try with a different image.",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+            if is_temporary
+            else status.HTTP_500_INTERNAL_SERVER_ERROR,
+            user_message="Image analysis is temporarily unavailable. Please try again in a few moments."
+            if is_temporary
+            else "Image analysis failed. Please try with a different image.",
             retry_after=30 if is_temporary else None,
-            request_id=request_id
+            request_id=request_id,
         )
 
     def handle_storage_error(
-        self,
-        storage_error: Exception,
-        operation: str,
-        request_id: Optional[str] = None
+        self, storage_error: Exception, operation: str, request_id: Optional[str] = None
     ) -> JSONResponse:
         """Handle file storage related errors."""
 
@@ -246,8 +241,8 @@ class ErrorHandler:
                 message=str(storage_error),
                 context={
                     "operation": operation,
-                    "error_type": type(storage_error).__name__
-                }
+                    "error_type": type(storage_error).__name__,
+                },
             )
         ]
 
@@ -259,7 +254,7 @@ class ErrorHandler:
             status_code=status.HTTP_507_INSUFFICIENT_STORAGE,
             user_message="File storage is temporarily unavailable. Please try again later.",
             retry_after=60,
-            request_id=request_id
+            request_id=request_id,
         )
 
     def handle_rate_limit_error(
@@ -267,7 +262,7 @@ class ErrorHandler:
         limit: int,
         window: int,
         retry_after: int,
-        request_id: Optional[str] = None
+        request_id: Optional[str] = None,
     ) -> JSONResponse:
         """Handle rate limiting errors."""
 
@@ -275,11 +270,7 @@ class ErrorHandler:
             ErrorDetail(
                 code="RATE_LIMIT_EXCEEDED",
                 message=f"Rate limit of {limit} requests per {window} seconds exceeded",
-                context={
-                    "limit": limit,
-                    "window": window,
-                    "retry_after": retry_after
-                }
+                context={"limit": limit, "window": window, "retry_after": retry_after},
             )
         ]
 
@@ -291,22 +282,15 @@ class ErrorHandler:
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             user_message=f"You've made too many requests. Please wait {retry_after} seconds before trying again.",
             retry_after=retry_after,
-            request_id=request_id
+            request_id=request_id,
         )
 
     def handle_authentication_error(
-        self,
-        message: str = "Authentication required",
-        request_id: Optional[str] = None
+        self, message: str = "Authentication required", request_id: Optional[str] = None
     ) -> JSONResponse:
         """Handle authentication errors."""
 
-        details = [
-            ErrorDetail(
-                code="AUTHENTICATION_REQUIRED",
-                message=message
-            )
-        ]
+        details = [ErrorDetail(code="AUTHENTICATION_REQUIRED", message=message)]
 
         return self.create_error_response(
             category=ErrorCategory.AUTHENTICATION,
@@ -315,14 +299,11 @@ class ErrorHandler:
             details=details,
             status_code=status.HTTP_401_UNAUTHORIZED,
             user_message="Please log in to access this resource",
-            request_id=request_id
+            request_id=request_id,
         )
 
     def handle_authorization_error(
-        self,
-        resource: str,
-        action: str,
-        request_id: Optional[str] = None
+        self, resource: str, action: str, request_id: Optional[str] = None
     ) -> JSONResponse:
         """Handle authorization errors."""
 
@@ -330,10 +311,7 @@ class ErrorHandler:
             ErrorDetail(
                 code="INSUFFICIENT_PERMISSIONS",
                 message=f"Insufficient permissions to {action} {resource}",
-                context={
-                    "resource": resource,
-                    "action": action
-                }
+                context={"resource": resource, "action": action},
             )
         ]
 
@@ -344,14 +322,11 @@ class ErrorHandler:
             details=details,
             status_code=status.HTTP_403_FORBIDDEN,
             user_message="You don't have permission to perform this action",
-            request_id=request_id
+            request_id=request_id,
         )
 
     def handle_not_found_error(
-        self,
-        resource: str,
-        identifier: str,
-        request_id: Optional[str] = None
+        self, resource: str, identifier: str, request_id: Optional[str] = None
     ) -> JSONResponse:
         """Handle resource not found errors."""
 
@@ -359,10 +334,7 @@ class ErrorHandler:
             ErrorDetail(
                 code="RESOURCE_NOT_FOUND",
                 message=f"{resource} with identifier '{identifier}' not found",
-                context={
-                    "resource": resource,
-                    "identifier": identifier
-                }
+                context={"resource": resource, "identifier": identifier},
             )
         ]
 
@@ -373,14 +345,14 @@ class ErrorHandler:
             details=details,
             status_code=status.HTTP_404_NOT_FOUND,
             user_message=f"The requested {resource.lower()} could not be found",
-            request_id=request_id
+            request_id=request_id,
         )
 
     def handle_internal_error(
         self,
         error: Exception,
         request_id: Optional[str] = None,
-        include_traceback: bool = False
+        include_traceback: bool = False,
     ) -> JSONResponse:
         """Handle internal server errors."""
 
@@ -393,8 +365,8 @@ class ErrorHandler:
                 message="An unexpected error occurred",
                 context={
                     "error_type": type(error).__name__,
-                    "traceback": traceback.format_exc() if include_traceback else None
-                }
+                    "traceback": traceback.format_exc() if include_traceback else None,
+                },
             )
         ]
 
@@ -405,7 +377,7 @@ class ErrorHandler:
             details=details,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             user_message="Something went wrong on our end. Please try again later.",
-            request_id=request_id
+            request_id=request_id,
         )
 
 
@@ -423,44 +395,39 @@ def get_error_handler() -> ErrorHandler:
 
 # Convenience functions for common error responses
 
+
 def validation_error_response(
-    errors: List[Dict[str, Any]],
-    request_id: Optional[str] = None
+    errors: List[Dict[str, Any]], request_id: Optional[str] = None
 ) -> JSONResponse:
     """Create a validation error response."""
     return get_error_handler().handle_validation_error(errors, request_id)
 
 
 def workflow_error_response(
-    workflow_error: Exception,
-    workflow_name: str,
-    request_id: Optional[str] = None
+    workflow_error: Exception, workflow_name: str, request_id: Optional[str] = None
 ) -> JSONResponse:
     """Create a workflow error response."""
-    return get_error_handler().handle_workflow_error(workflow_error, workflow_name, request_id)
+    return get_error_handler().handle_workflow_error(
+        workflow_error, workflow_name, request_id
+    )
 
 
 def ml_error_response(
-    ml_error: Exception,
-    operation: str,
-    request_id: Optional[str] = None
+    ml_error: Exception, operation: str, request_id: Optional[str] = None
 ) -> JSONResponse:
     """Create an ML error response."""
     return get_error_handler().handle_ml_error(ml_error, operation, request_id)
 
 
 def not_found_response(
-    resource: str,
-    identifier: str,
-    request_id: Optional[str] = None
+    resource: str, identifier: str, request_id: Optional[str] = None
 ) -> JSONResponse:
     """Create a not found error response."""
     return get_error_handler().handle_not_found_error(resource, identifier, request_id)
 
 
 def internal_error_response(
-    error: Exception,
-    request_id: Optional[str] = None
+    error: Exception, request_id: Optional[str] = None
 ) -> JSONResponse:
     """Create an internal error response."""
     return get_error_handler().handle_internal_error(error, request_id)

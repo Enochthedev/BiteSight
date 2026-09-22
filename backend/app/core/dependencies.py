@@ -18,7 +18,7 @@ security = HTTPBearer()
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> Student:
     """Get current authenticated user from JWT token."""
     token = credentials.credentials
@@ -40,7 +40,7 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: Student = Depends(get_current_user)
+    current_user: Student = Depends(get_current_user),
 ) -> Student:
     """Get current active user (can be extended for user status checks)."""
     return current_user
@@ -48,8 +48,9 @@ async def get_current_active_user(
 
 def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(
-        HTTPBearer(auto_error=False)),
-    db: Session = Depends(get_db)
+        HTTPBearer(auto_error=False)
+    ),
+    db: Session = Depends(get_db),
 ) -> Optional[Student]:
     """Get current user if authenticated, None otherwise."""
     if not credentials:

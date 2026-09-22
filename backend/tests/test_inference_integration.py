@@ -28,28 +28,29 @@ class TestInferenceIntegration:
     @pytest.fixture
     def sample_image(self):
         """Create sample PIL image."""
-        return Image.new('RGB', (224, 224), color='blue')
+        return Image.new("RGB", (224, 224), color="blue")
 
     @pytest.fixture
     def sample_image_base64(self, sample_image):
         """Create base64 encoded sample image."""
         buffer = io.BytesIO()
-        sample_image.save(buffer, format='JPEG')
+        sample_image.save(buffer, format="JPEG")
         image_data = buffer.getvalue()
-        return base64.b64encode(image_data).decode('utf-8')
+        return base64.b64encode(image_data).decode("utf-8")
 
     @pytest.fixture
     def mock_model_checkpoint(self):
         """Create mock model checkpoint."""
-        with tempfile.NamedTemporaryFile(suffix='.pth', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".pth", delete=False) as f:
             model = MobileNetV2FoodClassifier(num_classes=5, pretrained=False)
 
             checkpoint = {
-                'model_state_dict': model.state_dict(),
-                'class_names': ['jollof_rice', 'beans', 'plantain', 'fish', 'efo_riro']
+                "model_state_dict": model.state_dict(),
+                "class_names": ["jollof_rice", "beans", "plantain", "fish", "efo_riro"],
             }
 
             import torch
+
             torch.save(checkpoint, f.name)
             yield f.name
 
@@ -59,21 +60,21 @@ class TestInferenceIntegration:
     @pytest.fixture
     def mock_food_mapping(self):
         """Create mock food mapping file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             metadata = {
                 "foods": [
                     {
                         "name": "jollof_rice",
                         "local_names": ["jollof"],
                         "food_class": "jollof_rice",
-                        "nutritional_category": "carbohydrates"
+                        "nutritional_category": "carbohydrates",
                     },
                     {
                         "name": "beans",
                         "local_names": ["ewa"],
                         "food_class": "beans",
-                        "nutritional_category": "proteins"
-                    }
+                        "nutritional_category": "proteins",
+                    },
                 ]
             }
             json.dump(metadata, f)
@@ -90,7 +91,7 @@ class TestInferenceIntegration:
             food_mapping_path=mock_food_mapping,
             device="cpu",
             warmup_samples=1,
-            max_concurrent_requests=2
+            max_concurrent_requests=2,
         )
 
     def test_model_manager_initialization(self, serving_config):
@@ -133,7 +134,12 @@ class TestInferenceIntegration:
             assert result is not None
             assert isinstance(result, PredictionResult)
             assert result.class_name in [
-                'jollof_rice', 'beans', 'plantain', 'fish', 'efo_riro']
+                "jollof_rice",
+                "beans",
+                "plantain",
+                "fish",
+                "efo_riro",
+            ]
             assert 0 <= result.confidence <= 1
             assert isinstance(result.class_index, int)
 
@@ -167,10 +173,10 @@ class TestInferenceIntegration:
             result = await server.analyze_meal_nutrition(images)
 
             assert result is not None
-            assert 'detected_foods' in result
-            assert 'category_distribution' in result
-            assert 'missing_categories' in result
-            assert 'balance_score' in result
+            assert "detected_foods" in result
+            assert "category_distribution" in result
+            assert "missing_categories" in result
+            assert "balance_score" in result
 
         finally:
             server.cleanup()
@@ -199,14 +205,16 @@ class TestInferenceAPI:
     @pytest.fixture
     def sample_image_base64(self):
         """Create base64 encoded sample image."""
-        image = Image.new('RGB', (224, 224), color='red')
+        image = Image.new("RGB", (224, 224), color="red")
         buffer = io.BytesIO()
-        image.save(buffer, format='JPEG')
+        image.save(buffer, format="JPEG")
         image_data = buffer.getvalue()
-        return base64.b64encode(image_data).decode('utf-8')
+        return base64.b64encode(image_data).decode("utf-8")
 
-    @patch('app.api.v1.endpoints.inference.get_model_server')
-    def test_predict_endpoint_success(self, mock_get_server, client, sample_image_base64):
+    @patch("app.api.v1.endpoints.inference.get_model_server")
+    def test_predict_endpoint_success(
+        self, mock_get_server, client, sample_image_base64
+    ):
         """Test successful prediction endpoint."""
         # Mock server and prediction result
         mock_server = Mock()
@@ -215,7 +223,7 @@ class TestInferenceAPI:
             confidence=0.85,
             class_index=0,
             nutritional_category="carbohydrates",
-            local_names=["jollof"]
+            local_names=["jollof"],
         )
 
         mock_server.predict_single = AsyncMock(return_value=mock_result)
@@ -227,8 +235,8 @@ class TestInferenceAPI:
             json={
                 "image_base64": sample_image_base64,
                 "return_all_scores": False,
-                "model_id": "primary"
-            }
+                "model_id": "primary",
+            },
         )
 
         assert response.status_code == 200
@@ -238,8 +246,10 @@ class TestInferenceAPI:
         assert data["confidence"] == 0.85
         assert data["nutritional_category"] == "carbohydrates"
 
-    @patch('app.api.v1.endpoints.inference.get_model_server')
-    def test_predict_endpoint_failure(self, mock_get_server, client, sample_image_base64):
+    @patch("app.api.v1.endpoints.inference.get_model_server")
+    def test_predict_endpoint_failure(
+        self, mock_get_server, client, sample_image_base64
+    ):
         """Test prediction endpoint failure."""
         # Mock server that returns None (prediction failed)
         mock_server = Mock()
@@ -252,8 +262,8 @@ class TestInferenceAPI:
             json={
                 "image_base64": sample_image_base64,
                 "return_all_scores": False,
-                "model_id": "primary"
-            }
+                "model_id": "primary",
+            },
         )
 
         assert response.status_code == 500
@@ -265,28 +275,20 @@ class TestInferenceAPI:
             json={
                 "image_base64": "invalid_base64_data",
                 "return_all_scores": False,
-                "model_id": "primary"
-            }
+                "model_id": "primary",
+            },
         )
 
         assert response.status_code == 400
 
-    @patch('app.api.v1.endpoints.inference.get_model_server')
+    @patch("app.api.v1.endpoints.inference.get_model_server")
     def test_batch_predict_endpoint(self, mock_get_server, client, sample_image_base64):
         """Test batch prediction endpoint."""
         # Mock server and results
         mock_server = Mock()
         mock_results = [
-            PredictionResult(
-                class_name="jollof_rice",
-                confidence=0.85,
-                class_index=0
-            ),
-            PredictionResult(
-                class_name="beans",
-                confidence=0.75,
-                class_index=1
-            )
+            PredictionResult(class_name="jollof_rice", confidence=0.85, class_index=0),
+            PredictionResult(class_name="beans", confidence=0.75, class_index=1),
         ]
 
         mock_server.predict_batch = AsyncMock(return_value=mock_results)
@@ -298,8 +300,8 @@ class TestInferenceAPI:
             json={
                 "images_base64": [sample_image_base64, sample_image_base64],
                 "return_all_scores": False,
-                "model_id": "primary"
-            }
+                "model_id": "primary",
+            },
         )
 
         assert response.status_code == 200
@@ -309,39 +311,31 @@ class TestInferenceAPI:
         assert data["successful_predictions"] == 2
         assert len(data["predictions"]) == 2
 
-    @patch('app.api.v1.endpoints.inference.get_model_server')
-    def test_nutrition_analysis_endpoint(self, mock_get_server, client, sample_image_base64):
+    @patch("app.api.v1.endpoints.inference.get_model_server")
+    def test_nutrition_analysis_endpoint(
+        self, mock_get_server, client, sample_image_base64
+    ):
         """Test nutrition analysis endpoint."""
         # Mock server and analysis result
         mock_server = Mock()
         mock_analysis = {
             "detected_foods": [
-                {
-                    "name": "jollof_rice",
-                    "confidence": 0.85,
-                    "category": "carbohydrates"
-                }
+                {"name": "jollof_rice", "confidence": 0.85, "category": "carbohydrates"}
             ],
             "category_distribution": {"carbohydrates": 1},
             "missing_categories": ["proteins", "vitamins"],
             "balance_score": 0.33,
             "total_foods_detected": 1,
-            "recommendations": {
-                "proteins": ["Beans (ewa)", "Fish (eja)"]
-            }
+            "recommendations": {"proteins": ["Beans (ewa)", "Fish (eja)"]},
         }
 
-        mock_server.analyze_meal_nutrition = AsyncMock(
-            return_value=mock_analysis)
+        mock_server.analyze_meal_nutrition = AsyncMock(return_value=mock_analysis)
         mock_get_server.return_value = mock_server
 
         # Make request
         response = client.post(
             "/api/v1/inference/analyze/nutrition",
-            json={
-                "images_base64": [sample_image_base64],
-                "model_id": "primary"
-            }
+            json={"images_base64": [sample_image_base64], "model_id": "primary"},
         )
 
         assert response.status_code == 200
@@ -352,7 +346,7 @@ class TestInferenceAPI:
         assert "proteins" in data["missing_categories"]
         assert "recommendations" in data
 
-    @patch('app.api.v1.endpoints.inference.get_model_server')
+    @patch("app.api.v1.endpoints.inference.get_model_server")
     def test_status_endpoint(self, mock_get_server, client):
         """Test server status endpoint."""
         # Mock server status
@@ -364,13 +358,10 @@ class TestInferenceAPI:
                 {
                     "model_id": "primary",
                     "num_classes": 5,
-                    "class_names": ["jollof_rice", "beans"]
+                    "class_names": ["jollof_rice", "beans"],
                 }
             ],
-            "config": {
-                "max_batch_size": 16,
-                "confidence_threshold": 0.1
-            }
+            "config": {"max_batch_size": 16, "confidence_threshold": 0.1},
         }
 
         mock_server.get_server_status.return_value = mock_status
@@ -386,7 +377,7 @@ class TestInferenceAPI:
         assert data["uptime_seconds"] == 3600.0
         assert len(data["models"]) == 1
 
-    @patch('app.api.v1.endpoints.inference.get_model_server')
+    @patch("app.api.v1.endpoints.inference.get_model_server")
     def test_health_endpoint(self, mock_get_server, client):
         """Test health check endpoint."""
         # Mock healthy server
@@ -403,7 +394,7 @@ class TestInferenceAPI:
         assert data["status"] == "healthy"
         assert "timestamp" in data
 
-    @patch('app.api.v1.endpoints.inference.get_model_server')
+    @patch("app.api.v1.endpoints.inference.get_model_server")
     def test_health_endpoint_unhealthy(self, mock_get_server, client):
         """Test health check endpoint when unhealthy."""
         # Mock unhealthy server
@@ -430,7 +421,7 @@ class TestModelCaching:
             device="cpu",
             enable_caching=True,
             cache_size=100,
-            warmup_iterations=1
+            warmup_iterations=1,
         )
 
         # Test that config enables caching
@@ -457,9 +448,7 @@ class TestErrorHandling:
     def test_invalid_serving_config(self):
         """Test handling of invalid serving configuration."""
         config = ServingConfig(
-            model_path="/nonexistent/model.pth",
-            device="cpu",
-            warmup_samples=1
+            model_path="/nonexistent/model.pth", device="cpu", warmup_samples=1
         )
 
         # Should raise exception for nonexistent model

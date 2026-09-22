@@ -31,10 +31,13 @@ class ImageService:
         for directory in [self.raw_dir, self.processed_dir, self.thumbnails_dir]:
             directory.mkdir(exist_ok=True)
 
-    def _get_organized_path(self, meal_id: UUID, subdirectory: str, extension: str = "jpg") -> Path:
+    def _get_organized_path(
+        self, meal_id: UUID, subdirectory: str, extension: str = "jpg"
+    ) -> Path:
         """Generate organized file path based on date and meal ID."""
         # Sanitize subdirectory to prevent directory traversal
         import os
+
         safe_subdirectory = os.path.basename(subdirectory)
 
         # Only allow specific subdirectories
@@ -53,7 +56,7 @@ class ImageService:
             "is_valid": True,
             "errors": [],
             "warnings": [],
-            "metadata": {}
+            "metadata": {},
         }
 
         # Check file type
@@ -90,13 +93,11 @@ class ImageService:
 
             except Exception as e:
                 validation_results["is_valid"] = False
-                validation_results["errors"].append(
-                    f"Invalid image file: {str(e)}")
+                validation_results["errors"].append(f"Invalid image file: {str(e)}")
 
         except Exception as e:
             validation_results["is_valid"] = False
-            validation_results["errors"].append(
-                f"Error reading file: {str(e)}")
+            validation_results["errors"].append(f"Error reading file: {str(e)}")
 
         if not validation_results["is_valid"]:
             raise HTTPException(
@@ -104,19 +105,15 @@ class ImageService:
                 detail={
                     "message": "Image validation failed",
                     "errors": validation_results["errors"],
-                    "warnings": validation_results["warnings"]
-                }
+                    "warnings": validation_results["warnings"],
+                },
             )
 
         return validation_results
 
     def _validate_image_quality(self, image: Image.Image) -> Dict[str, Any]:
         """Validate image quality for food recognition."""
-        quality_results = {
-            "quality_score": 0.0,
-            "quality_issues": [],
-            "warnings": []
-        }
+        quality_results = {"quality_score": 0.0, "quality_issues": [], "warnings": []}
 
         # Check minimum resolution
         min_width, min_height = 224, 224  # Minimum for MobileNetV2
@@ -134,35 +131,38 @@ class ImageService:
             )
 
         # Check if image is too dark or too bright
-        if image.mode in ['RGB', 'L']:
+        if image.mode in ["RGB", "L"]:
             try:
                 stat = ImageStat.Stat(image)
-                if image.mode == 'RGB':
+                if image.mode == "RGB":
                     brightness = sum(stat.mean) / 3
                 else:
                     brightness = stat.mean[0]
 
                 if brightness < 50:
                     quality_results["warnings"].append(
-                        "Image appears too dark. Consider retaking with better lighting.")
+                        "Image appears too dark. Consider retaking with better lighting."
+                    )
                 elif brightness > 200:
                     quality_results["warnings"].append(
-                        "Image appears too bright. Consider retaking with less exposure.")
+                        "Image appears too bright. Consider retaking with less exposure."
+                    )
 
                 # Calculate quality score based on brightness and resolution
                 brightness_score = min(1.0, max(0.0, (brightness - 30) / 170))
-                resolution_score = min(
-                    1.0, (image.width * image.height) / (640 * 480))
+                resolution_score = min(1.0, (image.width * image.height) / (640 * 480))
                 quality_results["quality_score"] = (
-                    brightness_score + resolution_score) / 2
+                    brightness_score + resolution_score
+                ) / 2
 
             except Exception:
-                quality_results["warnings"].append(
-                    "Could not analyze image brightness")
+                quality_results["warnings"].append("Could not analyze image brightness")
 
         return quality_results
 
-    async def save_image(self, file: UploadFile, meal_id: UUID, student_id: UUID = None, db_session=None) -> Dict[str, Any]:
+    async def save_image(
+        self, file: UploadFile, meal_id: UUID, student_id: UUID = None, db_session=None
+    ) -> Dict[str, Any]:
         """Save uploaded image to storage with organized structure and metadata."""
         validation_results = await self.validate_image(file)
 
@@ -171,11 +171,12 @@ class ImageService:
         if file.filename:
             # Extract only the extension, ignore path components
             import os
+
             base_name = os.path.basename(file.filename)
-            if '.' in base_name:
-                ext = base_name.split('.')[-1].lower()
+            if "." in base_name:
+                ext = base_name.split(".")[-1].lower()
                 # Only allow safe image extensions
-                if ext in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']:
+                if ext in ["jpg", "jpeg", "png", "gif", "bmp", "webp"]:
                     safe_extension = ext
 
         raw_path = self._get_organized_path(meal_id, "raw", safe_extension)
@@ -217,10 +218,12 @@ class ImageService:
                     meal_id=meal_id,
                     student_id=student_id,
                     raw_image_path=str(raw_path),
-                    processed_image_path=str(
-                        processed_path) if processed_path.exists() else None,
-                    thumbnail_path=str(
-                        thumbnail_path) if thumbnail_path.exists() else None,
+                    processed_image_path=str(processed_path)
+                    if processed_path.exists()
+                    else None,
+                    thumbnail_path=str(thumbnail_path)
+                    if thumbnail_path.exists()
+                    else None,
                     original_filename=file.filename,
                     file_size=len(content),
                     file_hash=file_hash,
@@ -229,14 +232,12 @@ class ImageService:
                     height=validation_results["metadata"]["height"],
                     format=validation_results["metadata"]["format"],
                     mode=validation_results["metadata"]["mode"],
-                    quality_score=int(validation_results.get(
-                        "quality_score", 0) * 100),
-                    quality_issues=validation_results.get(
-                        "quality_issues", []),
+                    quality_score=int(validation_results.get("quality_score", 0) * 100),
+                    quality_issues=validation_results.get("quality_issues", []),
                     quality_warnings=validation_results.get("warnings", []),
                     exif_data=validation_results["metadata"].get("exif", {}),
                     is_processed=processed_path.exists() and not processing_error,
-                    processing_error=processing_error
+                    processing_error=processing_error,
                 )
                 metadata_service.create_metadata(metadata)
             except Exception as e:
@@ -249,10 +250,12 @@ class ImageService:
             "thumbnail_path": str(thumbnail_path) if thumbnail_path.exists() else None,
             "file_hash": file_hash,
             "file_size": len(content),
-            "validation_results": validation_results
+            "validation_results": validation_results,
         }
 
-    def preprocess_image(self, image_path: str, target_size: Tuple[int, int] = (224, 224)) -> Optional[Image.Image]:
+    def preprocess_image(
+        self, image_path: str, target_size: Tuple[int, int] = (224, 224)
+    ) -> Optional[Image.Image]:
         """Preprocess image for AI model inference with normalization."""
         try:
             image = Image.open(image_path)
@@ -260,7 +263,7 @@ class ImageService:
             # Handle EXIF orientation
             try:
                 for orientation in ExifTags.TAGS.keys():
-                    if ExifTags.TAGS[orientation] == 'Orientation':
+                    if ExifTags.TAGS[orientation] == "Orientation":
                         break
                 exif = image._getexif()
                 if exif is not None:
@@ -276,14 +279,14 @@ class ImageService:
                 pass
 
             # Convert to RGB if necessary
-            if image.mode != 'RGB':
-                image = image.convert('RGB')
+            if image.mode != "RGB":
+                image = image.convert("RGB")
 
             # Resize to model input size while maintaining aspect ratio
             image.thumbnail(target_size, Image.Resampling.LANCZOS)
 
             # Create a new image with the exact target size and paste the resized image
-            processed_image = Image.new('RGB', target_size, (255, 255, 255))
+            processed_image = Image.new("RGB", target_size, (255, 255, 255))
 
             # Calculate position to center the image
             x_offset = (target_size[0] - image.width) // 2
@@ -293,8 +296,7 @@ class ImageService:
             return processed_image
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error preprocessing image: {str(e)}"
+                status_code=500, detail=f"Error preprocessing image: {str(e)}"
             )
 
     def normalize_image_array(self, image: Image.Image) -> np.ndarray:
@@ -325,7 +327,7 @@ class ImageService:
                 "height": image.height,
                 "format": image.format,
                 "mode": image.mode,
-                "file_size": os.path.getsize(image_path)
+                "file_size": os.path.getsize(image_path),
             }
 
             # Extract EXIF data if available
@@ -343,8 +345,7 @@ class ImageService:
             return metadata
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error reading image metadata: {str(e)}"
+                status_code=500, detail=f"Error reading image metadata: {str(e)}"
             )
 
     def get_image_paths(self, meal_id: UUID) -> Dict[str, Optional[str]]:
@@ -358,15 +359,16 @@ class ImageService:
 
         # Add yesterday's date if not the first day of month
         if datetime.now().day > 1:
-            yesterday = datetime.now().replace(day=datetime.now().day-1)
+            yesterday = datetime.now().replace(day=datetime.now().day - 1)
             date_patterns.append(yesterday.strftime("%Y/%m/%d"))
 
         for img_type in ["raw", "processed", "thumbnails"]:
             paths[img_type] = None
             for date_pattern in date_patterns:
                 for ext in ["jpg", "jpeg", "png"]:
-                    potential_path = self.upload_dir / img_type / \
-                        date_pattern / f"{meal_id}.{ext}"
+                    potential_path = (
+                        self.upload_dir / img_type / date_pattern / f"{meal_id}.{ext}"
+                    )
                     if potential_path.exists():
                         paths[img_type] = str(potential_path)
                         break
@@ -415,7 +417,7 @@ class ImageService:
                                         try:
                                             dir_date = datetime.strptime(
                                                 f"{year_dir.name}/{month_dir.name}/{day_dir.name}",
-                                                "%Y/%m/%d"
+                                                "%Y/%m/%d",
                                             )
                                             if dir_date < cutoff_date:
                                                 for img_file in day_dir.iterdir():

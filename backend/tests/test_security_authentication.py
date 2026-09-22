@@ -8,7 +8,12 @@ from unittest.mock import patch, Mock
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.core.auth import create_access_token, verify_token, hash_password, verify_password
+from app.core.auth import (
+    create_access_token,
+    verify_token,
+    hash_password,
+    verify_password,
+)
 from app.models.user import Student
 from app.models.admin import AdminUser, AdminRole
 
@@ -28,7 +33,7 @@ class TestAuthenticationSecurity:
             email="security_test@university.edu.ng",
             name="Security Test User",
             password_hash=hash_password("SecurePassword123!"),
-            history_enabled=True
+            history_enabled=True,
         )
         db_session.add(user)
         db_session.commit()
@@ -43,7 +48,7 @@ class TestAuthenticationSecurity:
             email="security_admin@university.edu.ng",
             password_hash=hash_password("AdminPassword123!"),
             role=AdminRole.SUPER_ADMIN,
-            is_active=True
+            is_active=True,
         )
         db_session.add(admin)
         db_session.commit()
@@ -70,13 +75,7 @@ class TestAuthenticationSecurity:
         assert not verify_password("WrongPassword", hashed1)
 
         # Test with various password complexities
-        weak_passwords = [
-            "123456",
-            "password",
-            "qwerty",
-            "abc123",
-            "password123"
-        ]
+        weak_passwords = ["123456", "password", "qwerty", "abc123", "password123"]
 
         for weak_password in weak_passwords:
             hashed = hash_password(weak_password)
@@ -100,7 +99,7 @@ class TestAuthenticationSecurity:
         # Test token expiration
         expired_token = create_access_token(
             data={"sub": user_id},
-            expires_delta=timedelta(seconds=-1)  # Already expired
+            expires_delta=timedelta(seconds=-1),  # Already expired
         )
 
         # Expired token should not verify
@@ -121,10 +120,7 @@ class TestAuthenticationSecurity:
         """Test login security measures."""
 
         # Test successful login
-        login_data = {
-            "email": test_user.email,
-            "password": "SecurePassword123!"
-        }
+        login_data = {"email": test_user.email, "password": "SecurePassword123!"}
 
         response = client.post("/api/v1/auth/login", json=login_data)
         assert response.status_code == 200
@@ -135,10 +131,7 @@ class TestAuthenticationSecurity:
         assert auth_data["token_type"] == "bearer"
 
         # Test failed login with wrong password
-        wrong_password_data = {
-            "email": test_user.email,
-            "password": "WrongPassword"
-        }
+        wrong_password_data = {"email": test_user.email, "password": "WrongPassword"}
 
         response = client.post("/api/v1/auth/login", json=wrong_password_data)
         assert response.status_code == 401
@@ -150,25 +143,21 @@ class TestAuthenticationSecurity:
         # Test failed login with non-existent user
         nonexistent_user_data = {
             "email": "nonexistent@university.edu.ng",
-            "password": "AnyPassword"
+            "password": "AnyPassword",
         }
 
-        response = client.post("/api/v1/auth/login",
-                               json=nonexistent_user_data)
+        response = client.post("/api/v1/auth/login", json=nonexistent_user_data)
         assert response.status_code == 401
 
         # Test SQL injection attempts
         sql_injection_attempts = [
             "admin@test.com'; DROP TABLE students; --",
             "admin@test.com' OR '1'='1",
-            "admin@test.com' UNION SELECT * FROM students --"
+            "admin@test.com' UNION SELECT * FROM students --",
         ]
 
         for injection_email in sql_injection_attempts:
-            injection_data = {
-                "email": injection_email,
-                "password": "password"
-            }
+            injection_data = {"email": injection_email, "password": "password"}
 
             response = client.post("/api/v1/auth/login", json=injection_data)
             # Should not cause server error, should handle gracefully
@@ -181,10 +170,7 @@ class TestAuthenticationSecurity:
         failed_attempts = []
 
         for i in range(10):  # 10 failed attempts
-            login_data = {
-                "email": test_user.email,
-                "password": f"WrongPassword{i}"
-            }
+            login_data = {"email": test_user.email, "password": f"WrongPassword{i}"}
 
             response = client.post("/api/v1/auth/login", json=login_data)
             failed_attempts.append(response.status_code)
@@ -198,7 +184,7 @@ class TestAuthenticationSecurity:
         # Test that legitimate login still works after failed attempts
         correct_login_data = {
             "email": test_user.email,
-            "password": "SecurePassword123!"
+            "password": "SecurePassword123!",
         }
 
         response = client.post("/api/v1/auth/login", json=correct_login_data)
@@ -209,10 +195,7 @@ class TestAuthenticationSecurity:
         """Test session security measures."""
 
         # Login to get token
-        login_data = {
-            "email": test_user.email,
-            "password": "SecurePassword123!"
-        }
+        login_data = {"email": test_user.email, "password": "SecurePassword123!"}
 
         response = client.post("/api/v1/auth/login", json=login_data)
         assert response.status_code == 200
@@ -222,7 +205,8 @@ class TestAuthenticationSecurity:
 
         # Test authenticated request
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=headers
+        )
         assert response.status_code == 200
 
         # Test request without token
@@ -232,23 +216,22 @@ class TestAuthenticationSecurity:
         # Test request with invalid token
         invalid_headers = {"Authorization": "Bearer invalid-token"}
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=invalid_headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=invalid_headers
+        )
         assert response.status_code == 401
 
         # Test request with malformed authorization header
         malformed_headers = {"Authorization": "InvalidFormat token"}
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=malformed_headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=malformed_headers
+        )
         assert response.status_code == 401
 
     def test_authorization_levels(self, client, test_user, admin_user):
         """Test different authorization levels."""
 
         # Get user token
-        user_login = {
-            "email": test_user.email,
-            "password": "SecurePassword123!"
-        }
+        user_login = {"email": test_user.email, "password": "SecurePassword123!"}
 
         user_response = client.post("/api/v1/auth/login", json=user_login)
         assert user_response.status_code == 200
@@ -256,20 +239,17 @@ class TestAuthenticationSecurity:
         user_headers = {"Authorization": f"Bearer {user_token}"}
 
         # Get admin token
-        admin_login = {
-            "username": admin_user.username,
-            "password": "AdminPassword123!"
-        }
+        admin_login = {"username": admin_user.username, "password": "AdminPassword123!"}
 
-        admin_response = client.post(
-            "/api/v1/auth/admin/login", json=admin_login)
+        admin_response = client.post("/api/v1/auth/admin/login", json=admin_login)
         assert admin_response.status_code == 200
         admin_token = admin_response.json()["access_token"]
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
         # Test user access to user endpoints
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=user_headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=user_headers
+        )
         assert response.status_code == 200
 
         # Test user access to admin endpoints (should be denied)
@@ -282,7 +262,8 @@ class TestAuthenticationSecurity:
 
         # Test admin access to user endpoints (should work)
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=admin_headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=admin_headers
+        )
         assert response.status_code in [200, 403]  # Depends on implementation
 
     def test_cross_user_access_prevention(self, client, db_session):
@@ -293,14 +274,14 @@ class TestAuthenticationSecurity:
             email="user1@university.edu.ng",
             name="User One",
             password_hash=hash_password("Password123!"),
-            history_enabled=True
+            history_enabled=True,
         )
 
         user2 = Student(
             email="user2@university.edu.ng",
             name="User Two",
             password_hash=hash_password("Password123!"),
-            history_enabled=True
+            history_enabled=True,
         )
 
         db_session.add_all([user1, user2])
@@ -309,10 +290,7 @@ class TestAuthenticationSecurity:
         db_session.refresh(user2)
 
         # Login as user1
-        login_data = {
-            "email": user1.email,
-            "password": "Password123!"
-        }
+        login_data = {"email": user1.email, "password": "Password123!"}
 
         response = client.post("/api/v1/auth/login", json=login_data)
         assert response.status_code == 200
@@ -322,22 +300,26 @@ class TestAuthenticationSecurity:
 
         # User1 should access their own data
         response = client.get(
-            f"/api/v1/history/{user1.student_id}/meals", headers=user1_headers)
+            f"/api/v1/history/{user1.student_id}/meals", headers=user1_headers
+        )
         assert response.status_code == 200
 
         # User1 should NOT access user2's data
         response = client.get(
-            f"/api/v1/history/{user2.student_id}/meals", headers=user1_headers)
+            f"/api/v1/history/{user2.student_id}/meals", headers=user1_headers
+        )
         assert response.status_code == 403
 
         # Test with consent endpoints
         response = client.get(
-            f"/api/v1/consent/{user2.student_id}", headers=user1_headers)
+            f"/api/v1/consent/{user2.student_id}", headers=user1_headers
+        )
         assert response.status_code == 403
 
         # Test with insights endpoints
         response = client.get(
-            f"/api/v1/insights/{user2.student_id}/weekly", headers=user1_headers)
+            f"/api/v1/insights/{user2.student_id}/weekly", headers=user1_headers
+        )
         assert response.status_code == 403
 
     def test_input_validation_security(self, client):
@@ -348,18 +330,17 @@ class TestAuthenticationSecurity:
             "<script>alert('xss')</script>",
             "javascript:alert('xss')",
             "<img src=x onerror=alert('xss')>",
-            "';alert('xss');//"
+            "';alert('xss');//",
         ]
 
         for xss_payload in xss_attempts:
             registration_data = {
                 "name": xss_payload,
                 "email": f"test{hash(xss_payload)}@university.edu.ng",
-                "password": "SecurePassword123!"
+                "password": "SecurePassword123!",
             }
 
-            response = client.post(
-                "/api/v1/auth/register", json=registration_data)
+            response = client.post("/api/v1/auth/register", json=registration_data)
             # Should either reject or sanitize the input
             if response.status_code == 201:
                 user_data = response.json()
@@ -371,14 +352,11 @@ class TestAuthenticationSecurity:
         sql_injections = [
             "admin'; DROP TABLE students; --",
             "admin' OR '1'='1' --",
-            "admin' UNION SELECT password FROM students --"
+            "admin' UNION SELECT password FROM students --",
         ]
 
         for sql_payload in sql_injections:
-            login_data = {
-                "email": sql_payload,
-                "password": "password"
-            }
+            login_data = {"email": sql_payload, "password": "password"}
 
             response = client.post("/api/v1/auth/login", json=login_data)
             # Should handle gracefully without exposing database errors
@@ -395,24 +373,23 @@ class TestAuthenticationSecurity:
 
         # Test weak passwords
         weak_passwords = [
-            "123456",           # Too simple
-            "password",         # Common password
-            "abc",              # Too short
-            "PASSWORD123",      # No lowercase
-            "password123",      # No uppercase
-            "Password",         # No numbers
-            "Password123"       # No special characters (depending on policy)
+            "123456",  # Too simple
+            "password",  # Common password
+            "abc",  # Too short
+            "PASSWORD123",  # No lowercase
+            "password123",  # No uppercase
+            "Password",  # No numbers
+            "Password123",  # No special characters (depending on policy)
         ]
 
         for weak_password in weak_passwords:
             registration_data = {
                 "name": "Test User",
                 "email": f"test{hash(weak_password)}@university.edu.ng",
-                "password": weak_password
+                "password": weak_password,
             }
 
-            response = client.post(
-                "/api/v1/auth/register", json=registration_data)
+            response = client.post("/api/v1/auth/register", json=registration_data)
             # Should reject weak passwords
             if response.status_code != 201:
                 error_data = response.json()
@@ -422,11 +399,10 @@ class TestAuthenticationSecurity:
         strong_password_data = {
             "name": "Test User",
             "email": "strongpassword@university.edu.ng",
-            "password": "StrongPassword123!@#"
+            "password": "StrongPassword123!@#",
         }
 
-        response = client.post("/api/v1/auth/register",
-                               json=strong_password_data)
+        response = client.post("/api/v1/auth/register", json=strong_password_data)
         # Strong password should be accepted
         assert response.status_code in [201, 409]  # Created or already exists
 
@@ -434,10 +410,7 @@ class TestAuthenticationSecurity:
         """Test token refresh security."""
 
         # Login to get initial token
-        login_data = {
-            "email": test_user.email,
-            "password": "SecurePassword123!"
-        }
+        login_data = {"email": test_user.email, "password": "SecurePassword123!"}
 
         response = client.post("/api/v1/auth/login", json=login_data)
         assert response.status_code == 200
@@ -457,23 +430,22 @@ class TestAuthenticationSecurity:
             # New token should work
             new_headers = {"Authorization": f"Bearer {new_token}"}
             response = client.get(
-                f"/api/v1/history/{test_user.student_id}/meals", headers=new_headers)
+                f"/api/v1/history/{test_user.student_id}/meals", headers=new_headers
+            )
             assert response.status_code == 200
 
             # Old token might still work (depending on implementation)
             # or might be invalidated
             response = client.get(
-                f"/api/v1/history/{test_user.student_id}/meals", headers=headers)
+                f"/api/v1/history/{test_user.student_id}/meals", headers=headers
+            )
             assert response.status_code in [200, 401]
 
     def test_logout_security(self, client, test_user):
         """Test logout security."""
 
         # Login to get token
-        login_data = {
-            "email": test_user.email,
-            "password": "SecurePassword123!"
-        }
+        login_data = {"email": test_user.email, "password": "SecurePassword123!"}
 
         response = client.post("/api/v1/auth/login", json=login_data)
         assert response.status_code == 200
@@ -483,7 +455,8 @@ class TestAuthenticationSecurity:
 
         # Verify token works
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=headers
+        )
         assert response.status_code == 200
 
         # Logout
@@ -492,17 +465,15 @@ class TestAuthenticationSecurity:
 
         # Token should be invalidated after logout
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=headers
+        )
         # Depending on implementation, token might be blacklisted
         assert response.status_code in [200, 401]
 
     def test_concurrent_session_security(self, client, test_user):
         """Test concurrent session security."""
 
-        login_data = {
-            "email": test_user.email,
-            "password": "SecurePassword123!"
-        }
+        login_data = {"email": test_user.email, "password": "SecurePassword123!"}
 
         # Create multiple sessions
         tokens = []
@@ -515,7 +486,8 @@ class TestAuthenticationSecurity:
         for token in tokens:
             headers = {"Authorization": f"Bearer {token}"}
             response = client.get(
-                f"/api/v1/history/{test_user.student_id}/meals", headers=headers)
+                f"/api/v1/history/{test_user.student_id}/meals", headers=headers
+            )
             assert response.status_code == 200
 
         # Test session limit (if implemented)
@@ -525,10 +497,7 @@ class TestAuthenticationSecurity:
         """Test prevention of privilege escalation attacks."""
 
         # Login as regular user
-        login_data = {
-            "email": test_user.email,
-            "password": "SecurePassword123!"
-        }
+        login_data = {"email": test_user.email, "password": "SecurePassword123!"}
 
         response = client.post("/api/v1/auth/login", json=login_data)
         assert response.status_code == 200
@@ -541,7 +510,7 @@ class TestAuthenticationSecurity:
             "/api/v1/admin/users",
             "/api/v1/admin/dataset/stats",
             "/api/v1/admin/nutrition-rules",
-            "/api/v1/admin/analytics/usage"
+            "/api/v1/admin/analytics/usage",
         ]
 
         for endpoint in admin_endpoints:
@@ -552,11 +521,12 @@ class TestAuthenticationSecurity:
         rule_data = {
             "rule_name": "malicious_rule",
             "condition_logic": {"always": True},
-            "feedback_template": "Malicious feedback"
+            "feedback_template": "Malicious feedback",
         }
 
         response = client.post(
-            "/api/v1/admin/nutrition-rules", json=rule_data, headers=user_headers)
+            "/api/v1/admin/nutrition-rules", json=rule_data, headers=user_headers
+        )
         assert response.status_code == 403
 
     def test_timing_attack_resistance(self, client, test_user):
@@ -571,29 +541,32 @@ class TestAuthenticationSecurity:
         for i in range(5):
             # Time login attempt for existing user (wrong password)
             start_time = time.time()
-            response = client.post("/api/v1/auth/login", json={
-                "email": test_user.email,
-                "password": "WrongPassword"
-            })
+            response = client.post(
+                "/api/v1/auth/login",
+                json={"email": test_user.email, "password": "WrongPassword"},
+            )
             existing_user_times.append(time.time() - start_time)
             assert response.status_code == 401
 
             # Time login attempt for non-existing user
             start_time = time.time()
-            response = client.post("/api/v1/auth/login", json={
-                "email": f"nonexistent{i}@university.edu.ng",
-                "password": "AnyPassword"
-            })
+            response = client.post(
+                "/api/v1/auth/login",
+                json={
+                    "email": f"nonexistent{i}@university.edu.ng",
+                    "password": "AnyPassword",
+                },
+            )
             nonexistent_user_times.append(time.time() - start_time)
             assert response.status_code == 401
 
         # Calculate average times
         avg_existing = sum(existing_user_times) / len(existing_user_times)
-        avg_nonexistent = sum(nonexistent_user_times) / \
-            len(nonexistent_user_times)
+        avg_nonexistent = sum(nonexistent_user_times) / len(nonexistent_user_times)
 
         # Times should be similar to prevent timing attacks
         # Allow for some variance but should be in same order of magnitude
-        time_ratio = max(avg_existing, avg_nonexistent) / \
-            min(avg_existing, avg_nonexistent)
+        time_ratio = max(avg_existing, avg_nonexistent) / min(
+            avg_existing, avg_nonexistent
+        )
         assert time_ratio < 5.0  # Should not differ by more than 5x

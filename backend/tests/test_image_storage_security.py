@@ -24,6 +24,7 @@ class TestImageStorageSecurity:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Mock settings for testing
             import app.core.config
+
             original_upload_dir = app.core.config.settings.UPLOAD_DIR
             app.core.config.settings.UPLOAD_DIR = temp_dir
 
@@ -41,18 +42,21 @@ class TestImageStorageSecurity:
     @pytest.fixture
     def sample_image(self):
         """Create a sample test image."""
-        image = Image.new('RGB', (640, 480), color='red')
+        image = Image.new("RGB", (640, 480), color="red")
         img_bytes = BytesIO()
-        image.save(img_bytes, format='JPEG')
+        image.save(img_bytes, format="JPEG")
         img_bytes.seek(0)
         return img_bytes
 
-    def create_upload_file(self, image_bytes: BytesIO, filename: str = "test.jpg", content_type: str = "image/jpeg"):
+    def create_upload_file(
+        self,
+        image_bytes: BytesIO,
+        filename: str = "test.jpg",
+        content_type: str = "image/jpeg",
+    ):
         """Helper to create UploadFile from image bytes."""
         upload_file = UploadFile(
-            file=image_bytes,
-            filename=filename,
-            headers={"content-type": content_type}
+            file=image_bytes, filename=filename, headers={"content-type": content_type}
         )
         upload_file.size = len(image_bytes.getvalue())
         return upload_file
@@ -89,6 +93,7 @@ class TestImageStorageSecurity:
 
         # Verify file content matches hash
         import hashlib
+
         with open(result["raw_path"], "rb") as f:
             content = f.read()
             expected_hash = hashlib.md5(content).hexdigest()
@@ -107,8 +112,7 @@ class TestImageStorageSecurity:
         ]
 
         for malicious_filename in malicious_filenames:
-            upload_file = self.create_upload_file(
-                sample_image, malicious_filename)
+            upload_file = self.create_upload_file(sample_image, malicious_filename)
             meal_id = uuid4()
 
             result = await image_service.save_image(upload_file, meal_id)
@@ -128,7 +132,7 @@ class TestImageStorageSecurity:
         upload_file = UploadFile(
             file=large_file,
             filename="large.jpg",
-            headers={"content-type": "image/jpeg"}
+            headers={"content-type": "image/jpeg"},
         )
         upload_file.size = len(large_content)
 
@@ -150,7 +154,7 @@ class TestImageStorageSecurity:
         upload_file = UploadFile(
             file=text_content,
             filename="malicious.jpg",
-            headers={"content-type": "image/jpeg"}  # Lying about content type
+            headers={"content-type": "image/jpeg"},  # Lying about content type
         )
         upload_file.size = len(text_content.getvalue())
 
@@ -171,7 +175,7 @@ class TestImageStorageSecurity:
             "../../../etc",
             "..\\..\\windows",
             "/etc/passwd",
-            "C:\\Windows\\System32"
+            "C:\\Windows\\System32",
         ]
 
         for attempt in traversal_attempts:
@@ -184,12 +188,11 @@ class TestImageStorageSecurity:
     def test_file_permissions(self, image_service, sample_image, tmp_path):
         """Test that created files have appropriate permissions."""
         # This test is platform-specific and may not work on all systems
-        if os.name != 'posix':
-            pytest.skip(
-                "File permission test only applicable on POSIX systems")
+        if os.name != "posix":
+            pytest.skip("File permission test only applicable on POSIX systems")
 
         # Create test image file
-        image = Image.new('RGB', (300, 300), color='blue')
+        image = Image.new("RGB", (300, 300), color="blue")
         image_path = tmp_path / "test.jpg"
         image.save(image_path)
 
@@ -198,7 +201,7 @@ class TestImageStorageSecurity:
         permissions = oct(stat_info.st_mode)[-3:]
 
         # Should not be world-writable (last digit should not be 2, 3, 6, or 7)
-        assert permissions[-1] not in ['2', '3', '6', '7']
+        assert permissions[-1] not in ["2", "3", "6", "7"]
 
 
 class TestImageMetadataService:
@@ -231,7 +234,7 @@ class TestImageMetadataService:
             width=640,
             height=480,
             format="JPEG",
-            mode="RGB"
+            mode="RGB",
         )
 
     def test_create_metadata_success(self, metadata_service, sample_metadata, mock_db):
@@ -244,7 +247,7 @@ class TestImageMetadataService:
         mock_db.add.return_value = None
         mock_db.refresh.return_value = None
 
-        with patch('app.models.image_metadata.ImageMetadata') as mock_model:
+        with patch("app.models.image_metadata.ImageMetadata") as mock_model:
             mock_model.return_value = mock_metadata
             result = metadata_service.create_metadata(sample_metadata)
 
@@ -252,11 +255,15 @@ class TestImageMetadataService:
             mock_db.add.assert_called_once()
             mock_db.commit.assert_called_once()
 
-    def test_create_metadata_duplicate_prevention(self, metadata_service, sample_metadata, mock_db):
+    def test_create_metadata_duplicate_prevention(
+        self, metadata_service, sample_metadata, mock_db
+    ):
         """Test prevention of duplicate metadata creation."""
         # Mock existing metadata
         existing_metadata = Mock()
-        mock_db.query.return_value.filter.return_value.first.return_value = existing_metadata
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            existing_metadata
+        )
 
         # Should raise HTTPException for duplicate
         with pytest.raises(HTTPException) as exc_info:
@@ -269,9 +276,7 @@ class TestImageMetadataService:
         """Test that search queries prevent SQL injection."""
         # Create search query with potential SQL injection
         malicious_query = ImageSearchQuery(
-            image_format="'; DROP TABLE image_metadata; --",
-            limit=50,
-            offset=0
+            image_format="'; DROP TABLE image_metadata; --", limit=50, offset=0
         )
 
         # Mock query chain
@@ -299,7 +304,9 @@ class TestImageMetadataService:
         # Mock existing metadata with same hash
         existing_metadata = Mock()
         existing_metadata.file_hash = test_hash
-        mock_db.query.return_value.filter.return_value.first.return_value = existing_metadata
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            existing_metadata
+        )
 
         result = metadata_service.get_metadata_by_hash(test_hash)
 
@@ -339,7 +346,7 @@ class TestImageAccessControl:
             "/etc/shadow",
             "C:\\Windows\\System32\\config\\sam",
             "\\\\server\\share\\file.txt",
-            "/proc/self/environ"
+            "/proc/self/environ",
         ]
 
         for malicious_path in malicious_paths:

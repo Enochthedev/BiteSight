@@ -6,19 +6,22 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.user import (
-    Student, StudentCreate, StudentUpdate, StudentResponse,
-    LoginRequest, LoginResponse
+    Student,
+    StudentCreate,
+    StudentUpdate,
+    StudentResponse,
+    LoginRequest,
+    LoginResponse,
 )
 from app.services.user_service import UserService
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
-async def register(
-    user_data: StudentCreate,
-    db: Session = Depends(get_db)
-):
+@router.post(
+    "/register", response_model=StudentResponse, status_code=status.HTTP_201_CREATED
+)
+async def register(user_data: StudentCreate, db: Session = Depends(get_db)):
     """Register a new student."""
     user_service = UserService(db)
 
@@ -31,22 +34,19 @@ async def register(
             registration_date=user.registration_date,
             history_enabled=user.history_enabled,
             created_at=user.created_at,
-            updated_at=user.updated_at
+            updated_at=user.updated_at,
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create user account"
+            detail="Failed to create user account",
         )
 
 
 @router.post("/login", response_model=LoginResponse)
-async def login(
-    login_data: LoginRequest,
-    db: Session = Depends(get_db)
-):
+async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     """Student login."""
     user_service = UserService(db)
 
@@ -62,9 +62,7 @@ async def login(
 
 
 @router.post("/logout")
-async def logout(
-    current_user: Student = Depends(get_current_user)
-):
+async def logout(current_user: Student = Depends(get_current_user)):
     """Student logout."""
     # JWT tokens are stateless, so logout is handled client-side
     # This endpoint can be used for logging purposes or token blacklisting if needed
@@ -72,9 +70,7 @@ async def logout(
 
 
 @router.get("/me", response_model=StudentResponse)
-async def get_current_user_profile(
-    current_user: Student = Depends(get_current_user)
-):
+async def get_current_user_profile(current_user: Student = Depends(get_current_user)):
     """Get current user profile."""
     return StudentResponse(
         id=current_user.id,
@@ -83,7 +79,7 @@ async def get_current_user_profile(
         registration_date=current_user.registration_date,
         history_enabled=current_user.history_enabled,
         created_at=current_user.created_at,
-        updated_at=current_user.updated_at
+        updated_at=current_user.updated_at,
     )
 
 
@@ -91,7 +87,7 @@ async def get_current_user_profile(
 async def update_current_user_profile(
     user_data: StudentUpdate,
     current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Update current user profile."""
     user_service = UserService(db)
@@ -99,8 +95,7 @@ async def update_current_user_profile(
     updated_user = user_service.update_user(current_user.id, user_data)
     if not updated_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     return StudentResponse(
@@ -110,14 +105,13 @@ async def update_current_user_profile(
         registration_date=updated_user.registration_date,
         history_enabled=updated_user.history_enabled,
         created_at=updated_user.created_at,
-        updated_at=updated_user.updated_at
+        updated_at=updated_user.updated_at,
     )
 
 
 @router.delete("/me")
 async def delete_current_user_account(
-    current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Student = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """Delete current user account and all associated data."""
     user_service = UserService(db)
@@ -125,8 +119,7 @@ async def delete_current_user_account(
     success = user_service.delete_user(current_user.id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     return {"message": "Account successfully deleted"}

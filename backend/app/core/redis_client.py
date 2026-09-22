@@ -31,7 +31,7 @@ class RedisClient:
                 retry_on_timeout=True,
                 socket_connect_timeout=5,
                 socket_timeout=5,
-                health_check_interval=30
+                health_check_interval=30,
             )
             self._client = redis.Redis(connection_pool=self._connection_pool)
 
@@ -72,7 +72,7 @@ class RedisClient:
         key: str,
         value: Any,
         expire: Optional[Union[int, timedelta]] = None,
-        serialize: bool = True
+        serialize: bool = True,
     ) -> bool:
         """Set a key-value pair in Redis."""
         try:
@@ -96,9 +96,9 @@ class RedisClient:
                 try:
                     return json.loads(value)
                 except (json.JSONDecodeError, TypeError):
-                    return value.decode('utf-8') if isinstance(value, bytes) else value
+                    return value.decode("utf-8") if isinstance(value, bytes) else value
 
-            return value.decode('utf-8') if isinstance(value, bytes) else value
+            return value.decode("utf-8") if isinstance(value, bytes) else value
         except Exception as e:
             logger.error(f"Failed to get Redis key {key}: {e}")
             return None

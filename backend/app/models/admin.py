@@ -32,7 +32,9 @@ class AdminUser(Base, TimestampMixin):
     is_active = Column(Boolean, default=True, index=True)
     last_login = Column(DateTime(timezone=True))
 
-    sessions = relationship("AdminSession", back_populates="admin_user", cascade="all, delete-orphan")
+    sessions = relationship(
+        "AdminSession", back_populates="admin_user", cascade="all, delete-orphan"
+    )
 
 
 class AdminPermission(Base):
@@ -55,7 +57,12 @@ class AdminRolePermission(Base):
 
     id = uuid_pk()
     role = Column(String(50), nullable=False, index=True)
-    permission_id = Column(UUID(as_uuid=True), ForeignKey("admin_permissions.id"), nullable=False, index=True)
+    permission_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("admin_permissions.id"),
+        nullable=False,
+        index=True,
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     permission = relationship("AdminPermission")
@@ -66,7 +73,9 @@ class AdminSession(Base):
     __table_args__ = (Index("ix_admin_sessions_session_token", "session_token"),)
 
     id = uuid_pk()
-    admin_user_id = Column(UUID(as_uuid=True), ForeignKey("admin_users.id"), nullable=False, index=True)
+    admin_user_id = Column(
+        UUID(as_uuid=True), ForeignKey("admin_users.id"), nullable=False, index=True
+    )
     session_token = Column(String(255), nullable=False, unique=True)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     is_active = Column(Boolean, default=True, index=True)

@@ -27,7 +27,7 @@ def test_dataset_admin(db_session: Session):
         name="Dataset Admin",
         password_hash=get_password_hash("datasetpassword123"),
         role=AdminRole.DATASET_MANAGER.value,
-        is_active=True
+        is_active=True,
     )
     db_session.add(admin_user)
     db_session.commit()
@@ -46,9 +46,9 @@ def test_food_item(db_session: Session):
             "calories_per_100g": 150,
             "carbohydrates": 30,
             "protein": 3,
-            "fat": 2
+            "fat": 2,
         },
-        cultural_context="Popular West African rice dish"
+        cultural_context="Popular West African rice dish",
     )
     db_session.add(food_item)
     db_session.commit()
@@ -67,10 +67,7 @@ def admin_token(client: TestClient, test_dataset_admin):
     """Get admin authentication token."""
     response = client.post(
         "/api/v1/admin/login",
-        json={
-            "email": test_dataset_admin.email,
-            "password": "datasetpassword123"
-        }
+        json={"email": test_dataset_admin.email, "password": "datasetpassword123"},
     )
     return response.json()["access_token"]
 
@@ -87,7 +84,7 @@ class TestNigerianFoodService:
             local_names={"yoruba": ["amala", "elubo"]},
             food_class="carbohydrates",
             nutritional_info={"calories_per_100g": 120},
-            cultural_context="Traditional Yoruba food made from yam flour"
+            cultural_context="Traditional Yoruba food made from yam flour",
         )
 
         food_item = food_service.create_food_item(food_data)
@@ -97,14 +94,15 @@ class TestNigerianFoodService:
         assert food_item.food_class == "carbohydrates"
         assert food_item.nutritional_info == {"calories_per_100g": 120}
 
-    def test_create_duplicate_food_item(self, food_service: NigerianFoodService, test_food_item):
+    def test_create_duplicate_food_item(
+        self, food_service: NigerianFoodService, test_food_item
+    ):
         """Test creating duplicate food item."""
         from app.models.meal import NigerianFoodCreate
         from fastapi import HTTPException
 
         food_data = NigerianFoodCreate(
-            food_name=test_food_item.food_name,
-            food_class="carbohydrates"
+            food_name=test_food_item.food_name, food_class="carbohydrates"
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -126,12 +124,10 @@ class TestNigerianFoodService:
         from app.models.meal import NigerianFoodUpdate
 
         update_data = NigerianFoodUpdate(
-            food_name="Updated Jollof Rice",
-            cultural_context="Updated context"
+            food_name="Updated Jollof Rice", cultural_context="Updated context"
         )
 
-        updated_food = food_service.update_food_item(
-            test_food_item.id, update_data)
+        updated_food = food_service.update_food_item(test_food_item.id, update_data)
 
         assert updated_food is not None
         assert updated_food.food_name == "Updated Jollof Rice"
@@ -152,11 +148,7 @@ class TestNigerianFoodService:
         """Test searching food items."""
         from app.models.meal import NigerianFoodSearchRequest
 
-        search_request = NigerianFoodSearchRequest(
-            query="jollof",
-            skip=0,
-            limit=10
-        )
+        search_request = NigerianFoodSearchRequest(query="jollof", skip=0, limit=10)
 
         foods, total_count = food_service.search_food_items(search_request)
 
@@ -164,14 +156,14 @@ class TestNigerianFoodService:
         assert len(foods) >= 1
         assert any(food.food_name.lower() == "jollof rice" for food in foods)
 
-    def test_search_by_food_class(self, food_service: NigerianFoodService, test_food_item):
+    def test_search_by_food_class(
+        self, food_service: NigerianFoodService, test_food_item
+    ):
         """Test searching food items by class."""
         from app.models.meal import NigerianFoodSearchRequest
 
         search_request = NigerianFoodSearchRequest(
-            food_class="carbohydrates",
-            skip=0,
-            limit=10
+            food_class="carbohydrates", skip=0, limit=10
         )
 
         foods, total_count = food_service.search_food_items(search_request)
@@ -194,13 +186,13 @@ class TestNigerianFoodService:
             NigerianFoodCreate(
                 food_name="Efo Riro",
                 food_class="vitamins",
-                cultural_context="Yoruba vegetable soup"
+                cultural_context="Yoruba vegetable soup",
             ),
             NigerianFoodCreate(
                 food_name="Suya",
                 food_class="proteins",
-                cultural_context="Grilled meat with spices"
-            )
+                cultural_context="Grilled meat with spices",
+            ),
         ]
 
         bulk_data = NigerianFoodBulkCreate(foods=foods)
@@ -218,13 +210,13 @@ class TestNigerianFoodService:
                 "food_name": "Moimoi",
                 "food_class": "proteins",
                 "local_names": {"yoruba": ["moimoi"], "igbo": ["moi moi"]},
-                "cultural_context": "Steamed bean pudding"
+                "cultural_context": "Steamed bean pudding",
             },
             {
                 "food_name": "Plantain",
                 "food_class": "carbohydrates",
-                "nutritional_info": {"calories_per_100g": 89}
-            }
+                "nutritional_info": {"calories_per_100g": 89},
+            },
         ]
 
         json_string = json.dumps(json_data)
@@ -244,7 +236,9 @@ class TestNigerianFoodService:
         food_names = [item["food_name"] for item in exported_data]
         assert test_food_item.food_name in food_names
 
-    def test_get_dataset_statistics(self, food_service: NigerianFoodService, test_food_item):
+    def test_get_dataset_statistics(
+        self, food_service: NigerianFoodService, test_food_item
+    ):
         """Test getting dataset statistics."""
         stats = food_service.get_dataset_statistics()
 
@@ -264,7 +258,7 @@ class TestNigerianFoodService:
             "food_name": "Test Food",
             "food_class": "proteins",
             "local_names": {"yoruba": ["test"]},
-            "nutritional_info": {"calories": 100}
+            "nutritional_info": {"calories": 100},
         }
 
         errors = food_service.validate_food_data(valid_data)
@@ -293,8 +287,8 @@ class TestDatasetEndpoints:
                 "food_name": "Egusi Soup",
                 "food_class": "vitamins",
                 "local_names": {"yoruba": ["egusi"], "igbo": ["egwusi"]},
-                "cultural_context": "Popular Nigerian soup made with melon seeds"
-            }
+                "cultural_context": "Popular Nigerian soup made with melon seeds",
+            },
         )
 
         assert response.status_code == 201
@@ -304,11 +298,13 @@ class TestDatasetEndpoints:
         assert data["food_class"] == "vitamins"
         assert data["local_names"] == {"yoruba": ["egusi"], "igbo": ["egwusi"]}
 
-    def test_search_food_items_endpoint(self, client: TestClient, admin_token, test_food_item):
+    def test_search_food_items_endpoint(
+        self, client: TestClient, admin_token, test_food_item
+    ):
         """Test searching food items via API."""
         response = client.get(
             "/api/v1/dataset/foods/search?query=jollof&limit=10",
-            headers={"Authorization": f"Bearer {admin_token}"}
+            headers={"Authorization": f"Bearer {admin_token}"},
         )
 
         assert response.status_code == 200
@@ -318,11 +314,13 @@ class TestDatasetEndpoints:
         assert "total_count" in data
         assert data["total_count"] >= 1
 
-    def test_get_food_item_endpoint(self, client: TestClient, admin_token, test_food_item):
+    def test_get_food_item_endpoint(
+        self, client: TestClient, admin_token, test_food_item
+    ):
         """Test getting food item via API."""
         response = client.get(
             f"/api/v1/dataset/foods/{test_food_item.id}",
-            headers={"Authorization": f"Bearer {admin_token}"}
+            headers={"Authorization": f"Bearer {admin_token}"},
         )
 
         assert response.status_code == 200
@@ -331,15 +329,17 @@ class TestDatasetEndpoints:
         assert data["id"] == str(test_food_item.id)
         assert data["food_name"] == test_food_item.food_name
 
-    def test_update_food_item_endpoint(self, client: TestClient, admin_token, test_food_item):
+    def test_update_food_item_endpoint(
+        self, client: TestClient, admin_token, test_food_item
+    ):
         """Test updating food item via API."""
         response = client.put(
             f"/api/v1/dataset/foods/{test_food_item.id}",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
                 "food_name": "Updated Jollof Rice",
-                "cultural_context": "Updated context"
-            }
+                "cultural_context": "Updated context",
+            },
         )
 
         assert response.status_code == 200
@@ -348,11 +348,13 @@ class TestDatasetEndpoints:
         assert data["food_name"] == "Updated Jollof Rice"
         assert data["cultural_context"] == "Updated context"
 
-    def test_delete_food_item_endpoint(self, client: TestClient, admin_token, test_food_item):
+    def test_delete_food_item_endpoint(
+        self, client: TestClient, admin_token, test_food_item
+    ):
         """Test deleting food item via API."""
         response = client.delete(
             f"/api/v1/dataset/foods/{test_food_item.id}",
-            headers={"Authorization": f"Bearer {admin_token}"}
+            headers={"Authorization": f"Bearer {admin_token}"},
         )
 
         assert response.status_code == 200
@@ -368,15 +370,15 @@ class TestDatasetEndpoints:
                     {
                         "food_name": "Akara",
                         "food_class": "proteins",
-                        "cultural_context": "Fried bean cakes"
+                        "cultural_context": "Fried bean cakes",
                     },
                     {
                         "food_name": "Pounded Yam",
                         "food_class": "carbohydrates",
-                        "cultural_context": "Traditional Nigerian swallow"
-                    }
+                        "cultural_context": "Traditional Nigerian swallow",
+                    },
                 ]
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -392,17 +394,16 @@ class TestDatasetEndpoints:
             {
                 "food_name": "Banga Soup",
                 "food_class": "vitamins",
-                "cultural_context": "Palm nut soup"
+                "cultural_context": "Palm nut soup",
             }
         ]
 
-        json_content = json.dumps(json_data).encode('utf-8')
+        json_content = json.dumps(json_data).encode("utf-8")
 
         response = client.post(
             "/api/v1/dataset/foods/import",
             headers={"Authorization": f"Bearer {admin_token}"},
-            files={"file": ("foods.json", BytesIO(
-                json_content), "application/json")}
+            files={"file": ("foods.json", BytesIO(json_content), "application/json")},
         )
 
         assert response.status_code == 200
@@ -411,11 +412,13 @@ class TestDatasetEndpoints:
         assert data["created_count"] == 1
         assert data["failed_count"] == 0
 
-    def test_get_food_classes_endpoint(self, client: TestClient, admin_token, test_food_item):
+    def test_get_food_classes_endpoint(
+        self, client: TestClient, admin_token, test_food_item
+    ):
         """Test getting food classes via API."""
         response = client.get(
             "/api/v1/dataset/foods/classes",
-            headers={"Authorization": f"Bearer {admin_token}"}
+            headers={"Authorization": f"Bearer {admin_token}"},
         )
 
         assert response.status_code == 200
@@ -425,11 +428,13 @@ class TestDatasetEndpoints:
         assert isinstance(data["food_classes"], list)
         assert "carbohydrates" in data["food_classes"]
 
-    def test_get_dataset_statistics_endpoint(self, client: TestClient, admin_token, test_food_item):
+    def test_get_dataset_statistics_endpoint(
+        self, client: TestClient, admin_token, test_food_item
+    ):
         """Test getting dataset statistics via API."""
         response = client.get(
             "/api/v1/dataset/statistics",
-            headers={"Authorization": f"Bearer {admin_token}"}
+            headers={"Authorization": f"Bearer {admin_token}"},
         )
 
         assert response.status_code == 200
@@ -450,10 +455,7 @@ class TestDatasetEndpoints:
         response = client.post(
             "/api/v1/dataset/foods/validate",
             headers={"Authorization": f"Bearer {admin_token}"},
-            json={
-                "food_name": "Test Food",
-                "food_class": "proteins"
-            }
+            json={"food_name": "Test Food", "food_class": "proteins"},
         )
 
         assert response.status_code == 200

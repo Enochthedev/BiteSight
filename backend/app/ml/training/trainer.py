@@ -18,6 +18,7 @@ import json
 # Optional tensorboard import
 try:
     from torch.utils.tensorboard import SummaryWriter
+
     TENSORBOARD_AVAILABLE = True
 except ImportError:
     TENSORBOARD_AVAILABLE = False
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TrainingConfig:
     """Configuration for model training."""
+
     epochs: int = 50
     learning_rate: float = 0.001
     batch_size: int = 32
@@ -48,6 +50,7 @@ class TrainingConfig:
 @dataclass
 class TrainingMetrics:
     """Training metrics for one epoch."""
+
     epoch: int
     train_loss: float
     train_accuracy: float
@@ -69,7 +72,7 @@ class FoodModelTrainer:
         train_loader: DataLoader,
         val_loader: DataLoader,
         config: TrainingConfig,
-        class_names: Optional[List[str]] = None
+        class_names: Optional[List[str]] = None,
     ):
         """
         Initialize trainer.
@@ -86,12 +89,12 @@ class FoodModelTrainer:
         self.val_loader = val_loader
         self.config = config
         self.class_names = class_names or [
-            f"class_{i}" for i in range(model.num_classes)]
+            f"class_{i}" for i in range(model.num_classes)
+        ]
 
         # Setup device
         if config.device == "auto":
-            self.device = torch.device(
-                "cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         else:
             self.device = torch.device(config.device)
 
@@ -102,13 +105,13 @@ class FoodModelTrainer:
             self.model.parameters(),
             lr=config.learning_rate,
             momentum=config.momentum,
-            weight_decay=config.weight_decay
+            weight_decay=config.weight_decay,
         )
 
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer,
             step_size=config.scheduler_step_size,
-            gamma=config.scheduler_gamma
+            gamma=config.scheduler_gamma,
         )
 
         # Loss function
@@ -125,19 +128,19 @@ class FoodModelTrainer:
         self.log_dir.mkdir(exist_ok=True)
 
         # Setup tensorboard (optional)
-        self.writer = SummaryWriter(
-            self.log_dir) if TENSORBOARD_AVAILABLE else None
+        self.writer = SummaryWriter(self.log_dir) if TENSORBOARD_AVAILABLE else None
 
         # Training state
         self.current_epoch = 0
         self.best_val_accuracy = 0.0
-        self.best_val_loss = float('inf')
+        self.best_val_loss = float("inf")
         self.epochs_without_improvement = 0
         self.training_history: List[TrainingMetrics] = []
 
         logger.info(f"Trainer initialized on device: {self.device}")
         logger.info(
-            f"Model has {sum(p.numel() for p in model.parameters())} parameters")
+            f"Model has {sum(p.numel() for p in model.parameters())} parameters"
+        )
 
     def train_epoch(self) -> Tuple[float, float]:
         """
@@ -169,8 +172,7 @@ class FoodModelTrainer:
                 if self.config.gradient_clip_norm:
                     self.scaler.unscale_(self.optimizer)
                     torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(),
-                        self.config.gradient_clip_norm
+                        self.model.parameters(), self.config.gradient_clip_norm
                     )
 
                 self.scaler.step(self.optimizer)
@@ -183,8 +185,7 @@ class FoodModelTrainer:
                 # Gradient clipping
                 if self.config.gradient_clip_norm:
                     torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(),
-                        self.config.gradient_clip_norm
+                        self.model.parameters(), self.config.gradient_clip_norm
                     )
 
                 self.optimizer.step()
@@ -221,8 +222,7 @@ class FoodModelTrainer:
 
         with torch.no_grad():
             for images, targets in self.val_loader:
-                images, targets = images.to(
-                    self.device), targets.to(self.device)
+                images, targets = images.to(self.device), targets.to(self.device)
 
                 outputs = self.model(images)
                 loss = self.criterion(outputs, targets)
@@ -238,21 +238,18 @@ class FoodModelTrainer:
         return avg_loss, accuracy
 
     def save_checkpoint(
-        self,
-        epoch: int,
-        is_best: bool = False,
-        additional_info: Optional[Dict] = None
+        self, epoch: int, is_best: bool = False, additional_info: Optional[Dict] = None
     ):
         """Save model checkpoint."""
         checkpoint = {
-            'epoch': epoch,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'scheduler_state_dict': self.scheduler.state_dict(),
-            'best_val_accuracy': self.best_val_accuracy,
-            'best_val_loss': self.best_val_loss,
-            'config': self.config,
-            'class_names': self.class_names
+            "epoch": epoch,
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "scheduler_state_dict": self.scheduler.state_dict(),
+            "best_val_accuracy": self.best_val_accuracy,
+            "best_val_loss": self.best_val_loss,
+            "config": self.config,
+            "class_names": self.class_names,
         }
 
         if additional_info:
@@ -267,7 +264,8 @@ class FoodModelTrainer:
             best_path = self.checkpoint_dir / "best_model.pth"
             torch.save(checkpoint, best_path)
             logger.info(
-                f"Saved best model with validation accuracy: {self.best_val_accuracy:.2f}%")
+                f"Saved best model with validation accuracy: {self.best_val_accuracy:.2f}%"
+            )
 
     def load_checkpoint(self, checkpoint_path: str) -> int:
         """
@@ -281,14 +279,14 @@ class FoodModelTrainer:
         """
         checkpoint = torch.load(checkpoint_path, map_location=self.device)
 
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
-        self.best_val_accuracy = checkpoint.get('best_val_accuracy', 0.0)
-        self.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
+        self.best_val_accuracy = checkpoint.get("best_val_accuracy", 0.0)
+        self.best_val_loss = checkpoint.get("best_val_loss", float("inf"))
 
-        epoch = checkpoint['epoch']
+        epoch = checkpoint["epoch"]
         logger.info(f"Resumed training from epoch {epoch}")
 
         return epoch
@@ -335,21 +333,19 @@ class FoodModelTrainer:
                 train_accuracy=train_accuracy,
                 val_loss=val_loss,
                 val_accuracy=val_accuracy,
-                learning_rate=self.optimizer.param_groups[0]['lr'],
-                epoch_time=epoch_time
+                learning_rate=self.optimizer.param_groups[0]["lr"],
+                epoch_time=epoch_time,
             )
 
             self.training_history.append(metrics)
 
             # Log metrics (if tensorboard available)
             if self.writer:
-                self.writer.add_scalar('Loss/Train', train_loss, epoch)
-                self.writer.add_scalar('Loss/Validation', val_loss, epoch)
-                self.writer.add_scalar('Accuracy/Train', train_accuracy, epoch)
-                self.writer.add_scalar(
-                    'Accuracy/Validation', val_accuracy, epoch)
-                self.writer.add_scalar(
-                    'Learning_Rate', metrics.learning_rate, epoch)
+                self.writer.add_scalar("Loss/Train", train_loss, epoch)
+                self.writer.add_scalar("Loss/Validation", val_loss, epoch)
+                self.writer.add_scalar("Accuracy/Train", train_accuracy, epoch)
+                self.writer.add_scalar("Accuracy/Validation", val_accuracy, epoch)
+                self.writer.add_scalar("Learning_Rate", metrics.learning_rate, epoch)
 
             # Check for improvement
             is_best = val_accuracy > self.best_val_accuracy
@@ -387,7 +383,8 @@ class FoodModelTrainer:
         self.save_training_history()
 
         logger.info(
-            f"Training completed. Best validation accuracy: {self.best_val_accuracy:.2f}%")
+            f"Training completed. Best validation accuracy: {self.best_val_accuracy:.2f}%"
+        )
 
         return self.training_history
 
@@ -395,18 +392,20 @@ class FoodModelTrainer:
         """Save training history to JSON file."""
         history_data = []
         for metrics in self.training_history:
-            history_data.append({
-                'epoch': metrics.epoch,
-                'train_loss': metrics.train_loss,
-                'train_accuracy': metrics.train_accuracy,
-                'val_loss': metrics.val_loss,
-                'val_accuracy': metrics.val_accuracy,
-                'learning_rate': metrics.learning_rate,
-                'epoch_time': metrics.epoch_time
-            })
+            history_data.append(
+                {
+                    "epoch": metrics.epoch,
+                    "train_loss": metrics.train_loss,
+                    "train_accuracy": metrics.train_accuracy,
+                    "val_loss": metrics.val_loss,
+                    "val_accuracy": metrics.val_accuracy,
+                    "learning_rate": metrics.learning_rate,
+                    "epoch_time": metrics.epoch_time,
+                }
+            )
 
         history_path = self.log_dir / "training_history.json"
-        with open(history_path, 'w') as f:
+        with open(history_path, "w") as f:
             json.dump(history_data, f, indent=2)
 
         logger.info(f"Training history saved to {history_path}")
@@ -429,8 +428,7 @@ class FoodModelTrainer:
 
         with torch.no_grad():
             for images, targets in test_loader:
-                images, targets = images.to(
-                    self.device), targets.to(self.device)
+                images, targets = images.to(self.device), targets.to(self.device)
 
                 outputs = self.model(images)
                 loss = self.criterion(outputs, targets)
@@ -445,8 +443,7 @@ class FoodModelTrainer:
         all_predictions = np.array(all_predictions)
         all_targets = np.array(all_targets)
 
-        accuracy = 100.0 * np.sum(all_predictions ==
-                                  all_targets) / len(all_targets)
+        accuracy = 100.0 * np.sum(all_predictions == all_targets) / len(all_targets)
         avg_loss = total_loss / len(test_loader)
 
         # Per-class accuracy
@@ -454,20 +451,21 @@ class FoodModelTrainer:
         for i, class_name in enumerate(self.class_names):
             class_mask = all_targets == i
             if np.sum(class_mask) > 0:
-                class_acc = 100.0 * np.sum(
-                    all_predictions[class_mask] == all_targets[class_mask]
-                ) / np.sum(class_mask)
+                class_acc = (
+                    100.0
+                    * np.sum(all_predictions[class_mask] == all_targets[class_mask])
+                    / np.sum(class_mask)
+                )
                 class_accuracies[class_name] = class_acc
 
         results = {
-            'test_accuracy': accuracy,
-            'test_loss': avg_loss,
-            'class_accuracies': class_accuracies,
-            'total_samples': len(all_targets)
+            "test_accuracy": accuracy,
+            "test_loss": avg_loss,
+            "class_accuracies": class_accuracies,
+            "total_samples": len(all_targets),
         }
 
-        logger.info(
-            f"Test Results: Accuracy: {accuracy:.2f}%, Loss: {avg_loss:.4f}")
+        logger.info(f"Test Results: Accuracy: {accuracy:.2f}%, Loss: {avg_loss:.4f}")
 
         return results
 
@@ -477,7 +475,7 @@ def create_trainer(
     train_loader: DataLoader,
     val_loader: DataLoader,
     config: Optional[TrainingConfig] = None,
-    **kwargs
+    **kwargs,
 ) -> FoodModelTrainer:
     """
     Factory function to create a trainer.
@@ -500,5 +498,5 @@ def create_trainer(
         train_loader=train_loader,
         val_loader=val_loader,
         config=config,
-        **kwargs
+        **kwargs,
     )

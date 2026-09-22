@@ -23,9 +23,15 @@ class Student(Base, TimestampMixin):
     history_enabled = Column(Boolean, default=False)
 
     meals = relationship("Meal", back_populates="student", cascade="all, delete-orphan")
-    feedback_records = relationship("FeedbackRecord", back_populates="student", cascade="all, delete-orphan")
-    weekly_insights = relationship("WeeklyInsight", back_populates="student", cascade="all, delete-orphan")
-    consent_records = relationship("ConsentRecord", back_populates="student", cascade="all, delete-orphan")
+    feedback_records = relationship(
+        "FeedbackRecord", back_populates="student", cascade="all, delete-orphan"
+    )
+    weekly_insights = relationship(
+        "WeeklyInsight", back_populates="student", cascade="all, delete-orphan"
+    )
+    consent_records = relationship(
+        "ConsentRecord", back_populates="student", cascade="all, delete-orphan"
+    )
 
     @property
     def student_id(self):

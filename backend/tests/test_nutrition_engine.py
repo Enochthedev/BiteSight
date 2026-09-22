@@ -8,7 +8,7 @@ from app.core.nutrition_engine import (
     NutritionRule,
     NutritionAnalysisEngine,
     FoodClass,
-    RuleOperator
+    RuleOperator,
 )
 
 
@@ -23,7 +23,7 @@ class TestNutritionProfile:
             fats=0.1,
             vitamins=0.1,
             minerals=0.1,
-            water=0.0
+            water=0.0,
         )
 
         assert profile.carbohydrates == 0.4
@@ -48,7 +48,7 @@ class TestNutritionProfile:
             fats=0.05,  # Below threshold
             vitamins=0.0,  # Missing
             minerals=0.15,
-            water=0.0  # Missing
+            water=0.0,  # Missing
         )
 
         missing = profile.get_missing_groups(threshold=0.1)
@@ -63,8 +63,12 @@ class TestNutritionProfile:
         """Test balance score calculation."""
         # Perfectly balanced
         balanced_profile = NutritionProfile(
-            carbohydrates=1/6, proteins=1/6, fats=1/6,
-            vitamins=1/6, minerals=1/6, water=1/6
+            carbohydrates=1 / 6,
+            proteins=1 / 6,
+            fats=1 / 6,
+            vitamins=1 / 6,
+            minerals=1 / 6,
+            water=1 / 6,
         )
         balanced_score = balanced_profile.calculate_balance_score()
         assert balanced_score > 0.9  # Should be close to 1
@@ -90,7 +94,7 @@ class TestNutritionRule:
             name="Test Rule",
             conditions=[{"field": "proteins", "operator": "lt", "value": 0.1}],
             feedback_template="Add more protein!",
-            priority=5
+            priority=5,
         )
 
         assert rule.rule_id == "test_rule"
@@ -104,7 +108,7 @@ class TestNutritionRule:
             rule_id="low_protein",
             name="Low Protein",
             conditions=[{"field": "proteins", "operator": "lt", "value": 0.1}],
-            feedback_template="Add protein!"
+            feedback_template="Add protein!",
         )
 
         # Profile with low protein
@@ -122,15 +126,19 @@ class TestNutritionRule:
             name="Well Balanced",
             conditions=[
                 {"field": "balance_score", "operator": "gte", "value": 0.5},
-                {"field": "missing_groups_count", "operator": "lte", "value": 1}
+                {"field": "missing_groups_count", "operator": "lte", "value": 1},
             ],
-            feedback_template="Great balance!"
+            feedback_template="Great balance!",
         )
 
         # Balanced profile
         balanced_profile = NutritionProfile(
-            carbohydrates=0.25, proteins=0.25, fats=0.15,
-            vitamins=0.15, minerals=0.15, water=0.05
+            carbohydrates=0.25,
+            proteins=0.25,
+            fats=0.15,
+            vitamins=0.15,
+            minerals=0.15,
+            water=0.05,
         )
         assert rule.evaluate(balanced_profile, []) is True
 
@@ -144,22 +152,28 @@ class TestNutritionRule:
             rule_id="rice_beans",
             name="Rice and Beans",
             conditions=[
-                {"field": "detected_food_names",
-                    "operator": "contains", "value": "rice"},
-                {"field": "detected_food_names",
-                    "operator": "contains", "value": "beans"}
+                {
+                    "field": "detected_food_names",
+                    "operator": "contains",
+                    "value": "rice",
+                },
+                {
+                    "field": "detected_food_names",
+                    "operator": "contains",
+                    "value": "beans",
+                },
             ],
-            feedback_template="Great combo!"
+            feedback_template="Great combo!",
         )
 
         foods_with_combo = [
             {"food_name": "jollof_rice", "confidence": 0.9},
-            {"food_name": "beans", "confidence": 0.8}
+            {"food_name": "beans", "confidence": 0.8},
         ]
 
         foods_without_combo = [
             {"food_name": "jollof_rice", "confidence": 0.9},
-            {"food_name": "chicken", "confidence": 0.8}
+            {"food_name": "chicken", "confidence": 0.8},
         ]
 
         profile = NutritionProfile()
@@ -173,7 +187,7 @@ class TestNutritionRule:
             name="Inactive Rule",
             conditions=[{"field": "proteins", "operator": "lt", "value": 1.0}],
             feedback_template="This should not trigger",
-            is_active=False
+            is_active=False,
         )
 
         profile = NutritionProfile(proteins=0.0)
@@ -199,7 +213,7 @@ class TestNutritionAnalysisEngine:
             rule_id="test_rule",
             name="Test Rule",
             conditions=[{"field": "proteins", "operator": "lt", "value": 0.1}],
-            feedback_template="Test feedback"
+            feedback_template="Test feedback",
         )
 
         # Add rule
@@ -220,10 +234,13 @@ class TestNutritionAnalysisEngine:
         engine = NutritionAnalysisEngine()
 
         detected_foods = [
-            {"food_name": "jollof_rice", "confidence": 0.9,
-                "food_class": "carbohydrates"},
+            {
+                "food_name": "jollof_rice",
+                "confidence": 0.9,
+                "food_class": "carbohydrates",
+            },
             {"food_name": "chicken", "confidence": 0.8, "food_class": "proteins"},
-            {"food_name": "efo_riro", "confidence": 0.7, "food_class": "minerals"}
+            {"food_name": "efo_riro", "confidence": 0.7, "food_class": "minerals"},
         ]
 
         profile = engine.classify_foods(detected_foods)
@@ -242,13 +259,12 @@ class TestNutritionAnalysisEngine:
             rule_id="test_low_protein",
             name="Low Protein Test",
             conditions=[{"field": "proteins", "operator": "lt", "value": 0.1}],
-            feedback_template="Need more protein!"
+            feedback_template="Need more protein!",
         )
         engine.add_rule(rule)
 
         # Profile with low protein
-        low_protein_profile = NutritionProfile(
-            carbohydrates=0.8, proteins=0.05)
+        low_protein_profile = NutritionProfile(carbohydrates=0.8, proteins=0.05)
         matching_rules = engine.evaluate_rules(low_protein_profile, [])
 
         rule_ids = [rule.rule_id for rule in matching_rules]
@@ -259,9 +275,12 @@ class TestNutritionAnalysisEngine:
         engine = NutritionAnalysisEngine()
 
         detected_foods = [
-            {"food_name": "jollof_rice", "confidence": 0.9,
-                "food_class": "carbohydrates"},
-            {"food_name": "chicken", "confidence": 0.8, "food_class": "proteins"}
+            {
+                "food_name": "jollof_rice",
+                "confidence": 0.9,
+                "food_class": "carbohydrates",
+            },
+            {"food_name": "chicken", "confidence": 0.8, "food_class": "proteins"},
         ]
 
         result = engine.analyze_nutrition(detected_foods)
@@ -284,19 +303,32 @@ class TestNutritionAnalysisEngine:
 
         # Test some key Nigerian foods
         nigerian_foods = [
-            "jollof_rice", "amala", "fufu", "pounded_yam",  # Carbs
-            "beans", "moimoi", "chicken", "fish",  # Proteins
-            "efo_riro", "okra", "ugwu",  # Minerals/vegetables
-            "orange", "banana", "tomato",  # Vitamins/fruits
-            "palm_oil", "groundnut",  # Fats
-            "water", "zobo"  # Water
+            "jollof_rice",
+            "amala",
+            "fufu",
+            "pounded_yam",  # Carbs
+            "beans",
+            "moimoi",
+            "chicken",
+            "fish",  # Proteins
+            "efo_riro",
+            "okra",
+            "ugwu",  # Minerals/vegetables
+            "orange",
+            "banana",
+            "tomato",  # Vitamins/fruits
+            "palm_oil",
+            "groundnut",  # Fats
+            "water",
+            "zobo",  # Water
         ]
 
         for food in nigerian_foods:
             assert food in engine.food_class_mapping, f"Missing mapping for {food}"
             food_class = engine.food_class_mapping[food]
-            assert food_class in [
-                fc.value for fc in FoodClass], f"Invalid class for {food}"
+            assert food_class in [fc.value for fc in FoodClass], (
+                f"Invalid class for {food}"
+            )
 
 
 class TestRuleOperators:
@@ -305,10 +337,7 @@ class TestRuleOperators:
     def test_comparison_operators(self):
         """Test numeric comparison operators."""
         rule = NutritionRule(
-            rule_id="test",
-            name="Test",
-            conditions=[],
-            feedback_template="Test"
+            rule_id="test", name="Test", conditions=[], feedback_template="Test"
         )
 
         # Greater than
@@ -331,28 +360,20 @@ class TestRuleOperators:
     def test_list_operators(self):
         """Test list-based operators."""
         rule = NutritionRule(
-            rule_id="test",
-            name="Test",
-            conditions=[],
-            feedback_template="Test"
+            rule_id="test", name="Test", conditions=[], feedback_template="Test"
         )
 
         # In operator
         assert rule._apply_operator("apple", "in", ["apple", "banana"]) is True
-        assert rule._apply_operator(
-            "orange", "in", ["apple", "banana"]) is False
+        assert rule._apply_operator("orange", "in", ["apple", "banana"]) is False
 
         # Not in operator
-        assert rule._apply_operator(
-            "orange", "not_in", ["apple", "banana"]) is True
-        assert rule._apply_operator(
-            "apple", "not_in", ["apple", "banana"]) is False
+        assert rule._apply_operator("orange", "not_in", ["apple", "banana"]) is True
+        assert rule._apply_operator("apple", "not_in", ["apple", "banana"]) is False
 
         # Contains operator
-        assert rule._apply_operator(
-            ["apple", "banana"], "contains", "apple") is True
-        assert rule._apply_operator(
-            ["apple", "banana"], "contains", "orange") is False
+        assert rule._apply_operator(["apple", "banana"], "contains", "apple") is True
+        assert rule._apply_operator(["apple", "banana"], "contains", "orange") is False
         assert rule._apply_operator("hello world", "contains", "world") is True
         assert rule._apply_operator("hello world", "contains", "xyz") is False
 

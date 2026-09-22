@@ -9,7 +9,14 @@ from fastapi import HTTPException, status
 
 from app.core.auth import verify_password, get_password_hash, create_access_token
 from app.core.config import settings
-from app.models.user import Student, StudentCreate, StudentUpdate, LoginRequest, LoginResponse, StudentResponse
+from app.models.user import (
+    Student,
+    StudentCreate,
+    StudentUpdate,
+    LoginRequest,
+    LoginResponse,
+    StudentResponse,
+)
 
 
 class UserService:
@@ -21,14 +28,14 @@ class UserService:
     def create_user(self, user_data: StudentCreate) -> Student:
         """Create a new user account."""
         # Check if user already exists
-        existing_user = self.db.query(Student).filter(
-            Student.email == user_data.email
-        ).first()
+        existing_user = (
+            self.db.query(Student).filter(Student.email == user_data.email).first()
+        )
 
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+                detail="Email already registered",
             )
 
         # Create new user
@@ -37,7 +44,7 @@ class UserService:
             email=user_data.email,
             name=user_data.name,
             password_hash=hashed_password,
-            history_enabled=False  # Default to disabled for privacy
+            history_enabled=False,  # Default to disabled for privacy
         )
 
         self.db.add(db_user)
@@ -48,9 +55,7 @@ class UserService:
 
     def authenticate_user(self, login_data: LoginRequest) -> Optional[Student]:
         """Authenticate user with email and password."""
-        user = self.db.query(Student).filter(
-            Student.email == login_data.email
-        ).first()
+        user = self.db.query(Student).filter(Student.email == login_data.email).first()
 
         if not user:
             return None
@@ -62,8 +67,7 @@ class UserService:
 
     def create_login_response(self, user: Student) -> LoginResponse:
         """Create login response with access token."""
-        access_token_expires = timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             subject=user.id, expires_delta=access_token_expires
         )
@@ -79,8 +83,8 @@ class UserService:
                 registration_date=user.registration_date,
                 history_enabled=user.history_enabled,
                 created_at=user.created_at,
-                updated_at=user.updated_at
-            )
+                updated_at=user.updated_at,
+            ),
         )
 
     def get_user_by_id(self, user_id: UUID) -> Optional[Student]:

@@ -22,7 +22,7 @@ class TestInsightsService:
             email="insights@example.com",
             name="Insights Student",
             password_hash="hashed_password",
-            history_enabled=True
+            history_enabled=True,
         )
         db_session.add(student)
         db_session.commit()
@@ -36,7 +36,7 @@ class TestInsightsService:
             email="noinsights@example.com",
             name="No Insights Student",
             password_hash="hashed_password",
-            history_enabled=False
+            history_enabled=False,
         )
         db_session.add(student)
         db_session.commit()
@@ -50,21 +50,21 @@ class TestInsightsService:
         week_start = date.today() - timedelta(days=7)
 
         # Create meals for each day of the week with good variety
-        food_groups = ["carbohydrates", "proteins",
-                       "vitamins", "minerals", "fats"]
+        food_groups = ["carbohydrates", "proteins", "vitamins", "minerals", "fats"]
 
         for day in range(7):
             meal_date = datetime.combine(
-                week_start + timedelta(days=day), datetime.min.time())
+                week_start + timedelta(days=day), datetime.min.time()
+            )
 
             # Create 2 meals per day
             for meal_num in range(2):
                 meal = Meal(
                     student_id=sample_student.id,
                     image_path=f"/uploads/balanced_meal_{day}_{meal_num}.jpg",
-                    upload_date=meal_date +
-                    timedelta(hours=meal_num * 6 + 8),  # 8am and 2pm
-                    analysis_status="completed"
+                    upload_date=meal_date
+                    + timedelta(hours=meal_num * 6 + 8),  # 8am and 2pm
+                    analysis_status="completed",
                 )
                 db_session.add(meal)
                 db_session.flush()
@@ -77,8 +77,12 @@ class TestInsightsService:
                         food_name=f"{food_group.title()} Food {i}",
                         confidence_score=0.85 + (i * 0.03),
                         food_class=food_group,
-                        bounding_box={"x": 10 + i*20, "y": 10,
-                                      "width": 100, "height": 100}
+                        bounding_box={
+                            "x": 10 + i * 20,
+                            "y": 10,
+                            "width": 100,
+                            "height": 100,
+                        },
                     )
                     db_session.add(detected_food)
 
@@ -90,8 +94,8 @@ class TestInsightsService:
                     feedback_type="comprehensive_nutrition_analysis",
                     recommendations={
                         "suggestions": ["Keep up the good work!"],
-                        "balance_score": 0.8 + (day * 0.02)  # Improving trend
-                    }
+                        "balance_score": 0.8 + (day * 0.02),  # Improving trend
+                    },
                 )
                 db_session.add(feedback)
                 meals.append(meal)
@@ -107,13 +111,14 @@ class TestInsightsService:
 
         for day in range(7):
             meal_date = datetime.combine(
-                week_start + timedelta(days=day), datetime.min.time())
+                week_start + timedelta(days=day), datetime.min.time()
+            )
 
             meal = Meal(
                 student_id=sample_student.id,
                 image_path=f"/uploads/unbalanced_meal_{day}.jpg",
                 upload_date=meal_date + timedelta(hours=12),
-                analysis_status="completed"
+                analysis_status="completed",
             )
             db_session.add(meal)
             db_session.flush()
@@ -124,7 +129,7 @@ class TestInsightsService:
                 food_name="Rice",
                 confidence_score=0.9,
                 food_class="carbohydrates",
-                bounding_box={"x": 10, "y": 10, "width": 100, "height": 100}
+                bounding_box={"x": 10, "y": 10, "width": 100, "height": 100},
             )
             db_session.add(detected_food)
 
@@ -136,8 +141,8 @@ class TestInsightsService:
                 feedback_type="comprehensive_nutrition_analysis",
                 recommendations={
                     "suggestions": ["Add more variety to your meals"],
-                    "balance_score": 0.3 - (day * 0.02)  # Declining trend
-                }
+                    "balance_score": 0.3 - (day * 0.02),  # Declining trend
+                },
             )
             db_session.add(feedback)
             meals.append(meal)
@@ -146,7 +151,9 @@ class TestInsightsService:
         return meals, week_start
 
     @pytest.mark.asyncio
-    async def test_generate_weekly_insight_balanced_meals(self, db_session: Session, sample_student: Student, week_meals_balanced):
+    async def test_generate_weekly_insight_balanced_meals(
+        self, db_session: Session, sample_student: Student, week_meals_balanced
+    ):
         """Test generating insights for balanced meals."""
         meals, week_start = week_meals_balanced
         week_end = week_start + timedelta(days=6)
@@ -155,7 +162,7 @@ class TestInsightsService:
             student_id=sample_student.id,
             week_start_date=week_start,
             week_end_date=week_end,
-            db=db_session
+            db=db_session,
         )
 
         assert insight is not None
@@ -165,14 +172,20 @@ class TestInsightsService:
         assert "balanced" in " ".join(insight.positive_trends).lower()
 
         # Check that insight was stored in database
-        stored_insight = db_session.query(WeeklyInsight).filter(
-            WeeklyInsight.student_id == sample_student.id,
-            WeeklyInsight.week_start_date == week_start
-        ).first()
+        stored_insight = (
+            db_session.query(WeeklyInsight)
+            .filter(
+                WeeklyInsight.student_id == sample_student.id,
+                WeeklyInsight.week_start_date == week_start,
+            )
+            .first()
+        )
         assert stored_insight is not None
 
     @pytest.mark.asyncio
-    async def test_generate_weekly_insight_unbalanced_meals(self, db_session: Session, sample_student: Student, week_meals_unbalanced):
+    async def test_generate_weekly_insight_unbalanced_meals(
+        self, db_session: Session, sample_student: Student, week_meals_unbalanced
+    ):
         """Test generating insights for unbalanced meals."""
         meals, week_start = week_meals_unbalanced
         week_end = week_start + timedelta(days=6)
@@ -181,7 +194,7 @@ class TestInsightsService:
             student_id=sample_student.id,
             week_start_date=week_start,
             week_end_date=week_end,
-            db=db_session
+            db=db_session,
         )
 
         assert insight is not None
@@ -190,11 +203,14 @@ class TestInsightsService:
 
         # Should identify missing food groups
         improvement_text = " ".join(insight.improvement_areas).lower()
-        assert any(group in improvement_text for group in [
-                   "proteins", "vitamins", "minerals"])
+        assert any(
+            group in improvement_text for group in ["proteins", "vitamins", "minerals"]
+        )
 
     @pytest.mark.asyncio
-    async def test_generate_weekly_insight_no_meals(self, db_session: Session, sample_student: Student):
+    async def test_generate_weekly_insight_no_meals(
+        self, db_session: Session, sample_student: Student
+    ):
         """Test generating insights when no meals exist."""
         week_start = date.today() - timedelta(days=21)  # Empty week
         week_end = week_start + timedelta(days=6)
@@ -203,7 +219,7 @@ class TestInsightsService:
             student_id=sample_student.id,
             week_start_date=week_start,
             week_end_date=week_end,
-            db=db_session
+            db=db_session,
         )
 
         assert insight is not None
@@ -211,7 +227,9 @@ class TestInsightsService:
         assert "no meals recorded" in insight.recommendations.lower()
 
     @pytest.mark.asyncio
-    async def test_generate_weekly_insight_no_consent(self, db_session: Session, sample_student_no_history: Student):
+    async def test_generate_weekly_insight_no_consent(
+        self, db_session: Session, sample_student_no_history: Student
+    ):
         """Test generating insights without consent."""
         week_start = date.today() - timedelta(days=7)
         week_end = week_start + timedelta(days=6)
@@ -220,13 +238,15 @@ class TestInsightsService:
             student_id=sample_student_no_history.id,
             week_start_date=week_start,
             week_end_date=week_end,
-            db=db_session
+            db=db_session,
         )
 
         assert insight is None
 
     @pytest.mark.asyncio
-    async def test_get_existing_weekly_insight(self, db_session: Session, sample_student: Student, week_meals_balanced):
+    async def test_get_existing_weekly_insight(
+        self, db_session: Session, sample_student: Student, week_meals_balanced
+    ):
         """Test retrieving existing weekly insight."""
         meals, week_start = week_meals_balanced
         week_end = week_start + timedelta(days=6)
@@ -236,14 +256,12 @@ class TestInsightsService:
             student_id=sample_student.id,
             week_start_date=week_start,
             week_end_date=week_end,
-            db=db_session
+            db=db_session,
         )
 
         # Retrieve the same insight
         retrieved_insight = await insights_service.get_weekly_insight(
-            student_id=sample_student.id,
-            week_start_date=week_start,
-            db=db_session
+            student_id=sample_student.id, week_start_date=week_start, db=db_session
         )
 
         assert retrieved_insight is not None
@@ -251,7 +269,9 @@ class TestInsightsService:
         assert retrieved_insight.meals_analyzed == initial_insight.meals_analyzed
 
     @pytest.mark.asyncio
-    async def test_get_trend_analysis_improving(self, db_session: Session, sample_student: Student, week_meals_balanced):
+    async def test_get_trend_analysis_improving(
+        self, db_session: Session, sample_student: Student, week_meals_balanced
+    ):
         """Test trend analysis with improving nutrition."""
         meals, week_start = week_meals_balanced
 
@@ -260,13 +280,11 @@ class TestInsightsService:
             student_id=sample_student.id,
             week_start_date=week_start,
             week_end_date=week_start + timedelta(days=6),
-            db=db_session
+            db=db_session,
         )
 
         trends = await insights_service.get_trend_analysis(
-            student_id=sample_student.id,
-            weeks=2,
-            db=db_session
+            student_id=sample_student.id, weeks=2, db=db_session
         )
 
         assert "error" not in trends
@@ -275,7 +293,9 @@ class TestInsightsService:
         assert isinstance(trends["recommendations"], list)
 
     @pytest.mark.asyncio
-    async def test_get_trend_analysis_declining(self, db_session: Session, sample_student: Student, week_meals_unbalanced):
+    async def test_get_trend_analysis_declining(
+        self, db_session: Session, sample_student: Student, week_meals_unbalanced
+    ):
         """Test trend analysis with declining nutrition."""
         meals, week_start = week_meals_unbalanced
 
@@ -284,13 +304,11 @@ class TestInsightsService:
             student_id=sample_student.id,
             week_start_date=week_start,
             week_end_date=week_start + timedelta(days=6),
-            db=db_session
+            db=db_session,
         )
 
         trends = await insights_service.get_trend_analysis(
-            student_id=sample_student.id,
-            weeks=2,
-            db=db_session
+            student_id=sample_student.id, weeks=2, db=db_session
         )
 
         assert "error" not in trends
@@ -299,51 +317,48 @@ class TestInsightsService:
         assert trends["average_balance_score"] < 0.5
 
     @pytest.mark.asyncio
-    async def test_get_trend_analysis_no_consent(self, db_session: Session, sample_student_no_history: Student):
+    async def test_get_trend_analysis_no_consent(
+        self, db_session: Session, sample_student_no_history: Student
+    ):
         """Test trend analysis without consent."""
         trends = await insights_service.get_trend_analysis(
-            student_id=sample_student_no_history.id,
-            weeks=4,
-            db=db_session
+            student_id=sample_student_no_history.id, weeks=4, db=db_session
         )
 
         assert "error" in trends
         assert trends["error"] == "History not enabled"
 
     @pytest.mark.asyncio
-    async def test_get_trend_analysis_no_data(self, db_session: Session, sample_student: Student):
+    async def test_get_trend_analysis_no_data(
+        self, db_session: Session, sample_student: Student
+    ):
         """Test trend analysis with no data."""
         trends = await insights_service.get_trend_analysis(
-            student_id=sample_student.id,
-            weeks=4,
-            db=db_session
+            student_id=sample_student.id, weeks=4, db=db_session
         )
 
         assert trends["weeks_analyzed"] == 0
         assert trends["trend_direction"] == "no_data"
-        assert "start logging meals" in " ".join(
-            trends["recommendations"]).lower()
+        assert "start logging meals" in " ".join(trends["recommendations"]).lower()
 
     def test_food_group_recommendations(self):
         """Test food group specific recommendations."""
-        carb_recs = insights_service._get_food_group_recommendations(
-            "carbohydrates")
-        protein_recs = insights_service._get_food_group_recommendations(
-            "proteins")
-        vitamin_recs = insights_service._get_food_group_recommendations(
-            "vitamins")
+        carb_recs = insights_service._get_food_group_recommendations("carbohydrates")
+        protein_recs = insights_service._get_food_group_recommendations("proteins")
+        vitamin_recs = insights_service._get_food_group_recommendations("vitamins")
 
         assert len(carb_recs) > 0
-        assert any("rice" in rec.lower() or "yam" in rec.lower()
-                   for rec in carb_recs)
+        assert any("rice" in rec.lower() or "yam" in rec.lower() for rec in carb_recs)
 
         assert len(protein_recs) > 0
-        assert any("beans" in rec.lower() or "fish" in rec.lower()
-                   for rec in protein_recs)
+        assert any(
+            "beans" in rec.lower() or "fish" in rec.lower() for rec in protein_recs
+        )
 
         assert len(vitamin_recs) > 0
-        assert any("fruit" in rec.lower() or "orange" in rec.lower()
-                   for rec in vitamin_recs)
+        assert any(
+            "fruit" in rec.lower() or "orange" in rec.lower() for rec in vitamin_recs
+        )
 
     def test_trend_direction_calculation(self):
         """Test trend direction calculation logic."""
@@ -364,38 +379,42 @@ class TestInsightsService:
 
         # Insufficient data
         insufficient_scores = [0.7]
-        trend = insights_service._calculate_trend_direction(
-            insufficient_scores)
+        trend = insights_service._calculate_trend_direction(insufficient_scores)
         assert trend == "insufficient_data"
 
     def test_trend_recommendations_generation(self):
         """Test trend-based recommendation generation."""
         # Improving trend with good consistency
         recs = insights_service._generate_trend_recommendations(
-            "improving", 0.8, [0.7, 0.8])
+            "improving", 0.8, [0.7, 0.8]
+        )
         assert any("great job" in rec.lower() for rec in recs)
         assert any("excellent" in rec.lower() for rec in recs)
 
         # Declining trend with poor consistency
         recs = insights_service._generate_trend_recommendations(
-            "declining", 0.3, [0.8, 0.6])
+            "declining", 0.3, [0.8, 0.6]
+        )
         assert any("declining" in rec.lower() for rec in recs)
         assert any("log your meals" in rec.lower() for rec in recs)
 
         # Stable trend with good balance
         recs = insights_service._generate_trend_recommendations(
-            "stable", 0.7, [0.8, 0.8])
+            "stable", 0.7, [0.8, 0.8]
+        )
         assert any("maintaining" in rec.lower() for rec in recs)
 
     @pytest.mark.asyncio
-    async def test_nutrition_pattern_analysis(self, db_session: Session, sample_student: Student):
+    async def test_nutrition_pattern_analysis(
+        self, db_session: Session, sample_student: Student
+    ):
         """Test detailed nutrition pattern analysis."""
         # Create a meal with specific pattern
         meal = Meal(
             student_id=sample_student.id,
             image_path="/uploads/pattern_test.jpg",
             upload_date=datetime.utcnow(),
-            analysis_status="completed"
+            analysis_status="completed",
         )
         db_session.add(meal)
         db_session.flush()
@@ -408,7 +427,7 @@ class TestInsightsService:
                 food_name=f"Test {food_group}",
                 confidence_score=0.9,
                 food_class=food_group,
-                bounding_box={"x": i*10, "y": 10, "width": 100, "height": 100}
+                bounding_box={"x": i * 10, "y": 10, "width": 100, "height": 100},
             )
             db_session.add(detected_food)
 
@@ -418,7 +437,7 @@ class TestInsightsService:
             student_id=sample_student.id,
             feedback_text="Test feedback",
             feedback_type="test",
-            recommendations={"balance_score": 0.75}
+            recommendations={"balance_score": 0.75},
         )
         db_session.add(feedback)
         db_session.commit()

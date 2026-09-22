@@ -7,7 +7,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.consent import (
-    ConsentRecord, ConsentRequest, ConsentUpdateRequest, ConsentVerificationResult
+    ConsentRecord,
+    ConsentRequest,
+    ConsentUpdateRequest,
+    ConsentVerificationResult,
 )
 from app.models.user import Student, StudentCreate
 from app.services.consent_service import ConsentService
@@ -23,9 +26,7 @@ class TestConsentService:
         # Create a user first
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="consent@example.com",
-            name="Consent User",
-            password="password123"
+            email="consent@example.com", name="Consent User", password="password123"
         )
         user = user_service.create_user(user_data)
 
@@ -35,7 +36,7 @@ class TestConsentService:
             data_processing_consent=True,
             history_storage_consent=True,
             analytics_consent=False,
-            consent_version="1.0"
+            consent_version="1.0",
         )
 
         result = consent_service.record_consent(user.id, consent_data)
@@ -47,15 +48,16 @@ class TestConsentService:
         assert result.consent_version == "1.0"
 
         # Verify records were created in database
-        records = db_session.query(ConsentRecord).filter(
-            ConsentRecord.student_id == user.id
-        ).all()
+        records = (
+            db_session.query(ConsentRecord)
+            .filter(ConsentRecord.student_id == user.id)
+            .all()
+        )
 
         assert len(records) == 3  # data_processing, history_storage, analytics
 
         # Verify user's history_enabled flag was updated
-        updated_user = db_session.query(Student).filter(
-            Student.id == user.id).first()
+        updated_user = db_session.query(Student).filter(Student.id == user.id).first()
         assert updated_user.history_enabled is True
 
     def test_update_consent(self, db_session: Session):
@@ -63,9 +65,7 @@ class TestConsentService:
         # Create user and initial consent
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="update@example.com",
-            name="Update User",
-            password="password123"
+            email="update@example.com", name="Update User", password="password123"
         )
         user = user_service.create_user(user_data)
 
@@ -75,14 +75,13 @@ class TestConsentService:
         initial_consent = ConsentRequest(
             data_processing_consent=True,
             history_storage_consent=False,
-            analytics_consent=False
+            analytics_consent=False,
         )
         consent_service.record_consent(user.id, initial_consent)
 
         # Update consent
         update_data = ConsentUpdateRequest(
-            history_storage_consent=True,
-            analytics_consent=True
+            history_storage_consent=True, analytics_consent=True
         )
 
         result = consent_service.update_consent(user.id, update_data)
@@ -92,8 +91,7 @@ class TestConsentService:
         assert result.analytics_consent is True  # Updated
 
         # Verify user's history_enabled flag was updated
-        updated_user = db_session.query(Student).filter(
-            Student.id == user.id).first()
+        updated_user = db_session.query(Student).filter(Student.id == user.id).first()
         assert updated_user.history_enabled is True
 
     def test_get_current_consent(self, db_session: Session):
@@ -101,9 +99,7 @@ class TestConsentService:
         # Create user
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="current@example.com",
-            name="Current User",
-            password="password123"
+            email="current@example.com", name="Current User", password="password123"
         )
         user = user_service.create_user(user_data)
 
@@ -113,7 +109,7 @@ class TestConsentService:
         consent_data = ConsentRequest(
             data_processing_consent=True,
             history_storage_consent=True,
-            analytics_consent=False
+            analytics_consent=False,
         )
         consent_service.record_consent(user.id, consent_data)
 
@@ -130,9 +126,7 @@ class TestConsentService:
         # Create user and consent
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="verify@example.com",
-            name="Verify User",
-            password="password123"
+            email="verify@example.com", name="Verify User", password="password123"
         )
         user = user_service.create_user(user_data)
 
@@ -140,14 +134,13 @@ class TestConsentService:
         consent_data = ConsentRequest(
             data_processing_consent=True,
             history_storage_consent=True,
-            analytics_consent=True
+            analytics_consent=True,
         )
         consent_service.record_consent(user.id, consent_data)
 
         # Verify consent
         result = consent_service.verify_consent(
-            user.id,
-            ["data_processing", "history_storage"]
+            user.id, ["data_processing", "history_storage"]
         )
 
         assert result.has_data_processing_consent is True
@@ -160,9 +153,7 @@ class TestConsentService:
         # Create user with partial consent
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="missing@example.com",
-            name="Missing User",
-            password="password123"
+            email="missing@example.com", name="Missing User", password="password123"
         )
         user = user_service.create_user(user_data)
 
@@ -170,14 +161,13 @@ class TestConsentService:
         consent_data = ConsentRequest(
             data_processing_consent=True,
             history_storage_consent=False,
-            analytics_consent=False
+            analytics_consent=False,
         )
         consent_service.record_consent(user.id, consent_data)
 
         # Verify consent
         result = consent_service.verify_consent(
-            user.id,
-            ["data_processing", "history_storage", "analytics"]
+            user.id, ["data_processing", "history_storage", "analytics"]
         )
 
         assert result.has_data_processing_consent is True
@@ -192,9 +182,7 @@ class TestConsentService:
         # Create user
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="history@example.com",
-            name="History User",
-            password="password123"
+            email="history@example.com", name="History User", password="password123"
         )
         user = user_service.create_user(user_data)
 
@@ -204,7 +192,7 @@ class TestConsentService:
         initial_consent = ConsentRequest(
             data_processing_consent=True,
             history_storage_consent=False,
-            analytics_consent=False
+            analytics_consent=False,
         )
         consent_service.record_consent(user.id, initial_consent)
 
@@ -227,9 +215,7 @@ class TestConsentService:
         # Create user with consents
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="revoke@example.com",
-            name="Revoke User",
-            password="password123"
+            email="revoke@example.com", name="Revoke User", password="password123"
         )
         user = user_service.create_user(user_data)
 
@@ -239,7 +225,7 @@ class TestConsentService:
         consent_data = ConsentRequest(
             data_processing_consent=True,
             history_storage_consent=True,
-            analytics_consent=True
+            analytics_consent=True,
         )
         consent_service.record_consent(user.id, consent_data)
 
@@ -254,8 +240,7 @@ class TestConsentService:
         assert current.analytics_consent is False
 
         # Verify user's history_enabled flag was updated
-        updated_user = db_session.query(Student).filter(
-            Student.id == user.id).first()
+        updated_user = db_session.query(Student).filter(Student.id == user.id).first()
         assert updated_user.history_enabled is False
 
 
@@ -289,14 +274,14 @@ class TestConsentEndpoints:
         user_data = {
             "email": "consentapi@example.com",
             "name": "Consent API User",
-            "password": "password123"
+            "password": "password123",
         }
         client.post("/api/v1/auth/register", json=user_data)
 
-        login_response = client.post("/api/v1/auth/login", json={
-            "email": "consentapi@example.com",
-            "password": "password123"
-        })
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "consentapi@example.com", "password": "password123"},
+        )
         token = login_response.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -305,11 +290,10 @@ class TestConsentEndpoints:
             "data_processing_consent": True,
             "history_storage_consent": True,
             "analytics_consent": False,
-            "consent_version": "1.0"
+            "consent_version": "1.0",
         }
 
-        response = client.post(
-            "/api/v1/consent/", json=consent_data, headers=headers)
+        response = client.post("/api/v1/consent/", json=consent_data, headers=headers)
 
         assert response.status_code == 201
         data = response.json()
@@ -317,20 +301,22 @@ class TestConsentEndpoints:
         assert data["history_storage_consent"] is True
         assert data["analytics_consent"] is False
 
-    def test_get_current_consent_endpoint(self, client: TestClient, db_session: Session):
+    def test_get_current_consent_endpoint(
+        self, client: TestClient, db_session: Session
+    ):
         """Test getting current consent endpoint."""
         # Register and login user
         user_data = {
             "email": "getconsent@example.com",
             "name": "Get Consent User",
-            "password": "password123"
+            "password": "password123",
         }
         client.post("/api/v1/auth/register", json=user_data)
 
-        login_response = client.post("/api/v1/auth/login", json={
-            "email": "getconsent@example.com",
-            "password": "password123"
-        })
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "getconsent@example.com", "password": "password123"},
+        )
         token = login_response.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -338,7 +324,7 @@ class TestConsentEndpoints:
         consent_data = {
             "data_processing_consent": True,
             "history_storage_consent": False,
-            "analytics_consent": True
+            "analytics_consent": True,
         }
         client.post("/api/v1/consent/", json=consent_data, headers=headers)
 
@@ -357,14 +343,14 @@ class TestConsentEndpoints:
         user_data = {
             "email": "updateconsent@example.com",
             "name": "Update Consent User",
-            "password": "password123"
+            "password": "password123",
         }
         client.post("/api/v1/auth/register", json=user_data)
 
-        login_response = client.post("/api/v1/auth/login", json={
-            "email": "updateconsent@example.com",
-            "password": "password123"
-        })
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "updateconsent@example.com", "password": "password123"},
+        )
         token = login_response.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -372,18 +358,14 @@ class TestConsentEndpoints:
         initial_consent = {
             "data_processing_consent": True,
             "history_storage_consent": False,
-            "analytics_consent": False
+            "analytics_consent": False,
         }
         client.post("/api/v1/consent/", json=initial_consent, headers=headers)
 
         # Update consent
-        update_data = {
-            "history_storage_consent": True,
-            "analytics_consent": True
-        }
+        update_data = {"history_storage_consent": True, "analytics_consent": True}
 
-        response = client.put("/api/v1/consent/",
-                              json=update_data, headers=headers)
+        response = client.put("/api/v1/consent/", json=update_data, headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -397,14 +379,14 @@ class TestConsentEndpoints:
         user_data = {
             "email": "verifyconsent@example.com",
             "name": "Verify Consent User",
-            "password": "password123"
+            "password": "password123",
         }
         client.post("/api/v1/auth/register", json=user_data)
 
-        login_response = client.post("/api/v1/auth/login", json={
-            "email": "verifyconsent@example.com",
-            "password": "password123"
-        })
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "verifyconsent@example.com", "password": "password123"},
+        )
         token = login_response.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -412,7 +394,7 @@ class TestConsentEndpoints:
         consent_data = {
             "data_processing_consent": True,
             "history_storage_consent": False,
-            "analytics_consent": False
+            "analytics_consent": False,
         }
         client.post("/api/v1/consent/", json=consent_data, headers=headers)
 
@@ -420,9 +402,7 @@ class TestConsentEndpoints:
         required_consents = ["data_processing", "history_storage"]
 
         response = client.post(
-            "/api/v1/consent/verify",
-            json=required_consents,
-            headers=headers
+            "/api/v1/consent/verify", json=required_consents, headers=headers
         )
 
         assert response.status_code == 200
@@ -436,7 +416,7 @@ class TestConsentEndpoints:
         """Test accessing consent endpoints without authentication."""
         consent_data = {
             "data_processing_consent": True,
-            "history_storage_consent": True
+            "history_storage_consent": True,
         }
 
         response = client.post("/api/v1/consent/", json=consent_data)

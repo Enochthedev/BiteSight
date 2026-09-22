@@ -156,7 +156,9 @@ def load_pretrained_model(
     """Load a checkpoint saved by the trainer or scripts/create_mock_model.py."""
     checkpoint = torch.load(model_path, map_location=device)
     state_dict = checkpoint.get("model_state_dict", checkpoint)
-    num_classes = checkpoint.get("num_classes") or state_dict["classifier.3.weight"].shape[0]
+    num_classes = (
+        checkpoint.get("num_classes") or state_dict["classifier.3.weight"].shape[0]
+    )
     model = MobileNetV2FoodClassifier(num_classes=num_classes, pretrained=False)
     model.load_state_dict(state_dict)
     model.to(device).eval()

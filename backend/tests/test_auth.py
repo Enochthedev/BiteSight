@@ -7,8 +7,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.auth import (
-    create_access_token, verify_token, verify_password,
-    get_password_hash, create_authentication_exception
+    create_access_token,
+    verify_token,
+    verify_password,
+    get_password_hash,
+    create_authentication_exception,
 )
 from app.models.user import Student, StudentCreate, LoginRequest
 from app.services.user_service import UserService
@@ -55,8 +58,7 @@ class TestJWTTokens:
         """Test token creation with custom expiry."""
         user_id = str(uuid4())
         expires_delta = timedelta(minutes=30)
-        token = create_access_token(
-            subject=user_id, expires_delta=expires_delta)
+        token = create_access_token(subject=user_id, expires_delta=expires_delta)
 
         verified_id = verify_token(token)
         assert verified_id == user_id
@@ -65,8 +67,7 @@ class TestJWTTokens:
         """Test verification of invalid tokens."""
         assert verify_token("invalid_token") is None
         assert verify_token("") is None
-        assert verify_token(
-            "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalid") is None
+        assert verify_token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalid") is None
 
     def test_authentication_exception(self):
         """Test authentication exception creation."""
@@ -82,9 +83,7 @@ class TestUserService:
         """Test successful user creation."""
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="test@example.com",
-            name="Test User",
-            password="password123"
+            email="test@example.com", name="Test User", password="password123"
         )
 
         user = user_service.create_user(user_data)
@@ -99,9 +98,7 @@ class TestUserService:
         """Test user creation with duplicate email."""
         user_service = UserService(db_session)
         user_data = StudentCreate(
-            email="duplicate@example.com",
-            name="User One",
-            password="password123"
+            email="duplicate@example.com", name="User One", password="password123"
         )
 
         # Create first user
@@ -109,9 +106,7 @@ class TestUserService:
 
         # Try to create second user with same email
         user_data2 = StudentCreate(
-            email="duplicate@example.com",
-            name="User Two",
-            password="password456"
+            email="duplicate@example.com", name="User Two", password="password456"
         )
 
         with pytest.raises(Exception):  # Should raise HTTPException
@@ -123,17 +118,12 @@ class TestUserService:
 
         # Create user
         user_data = StudentCreate(
-            email="auth@example.com",
-            name="Auth User",
-            password="password123"
+            email="auth@example.com", name="Auth User", password="password123"
         )
         created_user = user_service.create_user(user_data)
 
         # Authenticate user
-        login_data = LoginRequest(
-            email="auth@example.com",
-            password="password123"
-        )
+        login_data = LoginRequest(email="auth@example.com", password="password123")
         authenticated_user = user_service.authenticate_user(login_data)
 
         assert authenticated_user is not None
@@ -148,14 +138,13 @@ class TestUserService:
         user_data = StudentCreate(
             email="wrongpass@example.com",
             name="Wrong Pass User",
-            password="password123"
+            password="password123",
         )
         user_service.create_user(user_data)
 
         # Try to authenticate with wrong password
         login_data = LoginRequest(
-            email="wrongpass@example.com",
-            password="wrongpassword"
+            email="wrongpass@example.com", password="wrongpassword"
         )
         authenticated_user = user_service.authenticate_user(login_data)
 
@@ -166,8 +155,7 @@ class TestUserService:
         user_service = UserService(db_session)
 
         login_data = LoginRequest(
-            email="nonexistent@example.com",
-            password="password123"
+            email="nonexistent@example.com", password="password123"
         )
         authenticated_user = user_service.authenticate_user(login_data)
 
@@ -181,7 +169,7 @@ class TestUserService:
         user_data = StudentCreate(
             email="loginresp@example.com",
             name="Login Response User",
-            password="password123"
+            password="password123",
         )
         user = user_service.create_user(user_data)
 
@@ -200,9 +188,7 @@ class TestUserService:
 
         # Create user
         user_data = StudentCreate(
-            email="getbyid@example.com",
-            name="Get By ID User",
-            password="password123"
+            email="getbyid@example.com", name="Get By ID User", password="password123"
         )
         created_user = user_service.create_user(user_data)
 
@@ -221,13 +207,12 @@ class TestUserService:
         user_data = StudentCreate(
             email="getbyemail@example.com",
             name="Get By Email User",
-            password="password123"
+            password="password123",
         )
         created_user = user_service.create_user(user_data)
 
         # Get user by email
-        retrieved_user = user_service.get_user_by_email(
-            "getbyemail@example.com")
+        retrieved_user = user_service.get_user_by_email("getbyemail@example.com")
 
         assert retrieved_user is not None
         assert retrieved_user.id == created_user.id
@@ -241,17 +226,12 @@ class TestUserService:
 
         # Create user
         user_data = StudentCreate(
-            email="update@example.com",
-            name="Original Name",
-            password="password123"
+            email="update@example.com", name="Original Name", password="password123"
         )
         created_user = user_service.create_user(user_data)
 
         # Update user
-        update_data = StudentUpdate(
-            name="Updated Name",
-            history_enabled=True
-        )
+        update_data = StudentUpdate(name="Updated Name", history_enabled=True)
         updated_user = user_service.update_user(created_user.id, update_data)
 
         assert updated_user is not None
@@ -265,9 +245,7 @@ class TestUserService:
 
         # Create user
         user_data = StudentCreate(
-            email="delete@example.com",
-            name="Delete User",
-            password="password123"
+            email="delete@example.com", name="Delete User", password="password123"
         )
         created_user = user_service.create_user(user_data)
         user_id = created_user.id
@@ -289,7 +267,7 @@ class TestAuthenticationEndpoints:
         user_data = {
             "email": "register@example.com",
             "name": "Register User",
-            "password": "password123"
+            "password": "password123",
         }
 
         response = client.post("/api/v1/auth/register", json=user_data)
@@ -306,7 +284,7 @@ class TestAuthenticationEndpoints:
         user_data = {
             "email": "duplicate@example.com",
             "name": "First User",
-            "password": "password123"
+            "password": "password123",
         }
 
         # First registration
@@ -325,15 +303,12 @@ class TestAuthenticationEndpoints:
         user_data = {
             "email": "login@example.com",
             "name": "Login User",
-            "password": "password123"
+            "password": "password123",
         }
         client.post("/api/v1/auth/register", json=user_data)
 
         # Then login
-        login_data = {
-            "email": "login@example.com",
-            "password": "password123"
-        }
+        login_data = {"email": "login@example.com", "password": "password123"}
         response = client.post("/api/v1/auth/login", json=login_data)
 
         assert response.status_code == 200
@@ -345,10 +320,7 @@ class TestAuthenticationEndpoints:
 
     def test_login_wrong_credentials(self, client: TestClient, db_session: Session):
         """Test login with wrong credentials."""
-        login_data = {
-            "email": "nonexistent@example.com",
-            "password": "wrongpassword"
-        }
+        login_data = {"email": "nonexistent@example.com", "password": "wrongpassword"}
         response = client.post("/api/v1/auth/login", json=login_data)
 
         assert response.status_code == 401
@@ -360,14 +332,14 @@ class TestAuthenticationEndpoints:
         user_data = {
             "email": "profile@example.com",
             "name": "Profile User",
-            "password": "password123"
+            "password": "password123",
         }
         client.post("/api/v1/auth/register", json=user_data)
 
-        login_response = client.post("/api/v1/auth/login", json={
-            "email": "profile@example.com",
-            "password": "password123"
-        })
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "profile@example.com", "password": "password123"},
+        )
         token = login_response.json()["access_token"]
 
         # Get profile
@@ -385,24 +357,20 @@ class TestAuthenticationEndpoints:
         user_data = {
             "email": "updateprofile@example.com",
             "name": "Original Name",
-            "password": "password123"
+            "password": "password123",
         }
         client.post("/api/v1/auth/register", json=user_data)
 
-        login_response = client.post("/api/v1/auth/login", json={
-            "email": "updateprofile@example.com",
-            "password": "password123"
-        })
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "updateprofile@example.com", "password": "password123"},
+        )
         token = login_response.json()["access_token"]
 
         # Update profile
-        update_data = {
-            "name": "Updated Name",
-            "history_enabled": True
-        }
+        update_data = {"name": "Updated Name", "history_enabled": True}
         headers = {"Authorization": f"Bearer {token}"}
-        response = client.put(
-            "/api/v1/auth/me", json=update_data, headers=headers)
+        response = client.put("/api/v1/auth/me", json=update_data, headers=headers)
 
         assert response.status_code == 200
         data = response.json()

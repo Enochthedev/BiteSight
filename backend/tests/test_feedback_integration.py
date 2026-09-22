@@ -9,6 +9,7 @@ from typing import Dict, List, Any
 import pytest
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -27,7 +28,7 @@ class MockDatabase:
 
     def refresh(self, record):
         # Simulate setting ID
-        if not hasattr(record, 'id'):
+        if not hasattr(record, "id"):
             record.id = uuid4()
 
     def query(self, model):
@@ -86,20 +87,20 @@ class TestFeedbackIntegration:
                 food_name="jollof_rice",
                 confidence=0.9,
                 food_class="carbohydrates",
-                bounding_box={"x": 0.1, "y": 0.1, "width": 0.4, "height": 0.4}
+                bounding_box={"x": 0.1, "y": 0.1, "width": 0.4, "height": 0.4},
             ),
             FoodDetectionResult(
                 food_name="chicken",
                 confidence=0.8,
                 food_class="proteins",
-                bounding_box={"x": 0.5, "y": 0.2, "width": 0.3, "height": 0.3}
+                bounding_box={"x": 0.5, "y": 0.2, "width": 0.3, "height": 0.3},
             ),
             FoodDetectionResult(
                 food_name="efo_riro",
                 confidence=0.7,
                 food_class="minerals",
-                bounding_box={"x": 0.2, "y": 0.6, "width": 0.3, "height": 0.2}
-            )
+                bounding_box={"x": 0.2, "y": 0.6, "width": 0.3, "height": 0.2},
+            ),
         ]
 
         # Test feedback generation (this will use fallback due to mock DB)
@@ -107,9 +108,12 @@ class TestFeedbackIntegration:
         try:
             # This should work with the fallback mechanism
             import asyncio
-            result = asyncio.run(feedback_service._generate_basic_feedback(
-                meal_id, student_id, detected_foods, mock_db
-            ))
+
+            result = asyncio.run(
+                feedback_service._generate_basic_feedback(
+                    meal_id, student_id, detected_foods, mock_db
+                )
+            )
         except Exception as e:
             # If async doesn't work in test, test the components separately
             pass
@@ -131,13 +135,14 @@ class TestFeedbackIntegration:
 
         # 2. Test feedback generation
         from app.core.nutrition_engine import NutritionProfile
+
         profile_obj = NutritionProfile(
             carbohydrates=nutrition_profile["carbohydrates"],
             proteins=nutrition_profile["proteins"],
             fats=nutrition_profile["fats"],
             vitamins=nutrition_profile["vitamins"],
             minerals=nutrition_profile["minerals"],
-            water=nutrition_profile["water"]
+            water=nutrition_profile["water"],
         )
 
         foods_dict = [
@@ -145,7 +150,7 @@ class TestFeedbackIntegration:
                 "food_name": food.food_name,
                 "confidence": food.confidence,
                 "food_class": food.food_class,
-                "bounding_box": food.bounding_box
+                "bounding_box": food.bounding_box,
             }
             for food in detected_foods
         ]
@@ -155,7 +160,7 @@ class TestFeedbackIntegration:
             profile_obj,
             foods_dict,
             [],  # No matching rules for this test
-            CulturalContext.NIGERIAN_GENERAL
+            CulturalContext.NIGERIAN_GENERAL,
         )
 
         assert "overall_message" in feedback_data
@@ -174,32 +179,42 @@ class TestFeedbackIntegration:
         test_meals = [
             # Traditional breakfast
             [
-                {"food_name": "bread", "confidence": 0.9,
-                    "food_class": "carbohydrates"},
+                {
+                    "food_name": "bread",
+                    "confidence": 0.9,
+                    "food_class": "carbohydrates",
+                },
                 {"food_name": "beans", "confidence": 0.8, "food_class": "proteins"},
-                {"food_name": "orange", "confidence": 0.7, "food_class": "vitamins"}
+                {"food_name": "orange", "confidence": 0.7, "food_class": "vitamins"},
             ],
             # Traditional lunch
             [
-                {"food_name": "amala", "confidence": 0.9,
-                    "food_class": "carbohydrates"},
-                {"food_name": "efo_riro", "confidence": 0.8,
-                    "food_class": "minerals"},
-                {"food_name": "fish", "confidence": 0.7, "food_class": "proteins"}
+                {
+                    "food_name": "amala",
+                    "confidence": 0.9,
+                    "food_class": "carbohydrates",
+                },
+                {"food_name": "efo_riro", "confidence": 0.8, "food_class": "minerals"},
+                {"food_name": "fish", "confidence": 0.7, "food_class": "proteins"},
             ],
             # Rice-based meal
             [
-                {"food_name": "jollof_rice", "confidence": 0.9,
-                    "food_class": "carbohydrates"},
+                {
+                    "food_name": "jollof_rice",
+                    "confidence": 0.9,
+                    "food_class": "carbohydrates",
+                },
                 {"food_name": "chicken", "confidence": 0.8, "food_class": "proteins"},
-                {"food_name": "plantain", "confidence": 0.7,
-                    "food_class": "carbohydrates"}
-            ]
+                {
+                    "food_name": "plantain",
+                    "confidence": 0.7,
+                    "food_class": "carbohydrates",
+                },
+            ],
         ]
 
         for i, meal in enumerate(test_meals):
-            print(
-                f"\nTesting meal {i+1}: {[food['food_name'] for food in meal]}")
+            print(f"\nTesting meal {i + 1}: {[food['food_name'] for food in meal]}")
 
             # Classify foods
             profile = engine.classify_foods(meal)
@@ -226,19 +241,19 @@ class TestFeedbackIntegration:
 
         # Create a sample meal
         from app.core.nutrition_engine import NutritionProfile
+
         profile = NutritionProfile(
             carbohydrates=0.4,
             proteins=0.3,
             minerals=0.2,
             vitamins=0.1,
             fats=0.0,
-            water=0.0
+            water=0.0,
         )
 
         foods = [
-            {"food_name": "amala", "confidence": 0.9,
-                "food_class": "carbohydrates"},
-            {"food_name": "efo_riro", "confidence": 0.8, "food_class": "minerals"}
+            {"food_name": "amala", "confidence": 0.9, "food_class": "carbohydrates"},
+            {"food_name": "efo_riro", "confidence": 0.8, "food_class": "minerals"},
         ]
 
         # Test different cultural contexts
@@ -247,13 +262,11 @@ class TestFeedbackIntegration:
             CulturalContext.STUDENT_FRIENDLY,
             CulturalContext.YORUBA,
             CulturalContext.IGBO,
-            CulturalContext.HAUSA
+            CulturalContext.HAUSA,
         ]
 
         for context in contexts:
-            feedback = feedback_generator.generate_feedback(
-                profile, foods, [], context
-            )
+            feedback = feedback_generator.generate_feedback(profile, foods, [], context)
 
             print(f"\n{context.value} feedback:")
             print(f"Message: {feedback['overall_message'][:100]}...")
@@ -275,16 +288,14 @@ class TestFeedbackIntegration:
         base_feedback = {
             "overall_message": "Your meal looks great!",
             "encouragement": "Keep up the good work!",
-            "recommendations": ["Add more vegetables"]
+            "recommendations": ["Add more vegetables"],
         }
 
         # Test different language localizations
         languages = ["english", "yoruba", "igbo", "hausa"]
 
         for lang in languages:
-            localized = feedback_generator.localize_feedback(
-                base_feedback.copy(), lang
-            )
+            localized = feedback_generator.localize_feedback(base_feedback.copy(), lang)
 
             print(f"\n{lang.capitalize()} localization:")
             if "cultural_greeting" in localized:
@@ -311,31 +322,54 @@ class TestFeedbackIntegration:
         test_scenarios = [
             {
                 "name": "Missing Protein",
-                "profile": {"carbohydrates": 0.8, "proteins": 0.05, "fats": 0.1, "vitamins": 0.05, "minerals": 0.0, "water": 0.0},
-                "expected_keywords": ["protein", "beans", "fish", "chicken"]
+                "profile": {
+                    "carbohydrates": 0.8,
+                    "proteins": 0.05,
+                    "fats": 0.1,
+                    "vitamins": 0.05,
+                    "minerals": 0.0,
+                    "water": 0.0,
+                },
+                "expected_keywords": ["protein", "beans", "fish", "chicken"],
             },
             {
                 "name": "Missing Vegetables",
-                "profile": {"carbohydrates": 0.6, "proteins": 0.3, "fats": 0.1, "vitamins": 0.0, "minerals": 0.0, "water": 0.0},
-                "expected_keywords": ["vegetable", "efo", "ugwu", "minerals"]
+                "profile": {
+                    "carbohydrates": 0.6,
+                    "proteins": 0.3,
+                    "fats": 0.1,
+                    "vitamins": 0.0,
+                    "minerals": 0.0,
+                    "water": 0.0,
+                },
+                "expected_keywords": ["vegetable", "efo", "ugwu", "minerals"],
             },
             {
                 "name": "Missing Carbs",
-                "profile": {"carbohydrates": 0.05, "proteins": 0.4, "fats": 0.2, "vitamins": 0.2, "minerals": 0.15, "water": 0.0},
-                "expected_keywords": ["energy", "rice", "yam", "carbohydrate"]
-            }
+                "profile": {
+                    "carbohydrates": 0.05,
+                    "proteins": 0.4,
+                    "fats": 0.2,
+                    "vitamins": 0.2,
+                    "minerals": 0.15,
+                    "water": 0.0,
+                },
+                "expected_keywords": ["energy", "rice", "yam", "carbohydrate"],
+            },
         ]
 
         for scenario in test_scenarios:
             print(f"\nTesting scenario: {scenario['name']}")
 
             from app.core.nutrition_engine import NutritionProfile
+
             profile = NutritionProfile(**scenario["profile"])
 
             foods = [{"food_name": "test_food", "confidence": 0.8}]
 
             recommendations = feedback_generator._generate_recommendations(
-                profile, foods)
+                profile, foods
+            )
 
             print(f"Generated recommendations: {recommendations}")
 
@@ -350,8 +384,9 @@ class TestFeedbackIntegration:
             print(f"Found expected keywords: {found_keywords}")
 
             # Should find at least one expected keyword
-            assert len(
-                found_keywords) > 0, f"No expected keywords found for {scenario['name']}"
+            assert len(found_keywords) > 0, (
+                f"No expected keywords found for {scenario['name']}"
+            )
 
         print("✓ Recommendation generation accuracy test passed")
 
@@ -373,4 +408,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Integration test failed: {e}")
         import traceback
+
         traceback.print_exc()

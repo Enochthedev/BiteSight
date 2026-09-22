@@ -16,16 +16,25 @@ from .base import UUID, Base, TimestampMixin, uuid_pk
 class WeeklyInsight(Base, TimestampMixin):
     __tablename__ = "weekly_insights"
     __table_args__ = (
-        Index("ix_weekly_insights_student_week", "student_id", "week_start_date", unique=True),
+        Index(
+            "ix_weekly_insights_student_week",
+            "student_id",
+            "week_start_date",
+            unique=True,
+        ),
     )
 
     id = uuid_pk()
-    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True)
+    student_id = Column(
+        UUID(as_uuid=True), ForeignKey("students.id"), nullable=False, index=True
+    )
     week_start_date = Column(Date, nullable=False, index=True)
     week_end_date = Column(Date, nullable=False)
     nutrition_summary = Column(JSON)
     recommendations = Column(Text)
-    generated_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    generated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
 
     student = relationship("Student", back_populates="weekly_insights")
 

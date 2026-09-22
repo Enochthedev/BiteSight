@@ -12,9 +12,16 @@ from sqlalchemy import and_, or_
 from app.core.auth import verify_password, get_password_hash, create_access_token
 from app.core.config import settings
 from app.models.admin import (
-    AdminUser, AdminPermission, AdminRolePermission, AdminSession,
-    AdminUserCreate, AdminUserUpdate, AdminLoginRequest, AdminLoginResponse,
-    AdminUserResponse, AdminRole
+    AdminUser,
+    AdminPermission,
+    AdminRolePermission,
+    AdminSession,
+    AdminUserCreate,
+    AdminUserUpdate,
+    AdminLoginRequest,
+    AdminLoginResponse,
+    AdminUserResponse,
+    AdminRole,
 )
 
 
@@ -27,14 +34,14 @@ class AdminService:
     def create_admin_user(self, admin_data: AdminUserCreate) -> AdminUser:
         """Create a new admin user."""
         # Check if email already exists
-        existing_admin = self.db.query(AdminUser).filter(
-            AdminUser.email == admin_data.email
-        ).first()
+        existing_admin = (
+            self.db.query(AdminUser).filter(AdminUser.email == admin_data.email).first()
+        )
 
         if existing_admin:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+                detail="Email already registered",
             )
 
         # Create new admin user
@@ -43,7 +50,7 @@ class AdminService:
             name=admin_data.name,
             password_hash=get_password_hash(admin_data.password),
             role=admin_data.role.value,
-            is_active=True
+            is_active=True,
         )
 
         self.db.add(admin_user)
@@ -54,14 +61,17 @@ class AdminService:
 
     def authenticate_admin(self, login_data: AdminLoginRequest) -> Optional[AdminUser]:
         """Authenticate admin user."""
-        admin_user = self.db.query(AdminUser).filter(
-            and_(
-                AdminUser.email == login_data.email,
-                AdminUser.is_active == True
+        admin_user = (
+            self.db.query(AdminUser)
+            .filter(
+                and_(AdminUser.email == login_data.email, AdminUser.is_active == True)
             )
-        ).first()
+            .first()
+        )
 
-        if not admin_user or not verify_password(login_data.password, admin_user.password_hash):
+        if not admin_user or not verify_password(
+            login_data.password, admin_user.password_hash
+        ):
             return None
 
         # Update last login
@@ -72,26 +82,33 @@ class AdminService:
 
     def get_admin_permissions(self, admin_user: AdminUser) -> List[str]:
         """Get all permissions for an admin user based on their role."""
-        permissions = self.db.query(AdminPermission).join(
-            AdminRolePermission,
-            AdminPermission.id == AdminRolePermission.permission_id
-        ).filter(
-            AdminRolePermission.role == admin_user.role
-        ).all()
+        permissions = (
+            self.db.query(AdminPermission)
+            .join(
+                AdminRolePermission,
+                AdminPermission.id == AdminRolePermission.permission_id,
+            )
+            .filter(AdminRolePermission.role == admin_user.role)
+            .all()
+        )
 
         return [f"{perm.resource}:{perm.action}" for perm in permissions]
 
-    def create_admin_session(self, admin_user: AdminUser, ip_address: str = None, user_agent: str = None) -> AdminSession:
+    def create_admin_session(
+        self, admin_user: AdminUser, ip_address: str = None, user_agent: str = None
+    ) -> AdminSession:
         """Create a new admin session."""
         # Generate session token
         session_token = secrets.token_urlsafe(32)
-        expires_at = datetime.utcnow() + timedelta(hours=settings.ADMIN_SESSION_EXPIRE_HOURS)
+        expires_at = datetime.utcnow() + timedelta(
+            hours=settings.ADMIN_SESSION_EXPIRE_HOURS
+        )
 
         # Deactivate old sessions for this user
         self.db.query(AdminSession).filter(
             and_(
                 AdminSession.admin_user_id == admin_user.id,
-                AdminSession.is_active == True
+                AdminSession.is_active == True,
             )
         ).update({"is_active": False})
 
@@ -102,7 +119,7 @@ class AdminService:
             expires_at=expires_at,
             is_active=True,
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
         self.db.add(session)
@@ -111,12 +128,14 @@ class AdminService:
 
         return session
 
-    def create_login_response(self, admin_user: AdminUser, session: AdminSession) -> AdminLoginResponse:
+    def create_login_response(
+        self, admin_user: AdminUser, session: AdminSession
+    ) -> AdminLoginResponse:
         """Create admin login response with token and permissions."""
         # Create JWT token
         access_token = create_access_token(
             subject=str(admin_user.id),
-            expires_delta=timedelta(hours=settings.ADMIN_SESSION_EXPIRE_HOURS)
+            expires_delta=timedelta(hours=settings.ADMIN_SESSION_EXPIRE_HOURS),
         )
 
         # Get user permissions
@@ -134,30 +153,30 @@ class AdminService:
                 is_active=admin_user.is_active,
                 last_login=admin_user.last_login,
                 created_at=admin_user.created_at,
-                updated_at=admin_user.updated_at
+                updated_at=admin_user.updated_at,
             ),
-            permissions=permissions
+            permissions=permissions,
         )
 
     def get_admin_by_id(self, admin_id: UUID) -> Optional[AdminUser]:
         """Get admin user by ID."""
-        return self.db.query(AdminUser).filter(
-            and_(
-                AdminUser.id == admin_id,
-                AdminUser.is_active == True
-            )
-        ).first()
+        return (
+            self.db.query(AdminUser)
+            .filter(and_(AdminUser.id == admin_id, AdminUser.is_active == True))
+            .first()
+        )
 
     def get_admin_by_email(self, email: str) -> Optional[AdminUser]:
         """Get admin user by email."""
-        return self.db.query(AdminUser).filter(
-            and_(
-                AdminUser.email == email,
-                AdminUser.is_active == True
-            )
-        ).first()
+        return (
+            self.db.query(AdminUser)
+            .filter(and_(AdminUser.email == email, AdminUser.is_active == True))
+            .first()
+        )
 
-    def update_admin_user(self, admin_id: UUID, admin_data: AdminUserUpdate) -> Optional[AdminUser]:
+    def update_admin_user(
+        self, admin_id: UUID, admin_data: AdminUserUpdate
+    ) -> Optional[AdminUser]:
         """Update admin user."""
         admin_user = self.get_admin_by_id(admin_id)
         if not admin_user:
@@ -196,13 +215,17 @@ class AdminService:
 
     def validate_session(self, session_token: str) -> Optional[AdminUser]:
         """Validate admin session token."""
-        session = self.db.query(AdminSession).filter(
-            and_(
-                AdminSession.session_token == session_token,
-                AdminSession.is_active == True,
-                AdminSession.expires_at > datetime.utcnow()
+        session = (
+            self.db.query(AdminSession)
+            .filter(
+                and_(
+                    AdminSession.session_token == session_token,
+                    AdminSession.is_active == True,
+                    AdminSession.expires_at > datetime.utcnow(),
+                )
             )
-        ).first()
+            .first()
+        )
 
         if not session:
             return None
@@ -212,10 +235,7 @@ class AdminService:
     def logout_admin(self, admin_id: UUID, session_token: str = None) -> bool:
         """Logout admin user by deactivating sessions."""
         query = self.db.query(AdminSession).filter(
-            and_(
-                AdminSession.admin_user_id == admin_id,
-                AdminSession.is_active == True
-            )
+            and_(AdminSession.admin_user_id == admin_id, AdminSession.is_active == True)
         )
 
         if session_token:
@@ -234,33 +254,46 @@ class AdminService:
             return True
 
         # Check specific permission
-        permission_exists = self.db.query(AdminPermission).join(
-            AdminRolePermission,
-            AdminPermission.id == AdminRolePermission.permission_id
-        ).filter(
-            and_(
-                AdminRolePermission.role == admin_user.role,
-                AdminPermission.resource == resource,
-                AdminPermission.action == action
+        permission_exists = (
+            self.db.query(AdminPermission)
+            .join(
+                AdminRolePermission,
+                AdminPermission.id == AdminRolePermission.permission_id,
             )
-        ).first()
+            .filter(
+                and_(
+                    AdminRolePermission.role == admin_user.role,
+                    AdminPermission.resource == resource,
+                    AdminPermission.action == action,
+                )
+            )
+            .first()
+        )
 
         return permission_exists is not None
 
     def list_admin_users(self, skip: int = 0, limit: int = 100) -> List[AdminUser]:
         """List all admin users."""
-        return self.db.query(AdminUser).filter(
-            AdminUser.is_active == True
-        ).offset(skip).limit(limit).all()
+        return (
+            self.db.query(AdminUser)
+            .filter(AdminUser.is_active == True)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def cleanup_expired_sessions(self) -> int:
         """Clean up expired admin sessions."""
-        expired_count = self.db.query(AdminSession).filter(
-            and_(
-                AdminSession.is_active == True,
-                AdminSession.expires_at <= datetime.utcnow()
+        expired_count = (
+            self.db.query(AdminSession)
+            .filter(
+                and_(
+                    AdminSession.is_active == True,
+                    AdminSession.expires_at <= datetime.utcnow(),
+                )
             )
-        ).update({"is_active": False})
+            .update({"is_active": False})
+        )
 
         self.db.commit()
         return expired_count

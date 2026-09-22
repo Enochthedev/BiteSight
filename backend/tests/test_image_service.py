@@ -21,6 +21,7 @@ class TestImageService:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Mock settings for testing
             import app.core.config
+
             original_upload_dir = app.core.config.settings.UPLOAD_DIR
             app.core.config.settings.UPLOAD_DIR = temp_dir
 
@@ -33,45 +34,48 @@ class TestImageService:
     @pytest.fixture
     def sample_image(self):
         """Create a sample test image."""
-        image = Image.new('RGB', (640, 480), color='red')
+        image = Image.new("RGB", (640, 480), color="red")
         img_bytes = BytesIO()
-        image.save(img_bytes, format='JPEG')
+        image.save(img_bytes, format="JPEG")
         img_bytes.seek(0)
         return img_bytes
 
     @pytest.fixture
     def small_image(self):
         """Create a small test image (below minimum resolution)."""
-        image = Image.new('RGB', (100, 100), color='blue')
+        image = Image.new("RGB", (100, 100), color="blue")
         img_bytes = BytesIO()
-        image.save(img_bytes, format='JPEG')
+        image.save(img_bytes, format="JPEG")
         img_bytes.seek(0)
         return img_bytes
 
     @pytest.fixture
     def dark_image(self):
         """Create a dark test image."""
-        image = Image.new('RGB', (640, 480), color=(20, 20, 20))
+        image = Image.new("RGB", (640, 480), color=(20, 20, 20))
         img_bytes = BytesIO()
-        image.save(img_bytes, format='JPEG')
+        image.save(img_bytes, format="JPEG")
         img_bytes.seek(0)
         return img_bytes
 
     @pytest.fixture
     def bright_image(self):
         """Create a bright test image."""
-        image = Image.new('RGB', (640, 480), color=(240, 240, 240))
+        image = Image.new("RGB", (640, 480), color=(240, 240, 240))
         img_bytes = BytesIO()
-        image.save(img_bytes, format='JPEG')
+        image.save(img_bytes, format="JPEG")
         img_bytes.seek(0)
         return img_bytes
 
-    def create_upload_file(self, image_bytes: BytesIO, filename: str = "test.jpg", content_type: str = "image/jpeg"):
+    def create_upload_file(
+        self,
+        image_bytes: BytesIO,
+        filename: str = "test.jpg",
+        content_type: str = "image/jpeg",
+    ):
         """Helper to create UploadFile from image bytes."""
         return UploadFile(
-            file=image_bytes,
-            filename=filename,
-            headers={"content-type": content_type}
+            file=image_bytes, filename=filename, headers={"content-type": content_type}
         )
 
     @pytest.mark.asyncio
@@ -95,7 +99,7 @@ class TestImageService:
         upload_file = UploadFile(
             file=text_content,
             filename="test.txt",
-            headers={"content-type": "text/plain"}
+            headers={"content-type": "text/plain"},
         )
 
         with pytest.raises(Exception):  # Should raise HTTPException
@@ -159,7 +163,7 @@ class TestImageService:
     def test_preprocess_image_resize(self, image_service, tmp_path):
         """Test image preprocessing and resizing."""
         # Create test image file
-        image = Image.new('RGB', (640, 480), color='green')
+        image = Image.new("RGB", (640, 480), color="green")
         image_path = tmp_path / "test.jpg"
         image.save(image_path)
 
@@ -167,36 +171,36 @@ class TestImageService:
 
         assert processed is not None
         assert processed.size == (224, 224)
-        assert processed.mode == 'RGB'
+        assert processed.mode == "RGB"
 
     def test_preprocess_image_convert_mode(self, image_service, tmp_path):
         """Test image preprocessing with mode conversion."""
         # Create RGBA image
-        image = Image.new('RGBA', (300, 300), color=(255, 0, 0, 128))
+        image = Image.new("RGBA", (300, 300), color=(255, 0, 0, 128))
         image_path = tmp_path / "test.png"
         image.save(image_path)
 
         processed = image_service.preprocess_image(str(image_path))
 
         assert processed is not None
-        assert processed.mode == 'RGB'
+        assert processed.mode == "RGB"
         assert processed.size == (224, 224)
 
     def test_normalize_image_array(self, image_service):
         """Test image normalization to numpy array."""
-        image = Image.new('RGB', (224, 224), color=(128, 128, 128))
+        image = Image.new("RGB", (224, 224), color=(128, 128, 128))
 
         normalized = image_service.normalize_image_array(image)
 
         # Batch, Channels, Height, Width
         assert normalized.shape == (1, 3, 224, 224)
-        assert normalized.dtype in ['float32', 'float64']
+        assert normalized.dtype in ["float32", "float64"]
         # Check that normalization was applied (values should be around 0 for gray image)
         assert abs(normalized.mean()) < 1.0
 
     def test_get_image_metadata(self, image_service, tmp_path):
         """Test image metadata extraction."""
-        image = Image.new('RGB', (800, 600), color='blue')
+        image = Image.new("RGB", (800, 600), color="blue")
         image_path = tmp_path / "test.jpg"
         image.save(image_path)
 
@@ -219,8 +223,7 @@ class TestImageService:
         assert path.suffix == ".jpg"
         # Should contain date structure (YYYY/MM/DD)
         path_parts = path.parts
-        assert len([p for p in path_parts if p.isdigit()
-                   and len(p) == 4]) >= 1  # Year
+        assert len([p for p in path_parts if p.isdigit() and len(p) == 4]) >= 1  # Year
 
     def test_get_image_paths(self, image_service, tmp_path):
         """Test image path retrieval."""
@@ -231,7 +234,7 @@ class TestImageService:
         raw_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Create dummy image file
-        image = Image.new('RGB', (100, 100), color='red')
+        image = Image.new("RGB", (100, 100), color="red")
         image.save(raw_path)
 
         paths = image_service.get_image_paths(meal_id)
@@ -260,8 +263,7 @@ class TestImageService:
 
         # Create test files
         raw_path = image_service._get_organized_path(meal_id, "raw", "jpg")
-        processed_path = image_service._get_organized_path(
-            meal_id, "processed", "jpg")
+        processed_path = image_service._get_organized_path(meal_id, "processed", "jpg")
 
         raw_path.parent.mkdir(parents=True, exist_ok=True)
         processed_path.parent.mkdir(parents=True, exist_ok=True)
@@ -287,12 +289,12 @@ class TestImageQualityValidation:
         service = ImageService()
 
         # Normal aspect ratio
-        normal_image = Image.new('RGB', (640, 480))  # 4:3 ratio
+        normal_image = Image.new("RGB", (640, 480))  # 4:3 ratio
         result = service._validate_image_quality(normal_image)
         assert len([w for w in result["warnings"] if "aspect ratio" in w]) == 0
 
         # Extreme aspect ratio
-        extreme_image = Image.new('RGB', (1000, 200))  # 5:1 ratio
+        extreme_image = Image.new("RGB", (1000, 200))  # 5:1 ratio
         result = service._validate_image_quality(extreme_image)
         assert len([w for w in result["warnings"] if "aspect ratio" in w]) > 0
 
@@ -301,16 +303,17 @@ class TestImageQualityValidation:
         service = ImageService()
 
         # Low resolution
-        low_res_image = Image.new('RGB', (100, 100))
+        low_res_image = Image.new("RGB", (100, 100))
         result = service._validate_image_quality(low_res_image)
         assert len(result["quality_issues"]) > 0
         assert "resolution too low" in result["quality_issues"][0]
 
         # Good resolution
-        good_res_image = Image.new('RGB', (640, 480))
+        good_res_image = Image.new("RGB", (640, 480))
         result = service._validate_image_quality(good_res_image)
         resolution_issues = [
-            issue for issue in result["quality_issues"] if "resolution" in issue]
+            issue for issue in result["quality_issues"] if "resolution" in issue
+        ]
         assert len(resolution_issues) == 0
 
     def test_brightness_validation(self):
@@ -318,20 +321,21 @@ class TestImageQualityValidation:
         service = ImageService()
 
         # Dark image
-        dark_image = Image.new('RGB', (300, 300), color=(20, 20, 20))
+        dark_image = Image.new("RGB", (300, 300), color=(20, 20, 20))
         result = service._validate_image_quality(dark_image)
         dark_warnings = [w for w in result["warnings"] if "too dark" in w]
         assert len(dark_warnings) > 0
 
         # Bright image
-        bright_image = Image.new('RGB', (300, 300), color=(240, 240, 240))
+        bright_image = Image.new("RGB", (300, 300), color=(240, 240, 240))
         result = service._validate_image_quality(bright_image)
         bright_warnings = [w for w in result["warnings"] if "too bright" in w]
         assert len(bright_warnings) > 0
 
         # Normal brightness
-        normal_image = Image.new('RGB', (300, 300), color=(128, 128, 128))
+        normal_image = Image.new("RGB", (300, 300), color=(128, 128, 128))
         result = service._validate_image_quality(normal_image)
-        brightness_warnings = [w for w in result["warnings"]
-                               if "too dark" in w or "too bright" in w]
+        brightness_warnings = [
+            w for w in result["warnings"] if "too dark" in w or "too bright" in w
+        ]
         assert len(brightness_warnings) == 0
