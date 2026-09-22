@@ -7,8 +7,12 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
 
 from app.core.monitoring import (
-    MonitoringService, AlertManager, Alert, PerformanceMonitor,
-    monitoring_service, performance_monitor
+    MonitoringService,
+    AlertManager,
+    Alert,
+    PerformanceMonitor,
+    monitoring_service,
+    performance_monitor,
 )
 from app.core.health_checks import HealthCheckResult, HealthStatus
 from app.core.metrics import metrics
@@ -22,10 +26,7 @@ class TestAlertManager:
         alert_manager = AlertManager()
 
         alert = alert_manager.create_alert(
-            "test_alert",
-            "warning",
-            "Test Alert",
-            "This is a test alert"
+            "test_alert", "warning", "Test Alert", "This is a test alert"
         )
 
         assert alert.id == "test_alert"
@@ -41,10 +42,7 @@ class TestAlertManager:
 
         # Create alert
         alert_manager.create_alert(
-            "test_alert",
-            "warning",
-            "Test Alert",
-            "This is a test alert"
+            "test_alert", "warning", "Test Alert", "This is a test alert"
         )
 
         # Resolve alert
@@ -60,10 +58,8 @@ class TestAlertManager:
         alert_manager = AlertManager()
 
         # Create multiple alerts
-        alert_manager.create_alert(
-            "alert1", "critical", "Alert 1", "Description 1")
-        alert_manager.create_alert(
-            "alert2", "warning", "Alert 2", "Description 2")
+        alert_manager.create_alert("alert1", "critical", "Alert 1", "Description 1")
+        alert_manager.create_alert("alert2", "warning", "Alert 2", "Description 2")
 
         active_alerts = alert_manager.get_active_alerts()
 
@@ -76,13 +72,13 @@ class TestAlertManager:
         alert_manager = AlertManager()
 
         # Create and resolve an alert
-        alert_manager.create_alert(
-            "old_alert", "info", "Old Alert", "Old description")
+        alert_manager.create_alert("old_alert", "info", "Old Alert", "Old description")
         alert_manager.resolve_alert("old_alert")
 
         # Create a new alert
         alert_manager.create_alert(
-            "new_alert", "warning", "New Alert", "New description")
+            "new_alert", "warning", "New Alert", "New description"
+        )
 
         history = alert_manager.get_alert_history(hours=24)
 
@@ -107,7 +103,7 @@ class TestMonitoringService:
             "database": HealthCheckResult(
                 name="database",
                 status=HealthStatus.UNHEALTHY,
-                message="Database connection failed"
+                message="Database connection failed",
             )
         }
 
@@ -127,7 +123,7 @@ class TestMonitoringService:
             "memory": HealthCheckResult(
                 name="memory",
                 status=HealthStatus.DEGRADED,
-                message="High memory usage detected"
+                message="High memory usage detected",
             )
         }
 
@@ -140,14 +136,13 @@ class TestMonitoringService:
         assert "memory" in active_alerts[0].title
 
     @pytest.mark.asyncio
-    async def test_process_health_results_healthy_resolves_alerts(self, monitoring_service):
+    async def test_process_health_results_healthy_resolves_alerts(
+        self, monitoring_service
+    ):
         """Test that healthy results resolve existing alerts."""
         # Create an existing alert
         monitoring_service.alert_manager.create_alert(
-            "health_database",
-            "critical",
-            "Database Issue",
-            "Database is down"
+            "health_database", "critical", "Database Issue", "Database is down"
         )
 
         # Mock healthy result
@@ -155,7 +150,7 @@ class TestMonitoringService:
             "database": HealthCheckResult(
                 name="database",
                 status=HealthStatus.HEALTHY,
-                message="Database is working fine"
+                message="Database is working fine",
             )
         }
 
@@ -183,13 +178,10 @@ class TestMonitoringService:
             "critical_alert",
             "critical",
             "Critical Issue",
-            "Something is critically wrong"
+            "Something is critically wrong",
         )
         monitoring_service.alert_manager.create_alert(
-            "warning_alert",
-            "warning",
-            "Warning Issue",
-            "Something needs attention"
+            "warning_alert", "warning", "Warning Issue", "Something needs attention"
         )
 
         overview = monitoring_service.get_system_overview()
@@ -275,9 +267,9 @@ class TestMetricsIntegration:
     def test_metrics_collector_initialization(self):
         """Test that metrics collector is properly initialized."""
         assert metrics is not None
-        assert hasattr(metrics, 'record_request')
-        assert hasattr(metrics, 'record_ml_inference')
-        assert hasattr(metrics, 'record_database_query')
+        assert hasattr(metrics, "record_request")
+        assert hasattr(metrics, "record_ml_inference")
+        assert hasattr(metrics, "record_database_query")
 
     def test_record_request_metrics(self):
         """Test recording request metrics."""
@@ -302,14 +294,18 @@ class TestMetricsIntegration:
 async def test_monitoring_loop_integration():
     """Test the monitoring loop integration."""
     # Mock the health checker
-    with patch('app.core.monitoring.monitoring_service.health_checker') as mock_health_checker:
-        mock_health_checker.run_all_checks = AsyncMock(return_value={
-            "database": HealthCheckResult(
-                name="database",
-                status=HealthStatus.HEALTHY,
-                message="Database is healthy"
-            )
-        })
+    with patch(
+        "app.core.monitoring.monitoring_service.health_checker"
+    ) as mock_health_checker:
+        mock_health_checker.run_all_checks = AsyncMock(
+            return_value={
+                "database": HealthCheckResult(
+                    name="database",
+                    status=HealthStatus.HEALTHY,
+                    message="Database is healthy",
+                )
+            }
+        )
 
         # Run one monitoring cycle
         monitoring_service.monitoring_enabled = True
@@ -325,9 +321,12 @@ async def test_monitoring_loop_integration():
 async def test_monitoring_error_handling():
     """Test monitoring error handling."""
     # Mock the health checker to raise an exception
-    with patch('app.core.monitoring.monitoring_service.health_checker') as mock_health_checker:
+    with patch(
+        "app.core.monitoring.monitoring_service.health_checker"
+    ) as mock_health_checker:
         mock_health_checker.run_all_checks = AsyncMock(
-            side_effect=Exception("Test error"))
+            side_effect=Exception("Test error")
+        )
 
         # Run monitoring cycle
         monitoring_service.monitoring_enabled = True
@@ -338,8 +337,7 @@ async def test_monitoring_error_handling():
         # Check that an alert was created for the monitoring failure
         active_alerts = monitoring_service.alert_manager.get_active_alerts()
         monitoring_failure_alerts = [
-            alert for alert in active_alerts
-            if alert.id == "monitoring_failure"
+            alert for alert in active_alerts if alert.id == "monitoring_failure"
         ]
 
         assert len(monitoring_failure_alerts) == 1

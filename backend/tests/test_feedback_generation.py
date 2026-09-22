@@ -7,7 +7,7 @@ from app.services.feedback_generation_service import (
     NigerianFeedbackGenerator,
     FeedbackTemplate,
     FeedbackType,
-    CulturalContext
+    CulturalContext,
 )
 from app.core.nutrition_engine import NutritionProfile, NutritionRule
 
@@ -23,7 +23,7 @@ class TestFeedbackTemplate:
             feedback_type=FeedbackType.ENCOURAGEMENT,
             cultural_context=CulturalContext.NIGERIAN_GENERAL,
             food_examples=["rice", "beans"],
-            priority=5
+            priority=5,
         )
 
         assert template.template_id == "test_template"
@@ -38,7 +38,7 @@ class TestFeedbackTemplate:
             message_template="Hello {name}! Your score is {score}%.",
             feedback_type=FeedbackType.ENCOURAGEMENT,
             cultural_context=CulturalContext.NIGERIAN_GENERAL,
-            food_examples=[]
+            food_examples=[],
         )
 
         formatted = template.format_message(name="Student", score=85)
@@ -51,7 +51,7 @@ class TestFeedbackTemplate:
             message_template="Hello {name}! Your score is {missing_var}%.",
             feedback_type=FeedbackType.ENCOURAGEMENT,
             cultural_context=CulturalContext.NIGERIAN_GENERAL,
-            food_examples=[]
+            food_examples=[],
         )
 
         # Should return original template when variable is missing
@@ -80,8 +80,7 @@ class TestNigerianFeedbackGenerator:
         """Test food suggestions structure."""
         generator = NigerianFeedbackGenerator()
 
-        required_categories = ["proteins",
-                               "vegetables", "carbohydrates", "fruits"]
+        required_categories = ["proteins", "vegetables", "carbohydrates", "fruits"]
         for category in required_categories:
             assert category in generator.food_suggestions
             assert len(generator.food_suggestions[category]) > 0
@@ -106,13 +105,13 @@ class TestNigerianFeedbackGenerator:
             fats=0.15,
             vitamins=0.15,
             minerals=0.15,
-            water=0.05
+            water=0.05,
         )
 
         detected_foods = [
             {"food_name": "jollof_rice", "confidence": 0.9},
             {"food_name": "chicken", "confidence": 0.8},
-            {"food_name": "efo_riro", "confidence": 0.7}
+            {"food_name": "efo_riro", "confidence": 0.7},
         ]
 
         # Create a mock rule for well-balanced meal
@@ -121,13 +120,11 @@ class TestNigerianFeedbackGenerator:
             name="Well Balanced",
             conditions=[],
             feedback_template="Great balance!",
-            priority=10
+            priority=10,
         )
 
         feedback = generator.generate_feedback(
-            balanced_profile,
-            detected_foods,
-            [well_balanced_rule]
+            balanced_profile, detected_foods, [well_balanced_rule]
         )
 
         assert "overall_message" in feedback
@@ -150,34 +147,27 @@ class TestNigerianFeedbackGenerator:
             fats=0.1,
             vitamins=0.05,
             minerals=0.0,
-            water=0.0
+            water=0.0,
         )
 
-        detected_foods = [
-            {"food_name": "jollof_rice", "confidence": 0.9}
-        ]
+        detected_foods = [{"food_name": "jollof_rice", "confidence": 0.9}]
 
         # Create rule for missing protein
         missing_protein_rule = NutritionRule(
             rule_id="missing_protein",
             name="Missing Protein",
-            conditions=[
-                {"field": "proteins", "operator": "lt", "value": 0.1}
-            ],
+            conditions=[{"field": "proteins", "operator": "lt", "value": 0.1}],
             feedback_template="Add protein!",
-            priority=5
+            priority=5,
         )
 
         feedback = generator.generate_feedback(
-            low_protein_profile,
-            detected_foods,
-            [missing_protein_rule]
+            low_protein_profile, detected_foods, [missing_protein_rule]
         )
 
         # Should suggest protein additions
         recommendations = feedback["recommendations"]
-        protein_mentioned = any("protein" in rec.lower()
-                                for rec in recommendations)
+        protein_mentioned = any("protein" in rec.lower() for rec in recommendations)
         assert protein_mentioned or len(recommendations) > 0
 
         # Should have suggestions in feedback
@@ -194,18 +184,19 @@ class TestNigerianFeedbackGenerator:
             fats=0.05,
             vitamins=0.0,
             minerals=0.0,  # Missing vegetables
-            water=0.0
+            water=0.0,
         )
 
         detected_foods = [{"food_name": "rice", "confidence": 0.9}]
 
-        recommendations = generator._generate_recommendations(
-            profile, detected_foods)
+        recommendations = generator._generate_recommendations(profile, detected_foods)
 
         assert len(recommendations) > 0
         # Should suggest adding missing food groups
         rec_text = " ".join(recommendations).lower()
-        assert "minerals" in rec_text or "vegetables" in rec_text or "proteins" in rec_text
+        assert (
+            "minerals" in rec_text or "vegetables" in rec_text or "proteins" in rec_text
+        )
 
     def test_encouragement_messages(self):
         """Test encouragement message generation."""
@@ -213,20 +204,22 @@ class TestNigerianFeedbackGenerator:
 
         # Test with high balance score
         high_balance_profile = NutritionProfile(
-            carbohydrates=0.2, proteins=0.2, fats=0.2,
-            vitamins=0.2, minerals=0.2, water=0.0
+            carbohydrates=0.2,
+            proteins=0.2,
+            fats=0.2,
+            vitamins=0.2,
+            minerals=0.2,
+            water=0.0,
         )
 
-        encouragement = generator._get_encouragement_message(
-            high_balance_profile, [])
+        encouragement = generator._get_encouragement_message(high_balance_profile, [])
         assert len(encouragement) > 0
         assert isinstance(encouragement, str)
 
         # Test with low balance score
         low_balance_profile = NutritionProfile(carbohydrates=1.0)
 
-        encouragement = generator._get_encouragement_message(
-            low_balance_profile, [])
+        encouragement = generator._get_encouragement_message(low_balance_profile, [])
         assert len(encouragement) > 0
         assert isinstance(encouragement, str)
 
@@ -240,8 +233,11 @@ class TestNigerianFeedbackGenerator:
         assert CulturalContext.STUDENT_FRIENDLY in contexts
 
         # Check for regional templates
-        regional_contexts = [CulturalContext.YORUBA,
-                             CulturalContext.IGBO, CulturalContext.HAUSA]
+        regional_contexts = [
+            CulturalContext.YORUBA,
+            CulturalContext.IGBO,
+            CulturalContext.HAUSA,
+        ]
         has_regional = any(ctx in contexts for ctx in regional_contexts)
         assert has_regional, "Should have at least one regional template"
 
@@ -251,7 +247,7 @@ class TestNigerianFeedbackGenerator:
 
         base_feedback = {
             "overall_message": "Great meal!",
-            "encouragement": "Keep it up!"
+            "encouragement": "Keep it up!",
         }
 
         # Test Yoruba localization
@@ -279,8 +275,16 @@ class TestNigerianFeedbackGenerator:
             all_foods.extend(category)
 
         nigerian_foods = [
-            "beans", "moimoi", "akara", "efo riro", "ugwu", "amala",
-            "fufu", "jollof rice", "suya", "kilishi"
+            "beans",
+            "moimoi",
+            "akara",
+            "efo riro",
+            "ugwu",
+            "amala",
+            "fufu",
+            "jollof rice",
+            "suya",
+            "kilishi",
         ]
 
         for food in nigerian_foods:
@@ -292,19 +296,27 @@ class TestNigerianFeedbackGenerator:
         generator = NigerianFeedbackGenerator()
 
         # Celebration templates should have high priority
-        celebration_templates = [t for t in generator.templates
-                                 if t.feedback_type == FeedbackType.CELEBRATION]
+        celebration_templates = [
+            t
+            for t in generator.templates
+            if t.feedback_type == FeedbackType.CELEBRATION
+        ]
         assert len(celebration_templates) > 0
 
         for template in celebration_templates:
-            assert template.priority >= 8, "Celebration templates should have high priority"
+            assert template.priority >= 8, (
+                "Celebration templates should have high priority"
+            )
 
         # Warning templates should have lower priority
-        warning_templates = [t for t in generator.templates
-                             if t.feedback_type == FeedbackType.WARNING]
+        warning_templates = [
+            t for t in generator.templates if t.feedback_type == FeedbackType.WARNING
+        ]
 
         for template in warning_templates:
-            assert template.priority <= 5, "Warning templates should have lower priority"
+            assert template.priority <= 5, (
+                "Warning templates should have lower priority"
+            )
 
 
 if __name__ == "__main__":

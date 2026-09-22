@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class FoodClass(Enum):
     """Nigerian food classification system."""
+
     CARBOHYDRATES = "carbohydrates"
     PROTEINS = "proteins"
     FATS = "fats"
@@ -21,6 +22,7 @@ class FoodClass(Enum):
 
 class RuleOperator(Enum):
     """Rule evaluation operators."""
+
     GREATER_THAN = "gt"
     LESS_THAN = "lt"
     EQUAL = "eq"
@@ -34,6 +36,7 @@ class RuleOperator(Enum):
 @dataclass
 class NutritionProfile:
     """Nutrition profile for a meal."""
+
     carbohydrates: float = 0.0
     proteins: float = 0.0
     fats: float = 0.0
@@ -49,15 +52,12 @@ class NutritionProfile:
             "fats": self.fats,
             "vitamins": self.vitamins,
             "minerals": self.minerals,
-            "water": self.water
+            "water": self.water,
         }
 
     def get_missing_groups(self, threshold: float = 0.1) -> List[str]:
         """Get food groups below threshold."""
-        return [
-            group for group, value in self.to_dict().items()
-            if value < threshold
-        ]
+        return [group for group, value in self.to_dict().items() if value < threshold]
 
     def calculate_balance_score(self) -> float:
         """Calculate overall nutritional balance score."""
@@ -71,7 +71,7 @@ class NutritionProfile:
             return 0.0
 
         variance = sum((x - mean_val) ** 2 for x in values) / len(values)
-        cv = (variance ** 0.5) / mean_val
+        cv = (variance**0.5) / mean_val
 
         # Convert to balance score (0-1, higher is better)
         return max(0.0, 1.0 - cv)
@@ -80,6 +80,7 @@ class NutritionProfile:
 @dataclass
 class NutritionRule:
     """Nutrition rule definition."""
+
     rule_id: str
     name: str
     conditions: List[Dict[str, Any]]
@@ -87,7 +88,9 @@ class NutritionRule:
     priority: int = 1
     is_active: bool = True
 
-    def evaluate(self, profile: NutritionProfile, detected_foods: List[Dict[str, Any]]) -> bool:
+    def evaluate(
+        self, profile: NutritionProfile, detected_foods: List[Dict[str, Any]]
+    ) -> bool:
         """Evaluate rule against nutrition profile and detected foods."""
         if not self.is_active:
             return False
@@ -97,9 +100,12 @@ class NutritionRule:
                 return False
         return True
 
-    def _evaluate_condition(self, condition: Dict[str, Any],
-                            profile: NutritionProfile,
-                            detected_foods: List[Dict[str, Any]]) -> bool:
+    def _evaluate_condition(
+        self,
+        condition: Dict[str, Any],
+        profile: NutritionProfile,
+        detected_foods: List[Dict[str, Any]],
+    ) -> bool:
         """Evaluate a single condition."""
         field = condition.get("field")
         operator = condition.get("operator")
@@ -114,8 +120,12 @@ class NutritionRule:
         # Evaluate based on operator
         return self._apply_operator(actual_value, operator, value)
 
-    def _get_field_value(self, field: str, profile: NutritionProfile,
-                         detected_foods: List[Dict[str, Any]]) -> Any:
+    def _get_field_value(
+        self,
+        field: str,
+        profile: NutritionProfile,
+        detected_foods: List[Dict[str, Any]],
+    ) -> Any:
         """Get field value from profile or detected foods."""
         # Nutrition profile fields
         if hasattr(profile, field):
@@ -186,7 +196,6 @@ class NutritionAnalysisEngine:
             "yam": FoodClass.CARBOHYDRATES.value,
             "plantain": FoodClass.CARBOHYDRATES.value,
             "sweet_potato": FoodClass.CARBOHYDRATES.value,
-
             # Proteins
             "chicken": FoodClass.PROTEINS.value,
             "beef": FoodClass.PROTEINS.value,
@@ -199,14 +208,12 @@ class NutritionAnalysisEngine:
             "egg": FoodClass.PROTEINS.value,
             "suya": FoodClass.PROTEINS.value,
             "kilishi": FoodClass.PROTEINS.value,
-
             # Fats/Oils
             "palm_oil": FoodClass.FATS.value,
             "groundnut_oil": FoodClass.FATS.value,
             "coconut": FoodClass.FATS.value,
             "groundnut": FoodClass.FATS.value,
             "avocado": FoodClass.FATS.value,
-
             # Vitamins (Fruits and some vegetables)
             "orange": FoodClass.VITAMINS.value,
             "banana": FoodClass.VITAMINS.value,
@@ -216,7 +223,6 @@ class NutritionAnalysisEngine:
             "watermelon": FoodClass.VITAMINS.value,
             "tomato": FoodClass.VITAMINS.value,
             "pepper": FoodClass.VITAMINS.value,
-
             # Minerals (Vegetables and leafy greens)
             "efo_riro": FoodClass.MINERALS.value,
             "okra": FoodClass.MINERALS.value,
@@ -226,7 +232,6 @@ class NutritionAnalysisEngine:
             "vegetable_soup": FoodClass.MINERALS.value,
             "egusi": FoodClass.MINERALS.value,
             "ogbono": FoodClass.MINERALS.value,
-
             # Water (Beverages and water-rich foods)
             "water": FoodClass.WATER.value,
             "zobo": FoodClass.WATER.value,
@@ -273,8 +278,7 @@ class NutritionAnalysisEngine:
 
             # Get food class from mapping or use provided class
             food_class = self.food_class_mapping.get(
-                food_name,
-                food.get("food_class", "")
+                food_name, food.get("food_class", "")
             )
 
             # Add to appropriate category
@@ -303,8 +307,9 @@ class NutritionAnalysisEngine:
 
         return profile
 
-    def evaluate_rules(self, profile: NutritionProfile,
-                       detected_foods: List[Dict[str, Any]]) -> List[NutritionRule]:
+    def evaluate_rules(
+        self, profile: NutritionProfile, detected_foods: List[Dict[str, Any]]
+    ) -> List[NutritionRule]:
         """Evaluate all rules and return matching ones."""
         matching_rules = []
 
@@ -335,16 +340,19 @@ class NutritionAnalysisEngine:
                     "rule_id": rule.rule_id,
                     "name": rule.name,
                     "feedback_template": rule.feedback_template,
-                    "priority": rule.priority
+                    "priority": rule.priority,
                 }
                 for rule in matching_rules
             ],
             "detected_food_count": len(detected_foods),
-            "food_classes_present": list(set(
-                self.food_class_mapping.get(
-                    food.get("food_name", "").lower(), "unknown")
-                for food in detected_foods
-            ))
+            "food_classes_present": list(
+                set(
+                    self.food_class_mapping.get(
+                        food.get("food_name", "").lower(), "unknown"
+                    )
+                    for food in detected_foods
+                )
+            ),
         }
 
 

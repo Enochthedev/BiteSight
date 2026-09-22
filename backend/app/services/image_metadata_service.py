@@ -12,7 +12,7 @@ from app.models.image_metadata import (
     ImageMetadata,
     ImageMetadataCreate,
     ImageMetadataUpdate,
-    ImageSearchQuery
+    ImageSearchQuery,
 )
 from app.core.database import get_db
 
@@ -27,14 +27,16 @@ class ImageMetadataService:
         """Create new image metadata record."""
         try:
             # Check if metadata already exists for this meal
-            existing = self.db.query(ImageMetadata).filter(
-                ImageMetadata.meal_id == metadata.meal_id
-            ).first()
+            existing = (
+                self.db.query(ImageMetadata)
+                .filter(ImageMetadata.meal_id == metadata.meal_id)
+                .first()
+            )
 
             if existing:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Image metadata already exists for meal {metadata.meal_id}"
+                    detail=f"Image metadata already exists for meal {metadata.meal_id}",
                 )
 
             # Create new metadata record
@@ -48,23 +50,28 @@ class ImageMetadataService:
         except Exception as e:
             self.db.rollback()
             raise HTTPException(
-                status_code=500,
-                detail=f"Error creating image metadata: {str(e)}"
+                status_code=500, detail=f"Error creating image metadata: {str(e)}"
             )
 
     def get_metadata_by_meal_id(self, meal_id: UUID) -> Optional[ImageMetadata]:
         """Get image metadata by meal ID."""
-        return self.db.query(ImageMetadata).filter(
-            ImageMetadata.meal_id == meal_id
-        ).first()
+        return (
+            self.db.query(ImageMetadata)
+            .filter(ImageMetadata.meal_id == meal_id)
+            .first()
+        )
 
     def get_metadata_by_hash(self, file_hash: str) -> Optional[ImageMetadata]:
         """Get image metadata by file hash (for duplicate detection)."""
-        return self.db.query(ImageMetadata).filter(
-            ImageMetadata.file_hash == file_hash
-        ).first()
+        return (
+            self.db.query(ImageMetadata)
+            .filter(ImageMetadata.file_hash == file_hash)
+            .first()
+        )
 
-    def update_metadata(self, meal_id: UUID, update_data: ImageMetadataUpdate) -> Optional[ImageMetadata]:
+    def update_metadata(
+        self, meal_id: UUID, update_data: ImageMetadataUpdate
+    ) -> Optional[ImageMetadata]:
         """Update image metadata."""
         try:
             metadata = self.get_metadata_by_meal_id(meal_id)
@@ -88,8 +95,7 @@ class ImageMetadataService:
         except Exception as e:
             self.db.rollback()
             raise HTTPException(
-                status_code=500,
-                detail=f"Error updating image metadata: {str(e)}"
+                status_code=500, detail=f"Error updating image metadata: {str(e)}"
             )
 
     def delete_metadata(self, meal_id: UUID) -> bool:
@@ -106,8 +112,7 @@ class ImageMetadataService:
         except Exception as e:
             self.db.rollback()
             raise HTTPException(
-                status_code=500,
-                detail=f"Error deleting image metadata: {str(e)}"
+                status_code=500, detail=f"Error deleting image metadata: {str(e)}"
             )
 
     def search_images(self, query: ImageSearchQuery) -> tuple[List[ImageMetadata], int]:
@@ -129,8 +134,7 @@ class ImageMetadataService:
                 filters.append(ImageMetadata.upload_date <= query.date_to)
 
             if query.min_quality_score is not None:
-                filters.append(ImageMetadata.quality_score >=
-                               query.min_quality_score)
+                filters.append(ImageMetadata.quality_score >= query.min_quality_score)
 
             if query.has_processing_errors is not None:
                 if query.has_processing_errors:
@@ -139,8 +143,7 @@ class ImageMetadataService:
                     filters.append(ImageMetadata.processing_error.is_(None))
 
             if query.image_format:
-                filters.append(ImageMetadata.format.ilike(
-                    f"%{query.image_format}%"))
+                filters.append(ImageMetadata.format.ilike(f"%{query.image_format}%"))
 
             if query.min_resolution:
                 filters.append(
@@ -157,16 +160,18 @@ class ImageMetadataService:
             total_count = filtered_query.count()
 
             # Apply ordering, pagination
-            results = filtered_query.order_by(
-                desc(ImageMetadata.upload_date)
-            ).offset(query.offset).limit(query.limit).all()
+            results = (
+                filtered_query.order_by(desc(ImageMetadata.upload_date))
+                .offset(query.offset)
+                .limit(query.limit)
+                .all()
+            )
 
             return results, total_count
 
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error searching images: {str(e)}"
+                status_code=500, detail=f"Error searching images: {str(e)}"
             )
 
     def get_student_image_stats(self, student_id: UUID) -> Dict[str, Any]:
@@ -187,11 +192,13 @@ class ImageMetadataService:
 
             # Average quality score
             quality_scores = [
-                img.quality_score for img in base_query.all()
+                img.quality_score
+                for img in base_query.all()
                 if img.quality_score is not None
             ]
-            avg_quality = sum(quality_scores) / \
-                len(quality_scores) if quality_scores else None
+            avg_quality = (
+                sum(quality_scores) / len(quality_scores) if quality_scores else None
+            )
 
             # Total storage used (in bytes)
             total_storage = sum([img.file_size for img in base_query.all()])
@@ -200,16 +207,17 @@ class ImageMetadataService:
                 "total_images": total_images,
                 "processed_images": processed_images,
                 "failed_processing": failed_processing,
-                "processing_success_rate": processed_images / total_images if total_images > 0 else 0,
+                "processing_success_rate": processed_images / total_images
+                if total_images > 0
+                else 0,
                 "average_quality_score": avg_quality,
                 "total_storage_bytes": total_storage,
-                "total_storage_mb": round(total_storage / (1024 * 1024), 2)
+                "total_storage_mb": round(total_storage / (1024 * 1024), 2),
             }
 
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error getting image statistics: {str(e)}"
+                status_code=500, detail=f"Error getting image statistics: {str(e)}"
             )
 
     def cleanup_orphaned_metadata(self) -> int:
@@ -221,8 +229,7 @@ class ImageMetadataService:
 
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error cleaning up orphaned metadata: {str(e)}"
+                status_code=500, detail=f"Error cleaning up orphaned metadata: {str(e)}"
             )
 
     def find_duplicate_images(self) -> List[Dict[str, Any]]:
@@ -231,42 +238,45 @@ class ImageMetadataService:
             from sqlalchemy import func
 
             # Find file hashes that appear more than once
-            duplicate_hashes = self.db.query(
-                ImageMetadata.file_hash,
-                func.count(ImageMetadata.id).label('count')
-            ).group_by(
-                ImageMetadata.file_hash
-            ).having(
-                func.count(ImageMetadata.id) > 1
-            ).all()
+            duplicate_hashes = (
+                self.db.query(
+                    ImageMetadata.file_hash, func.count(ImageMetadata.id).label("count")
+                )
+                .group_by(ImageMetadata.file_hash)
+                .having(func.count(ImageMetadata.id) > 1)
+                .all()
+            )
 
             duplicates = []
             for hash_info in duplicate_hashes:
                 file_hash, count = hash_info
-                images = self.db.query(ImageMetadata).filter(
-                    ImageMetadata.file_hash == file_hash
-                ).all()
+                images = (
+                    self.db.query(ImageMetadata)
+                    .filter(ImageMetadata.file_hash == file_hash)
+                    .all()
+                )
 
-                duplicates.append({
-                    "file_hash": file_hash,
-                    "count": count,
-                    "images": [
-                        {
-                            "meal_id": str(img.meal_id),
-                            "student_id": str(img.student_id),
-                            "upload_date": img.upload_date,
-                            "file_size": img.file_size
-                        }
-                        for img in images
-                    ]
-                })
+                duplicates.append(
+                    {
+                        "file_hash": file_hash,
+                        "count": count,
+                        "images": [
+                            {
+                                "meal_id": str(img.meal_id),
+                                "student_id": str(img.student_id),
+                                "upload_date": img.upload_date,
+                                "file_size": img.file_size,
+                            }
+                            for img in images
+                        ],
+                    }
+                )
 
             return duplicates
 
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error finding duplicate images: {str(e)}"
+                status_code=500, detail=f"Error finding duplicate images: {str(e)}"
             )
 
 

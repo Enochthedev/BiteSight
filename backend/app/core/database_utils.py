@@ -105,45 +105,64 @@ def initialize_sample_data(db: Session) -> bool:
         sample_foods = [
             NigerianFood(
                 food_name="Jollof Rice",
-                local_names={"yoruba": "Jollof",
-                             "igbo": "Jollof", "hausa": "Jollof"},
+                local_names={"yoruba": "Jollof", "igbo": "Jollof", "hausa": "Jollof"},
                 food_class="carbohydrates",
-                nutritional_info={"calories_per_100g": 150,
-                                  "carbs": 30, "protein": 3, "fat": 2},
-                cultural_context="Popular West African rice dish, often served at celebrations"
+                nutritional_info={
+                    "calories_per_100g": 150,
+                    "carbs": 30,
+                    "protein": 3,
+                    "fat": 2,
+                },
+                cultural_context="Popular West African rice dish, often served at celebrations",
             ),
             NigerianFood(
                 food_name="Amala",
                 local_names={"yoruba": "Àmàlà"},
                 food_class="carbohydrates",
-                nutritional_info={"calories_per_100g": 120,
-                                  "carbs": 25, "protein": 2, "fat": 1},
-                cultural_context="Traditional Yoruba dish made from yam flour"
+                nutritional_info={
+                    "calories_per_100g": 120,
+                    "carbs": 25,
+                    "protein": 2,
+                    "fat": 1,
+                },
+                cultural_context="Traditional Yoruba dish made from yam flour",
             ),
             NigerianFood(
                 food_name="Efo Riro",
                 local_names={"yoruba": "Ẹ̀fọ́ rírò"},
                 food_class="vitamins",
-                nutritional_info={"calories_per_100g": 80,
-                                  "carbs": 8, "protein": 4, "fat": 5},
-                cultural_context="Nigerian spinach stew rich in vegetables"
+                nutritional_info={
+                    "calories_per_100g": 80,
+                    "carbs": 8,
+                    "protein": 4,
+                    "fat": 5,
+                },
+                cultural_context="Nigerian spinach stew rich in vegetables",
             ),
             NigerianFood(
                 food_name="Suya",
                 local_names={"hausa": "Suya"},
                 food_class="proteins",
-                nutritional_info={"calories_per_100g": 250,
-                                  "carbs": 5, "protein": 25, "fat": 15},
-                cultural_context="Spiced grilled meat popular across Nigeria"
+                nutritional_info={
+                    "calories_per_100g": 250,
+                    "carbs": 5,
+                    "protein": 25,
+                    "fat": 15,
+                },
+                cultural_context="Spiced grilled meat popular across Nigeria",
             ),
             NigerianFood(
                 food_name="Moi Moi",
                 local_names={"yoruba": "Mọ́í mọ́í", "igbo": "Moi moi"},
                 food_class="proteins",
-                nutritional_info={"calories_per_100g": 180,
-                                  "carbs": 15, "protein": 12, "fat": 8},
-                cultural_context="Steamed bean pudding, protein-rich traditional dish"
-            )
+                nutritional_info={
+                    "calories_per_100g": 180,
+                    "carbs": 15,
+                    "protein": 12,
+                    "fat": 8,
+                },
+                cultural_context="Steamed bean pudding, protein-rich traditional dish",
+            ),
         ]
 
         # Sample nutrition rules
@@ -153,29 +172,29 @@ def initialize_sample_data(db: Session) -> bool:
                 condition_logic={"missing_food_groups": ["proteins"]},
                 feedback_template="Your meal looks good, but try adding some protein like beans, fish, or meat to make it more balanced. Consider adding moi moi or suya!",
                 priority=1,
-                is_active=True
+                is_active=True,
             ),
             NutritionRule(
                 rule_name="Missing Vegetables Check",
                 condition_logic={"missing_food_groups": ["vitamins"]},
                 feedback_template="Great choice of foods! To make your meal even healthier, add some vegetables like efo riro or ugwu for vitamins and minerals.",
                 priority=1,
-                is_active=True
+                is_active=True,
             ),
             NutritionRule(
                 rule_name="Balanced Meal Praise",
                 condition_logic={"all_food_groups_present": True},
                 feedback_template="Excellent! Your meal has a great balance of all food groups. Keep up the healthy eating habits!",
                 priority=2,
-                is_active=True
+                is_active=True,
             ),
             NutritionRule(
                 rule_name="Too Much Carbs Warning",
                 condition_logic={"carbohydrate_ratio": ">0.7"},
                 feedback_template="You have plenty of energy foods (carbohydrates), but try to balance with more proteins and vegetables for better nutrition.",
                 priority=1,
-                is_active=True
-            )
+                is_active=True,
+            ),
         ]
 
         # Add sample data to database

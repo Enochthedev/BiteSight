@@ -18,12 +18,9 @@ class ConsentRequiredError(HTTPException):
             "error": "consent_required",
             "message": "Required consent not given",
             "missing_consents": missing_consents,
-            "action_required": "Please update your consent preferences"
+            "action_required": "Please update your consent preferences",
         }
-        super().__init__(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=detail
-        )
+        super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
 def require_consent(required_consents: List[str]):
@@ -36,16 +33,15 @@ def require_consent(required_consents: List[str]):
     Returns:
         FastAPI dependency function
     """
+
     def consent_dependency(
-        current_user: Student = Depends(get_current_user),
-        db: Session = Depends(get_db)
+        current_user: Student = Depends(get_current_user), db: Session = Depends(get_db)
     ) -> Student:
         """Verify that the current user has given required consents."""
         consent_service = ConsentService(db)
 
         verification_result = consent_service.verify_consent(
-            current_user.id,
-            required_consents
+            current_user.id, required_consents
         )
 
         if verification_result.requires_update:

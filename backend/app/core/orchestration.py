@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class TaskStatus(Enum):
     """Task execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -26,6 +27,7 @@ class TaskStatus(Enum):
 @dataclass
 class TaskResult:
     """Task execution result."""
+
     task_id: str
     status: TaskStatus
     result: Optional[Any] = None
@@ -54,7 +56,7 @@ class ServiceOrchestrator:
         self,
         workflow_name: str,
         steps: List[Dict[str, Any]],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> TaskResult:
         """
         Execute a multi-step workflow.
@@ -70,13 +72,10 @@ class ServiceOrchestrator:
         task_id = str(uuid.uuid4())
         context = context or {}
 
-        logger.info(
-            f"Starting workflow '{workflow_name}' with task_id: {task_id}")
+        logger.info(f"Starting workflow '{workflow_name}' with task_id: {task_id}")
 
         result = TaskResult(
-            task_id=task_id,
-            status=TaskStatus.PENDING,
-            start_time=time.time()
+            task_id=task_id, status=TaskStatus.PENDING, start_time=time.time()
         )
 
         self.task_results[task_id] = result
@@ -108,8 +107,9 @@ class ServiceOrchestrator:
                     if step_timeout:
                         step_result = await asyncio.wait_for(
                             self._execute_service_call(
-                                service_name, method_name, step_params),
-                            timeout=step_timeout
+                                service_name, method_name, step_params
+                            ),
+                            timeout=step_timeout,
                         )
                     else:
                         step_result = await self._execute_service_call(
@@ -127,7 +127,7 @@ class ServiceOrchestrator:
                 except Exception as step_error:
                     logger.error(
                         f"Step '{step_name}' failed in workflow '{workflow_name}': {step_error}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
                     # Handle step failure based on requirements
@@ -136,7 +136,7 @@ class ServiceOrchestrator:
                         raise WorkflowError(
                             f"Required step '{step_name}' failed: {step_error}",
                             step_name=step_name,
-                            original_error=step_error
+                            original_error=step_error,
                         )
                     else:
                         # Optional step failed - log and continue
@@ -146,15 +146,14 @@ class ServiceOrchestrator:
                         workflow_result[step_name] = {
                             "status": "failed",
                             "error": str(step_error),
-                            "optional": True
+                            "optional": True,
                         }
 
             result.status = TaskStatus.COMPLETED
             result.result = workflow_result
 
         except Exception as e:
-            logger.error(
-                f"Workflow '{workflow_name}' failed: {e}", exc_info=True)
+            logger.error(f"Workflow '{workflow_name}' failed: {e}", exc_info=True)
             result.status = TaskStatus.FAILED
             result.error = str(e)
 
@@ -168,9 +167,7 @@ class ServiceOrchestrator:
         return result
 
     async def execute_parallel_tasks(
-        self,
-        tasks: List[Dict[str, Any]],
-        max_concurrent: Optional[int] = None
+        self, tasks: List[Dict[str, Any]], max_concurrent: Optional[int] = None
     ) -> List[TaskResult]:
         """
         Execute multiple tasks in parallel with concurrency control.
@@ -189,9 +186,7 @@ class ServiceOrchestrator:
             async with semaphore:
                 task_id = str(uuid.uuid4())
                 result = TaskResult(
-                    task_id=task_id,
-                    status=TaskStatus.RUNNING,
-                    start_time=time.time()
+                    task_id=task_id, status=TaskStatus.RUNNING, start_time=time.time()
                 )
 
                 try:
@@ -207,8 +202,7 @@ class ServiceOrchestrator:
                     result.result = task_result
 
                 except Exception as e:
-                    logger.error(
-                        f"Parallel task {task_id} failed: {e}", exc_info=True)
+                    logger.error(f"Parallel task {task_id} failed: {e}", exc_info=True)
                     result.status = TaskStatus.FAILED
                     result.error = str(e)
 
@@ -230,7 +224,7 @@ class ServiceOrchestrator:
                     status=TaskStatus.FAILED,
                     error=str(result),
                     start_time=time.time(),
-                    end_time=time.time()
+                    end_time=time.time(),
                 )
                 final_results.append(error_result)
             else:
@@ -239,14 +233,10 @@ class ServiceOrchestrator:
         return final_results
 
     async def _execute_service_call(
-        self,
-        service_name: str,
-        method_name: str,
-        params: Dict[str, Any]
+        self, service_name: str, method_name: str, params: Dict[str, Any]
     ) -> Any:
         """Execute a service method call with actual service integration."""
-        logger.info(
-            f"Executing {service_name}.{method_name} with params: {params}")
+        logger.info(f"Executing {service_name}.{method_name} with params: {params}")
 
         try:
             # Route to appropriate service based on service_name
@@ -267,10 +257,14 @@ class ServiceOrchestrator:
 
         except Exception as e:
             logger.error(
-                f"Service call failed: {service_name}.{method_name} - {e}", exc_info=True)
+                f"Service call failed: {service_name}.{method_name} - {e}",
+                exc_info=True,
+            )
             raise
 
-    async def _call_image_service(self, method_name: str, params: Dict[str, Any]) -> Any:
+    async def _call_image_service(
+        self, method_name: str, params: Dict[str, Any]
+    ) -> Any:
         """Call image service methods."""
         from app.services.image_service import ImageService
 
@@ -278,20 +272,20 @@ class ServiceOrchestrator:
 
         if method_name == "preprocess_image":
             return await service.preprocess_image(
-                params["image_path"],
-                params.get("meal_id")
+                params["image_path"], params.get("meal_id")
             )
         elif method_name == "validate_image":
             return await service.validate_image(params["image_path"])
         elif method_name == "store_image":
             return await service.store_image(
-                params["image_data"],
-                params.get("metadata", {})
+                params["image_data"], params.get("metadata", {})
             )
         else:
             raise ValueError(f"Unknown image service method: {method_name}")
 
-    async def _call_inference_service(self, method_name: str, params: Dict[str, Any]) -> Any:
+    async def _call_inference_service(
+        self, method_name: str, params: Dict[str, Any]
+    ) -> Any:
         """Call ML inference service methods."""
         from app.ml.inference.predictor import FoodPredictor
 
@@ -304,10 +298,11 @@ class ServiceOrchestrator:
         elif method_name == "batch_analyze":
             return await predictor.batch_predict_async(params["image_paths"])
         else:
-            raise ValueError(
-                f"Unknown inference service method: {method_name}")
+            raise ValueError(f"Unknown inference service method: {method_name}")
 
-    async def _call_feedback_service(self, method_name: str, params: Dict[str, Any]) -> Any:
+    async def _call_feedback_service(
+        self, method_name: str, params: Dict[str, Any]
+    ) -> Any:
         """Call feedback service methods."""
         from app.services.feedback_service import FeedbackService
 
@@ -315,18 +310,18 @@ class ServiceOrchestrator:
 
         if method_name == "generate_feedback":
             return await service.generate_feedback_async(
-                params["meal_id"],
-                params.get("student_id")
+                params["meal_id"], params.get("student_id")
             )
         elif method_name == "store_feedback":
             return await service.store_feedback(
-                params["feedback_data"],
-                params["meal_id"]
+                params["feedback_data"], params["meal_id"]
             )
         else:
             raise ValueError(f"Unknown feedback service method: {method_name}")
 
-    async def _call_history_service(self, method_name: str, params: Dict[str, Any]) -> Any:
+    async def _call_history_service(
+        self, method_name: str, params: Dict[str, Any]
+    ) -> Any:
         """Call history service methods."""
         from app.services.history_service import HistoryService
 
@@ -334,20 +329,20 @@ class ServiceOrchestrator:
 
         if method_name == "store_meal_record":
             return await service.store_meal_record_async(
-                params["meal_id"],
-                params["student_id"]
+                params["meal_id"], params["student_id"]
             )
         elif method_name == "get_weekly_meals":
             return await service.get_weekly_meals_async(params["student_id"])
         elif method_name == "store_weekly_insights":
             return await service.store_weekly_insights_async(
-                params["student_id"],
-                params.get("insights_data")
+                params["student_id"], params.get("insights_data")
             )
         else:
             raise ValueError(f"Unknown history service method: {method_name}")
 
-    async def _call_insights_service(self, method_name: str, params: Dict[str, Any]) -> Any:
+    async def _call_insights_service(
+        self, method_name: str, params: Dict[str, Any]
+    ) -> Any:
         """Call insights service methods."""
         from app.services.insights_service import InsightsService
 
@@ -356,7 +351,9 @@ class ServiceOrchestrator:
         if method_name == "analyze_nutrition_patterns":
             return await service.analyze_nutrition_patterns_async(params["student_id"])
         elif method_name == "generate_weekly_recommendations":
-            return await service.generate_weekly_recommendations_async(params["student_id"])
+            return await service.generate_weekly_recommendations_async(
+                params["student_id"]
+            )
         else:
             raise ValueError(f"Unknown insights service method: {method_name}")
 
@@ -370,8 +367,7 @@ class ServiceOrchestrator:
             return await service.validate_user_async(params["student_id"])
         elif method_name == "update_preferences":
             return await service.update_preferences_async(
-                params["student_id"],
-                params["preferences"]
+                params["student_id"], params["preferences"]
             )
         else:
             raise ValueError(f"Unknown user service method: {method_name}")
@@ -399,9 +395,12 @@ class ServiceOrchestrator:
         to_remove = []
 
         for task_id, result in self.task_results.items():
-            if (result.end_time and
-                current_time - result.end_time > max_age_seconds and
-                    result.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]):
+            if (
+                result.end_time
+                and current_time - result.end_time > max_age_seconds
+                and result.status
+                in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]
+            ):
                 to_remove.append(task_id)
 
         for task_id in to_remove:
@@ -415,7 +414,9 @@ class ServiceOrchestrator:
 class WorkflowError(Exception):
     """Custom exception for workflow errors."""
 
-    def __init__(self, message: str, step_name: str = None, original_error: Exception = None):
+    def __init__(
+        self, message: str, step_name: str = None, original_error: Exception = None
+    ):
         self.step_name = step_name
         self.original_error = original_error
         super().__init__(message)
@@ -432,7 +433,7 @@ class MealAnalysisWorkflow:
         student_id: str,
         meal_id: str,
         image_path: str,
-        options: Optional[Dict[str, Any]] = None
+        options: Optional[Dict[str, Any]] = None,
     ) -> TaskResult:
         """
         Complete meal analysis workflow.
@@ -444,7 +445,8 @@ class MealAnalysisWorkflow:
         # Validate inputs
         if not all([student_id, meal_id, image_path]):
             raise WorkflowError(
-                "Missing required parameters for meal analysis workflow")
+                "Missing required parameters for meal analysis workflow"
+            )
 
         workflow_steps = [
             {
@@ -452,21 +454,21 @@ class MealAnalysisWorkflow:
                 "service": "user_service",
                 "method": "validate_user",
                 "params": {"student_id": student_id},
-                "required": True
+                "required": True,
             },
             {
                 "name": "validate_image",
                 "service": "image_service",
                 "method": "validate_image",
                 "params": {"image_path": image_path},
-                "required": True
+                "required": True,
             },
             {
                 "name": "preprocess_image",
                 "service": "image_service",
                 "method": "preprocess_image",
                 "params": {"image_path": image_path, "meal_id": meal_id},
-                "required": True
+                "required": True,
             },
             {
                 "name": "recognize_food",
@@ -474,46 +476,41 @@ class MealAnalysisWorkflow:
                 "method": "analyze_food",
                 "params": {"meal_id": meal_id},
                 "required": True,
-                "retry_on_failure": True
+                "retry_on_failure": True,
             },
             {
                 "name": "generate_feedback",
                 "service": "feedback_service",
                 "method": "generate_feedback",
                 "params": {"meal_id": meal_id, "student_id": student_id},
-                "required": True
+                "required": True,
             },
             {
                 "name": "store_history",
                 "service": "history_service",
                 "method": "store_meal_record",
                 "params": {"meal_id": meal_id, "student_id": student_id},
-                "required": False  # Optional step - don't fail workflow if this fails
-            }
+                "required": False,  # Optional step - don't fail workflow if this fails
+            },
         ]
 
         context = {
             "student_id": student_id,
             "meal_id": meal_id,
             "image_path": image_path,
-            "workflow_options": options
+            "workflow_options": options,
         }
 
         return await self.orchestrator.execute_workflow(
-            "meal_analysis_complete",
-            workflow_steps,
-            context
+            "meal_analysis_complete", workflow_steps, context
         )
 
     async def generate_weekly_insights(
-        self,
-        student_id: str,
-        week_start: Optional[str] = None
+        self, student_id: str, week_start: Optional[str] = None
     ) -> TaskResult:
         """Generate weekly insights workflow."""
         if not student_id:
-            raise WorkflowError(
-                "Missing student_id for weekly insights workflow")
+            raise WorkflowError("Missing student_id for weekly insights workflow")
 
         workflow_steps = [
             {
@@ -521,52 +518,46 @@ class MealAnalysisWorkflow:
                 "service": "user_service",
                 "method": "validate_user",
                 "params": {"student_id": student_id},
-                "required": True
+                "required": True,
             },
             {
                 "name": "fetch_meal_history",
                 "service": "history_service",
                 "method": "get_weekly_meals",
                 "params": {"student_id": student_id, "week_start": week_start},
-                "required": True
+                "required": True,
             },
             {
                 "name": "analyze_patterns",
                 "service": "insights_service",
                 "method": "analyze_nutrition_patterns",
                 "params": {"student_id": student_id},
-                "required": True
+                "required": True,
             },
             {
                 "name": "generate_recommendations",
                 "service": "insights_service",
                 "method": "generate_weekly_recommendations",
                 "params": {"student_id": student_id},
-                "required": True
+                "required": True,
             },
             {
                 "name": "store_insights",
                 "service": "history_service",
                 "method": "store_weekly_insights",
                 "params": {"student_id": student_id},
-                "required": False
-            }
+                "required": False,
+            },
         ]
 
-        context = {
-            "student_id": student_id,
-            "week_start": week_start
-        }
+        context = {"student_id": student_id, "week_start": week_start}
 
         return await self.orchestrator.execute_workflow(
-            "weekly_insights_generation",
-            workflow_steps,
-            context
+            "weekly_insights_generation", workflow_steps, context
         )
 
     async def batch_meal_analysis(
-        self,
-        meal_requests: List[Dict[str, str]]
+        self, meal_requests: List[Dict[str, str]]
     ) -> List[TaskResult]:
         """
         Process multiple meal analysis requests in parallel.
@@ -583,7 +574,7 @@ class MealAnalysisWorkflow:
             task_def = {
                 "service": "workflow",
                 "method": "analyze_meal_complete",
-                "params": request
+                "params": request,
             }
             tasks.append(task_def)
 
@@ -591,13 +582,11 @@ class MealAnalysisWorkflow:
         return await self.orchestrator.execute_parallel_tasks(
             tasks,
             # Limit concurrent analyses
-            max_concurrent=min(len(meal_requests), 5)
+            max_concurrent=min(len(meal_requests), 5),
         )
 
     async def model_retraining_workflow(
-        self,
-        dataset_path: str,
-        model_config: Dict[str, Any]
+        self, dataset_path: str, model_config: Dict[str, Any]
     ) -> TaskResult:
         """
         Coordinate model retraining workflow.
@@ -610,14 +599,14 @@ class MealAnalysisWorkflow:
                 "service": "dataset_service",
                 "method": "validate_dataset",
                 "params": {"dataset_path": dataset_path},
-                "required": True
+                "required": True,
             },
             {
                 "name": "prepare_training_data",
                 "service": "dataset_service",
                 "method": "prepare_training_data",
                 "params": {"dataset_path": dataset_path, "config": model_config},
-                "required": True
+                "required": True,
             },
             {
                 "name": "train_model",
@@ -625,34 +614,32 @@ class MealAnalysisWorkflow:
                 "method": "train_model",
                 "params": {"config": model_config},
                 "required": True,
-                "timeout": 3600  # 1 hour timeout for training
+                "timeout": 3600,  # 1 hour timeout for training
             },
             {
                 "name": "validate_model",
                 "service": "training_service",
                 "method": "validate_model",
                 "params": {"model_config": model_config},
-                "required": True
+                "required": True,
             },
             {
                 "name": "deploy_model",
                 "service": "inference_service",
                 "method": "deploy_model",
                 "params": {"model_config": model_config},
-                "required": True
-            }
+                "required": True,
+            },
         ]
 
         context = {
             "dataset_path": dataset_path,
             "model_config": model_config,
-            "training_started_at": time.time()
+            "training_started_at": time.time(),
         }
 
         return await self.orchestrator.execute_workflow(
-            "model_retraining",
-            workflow_steps,
-            context
+            "model_retraining", workflow_steps, context
         )
 
 

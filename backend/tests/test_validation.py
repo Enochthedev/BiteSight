@@ -11,7 +11,7 @@ from app.core.validation import (
     FoodValidation,
     NutritionRuleValidation,
     validate_uuid,
-    validate_date_range
+    validate_date_range,
 )
 from app.models.user import Student
 
@@ -24,8 +24,9 @@ class TestImageValidation:
         assert ImageValidation.validate_file_extension("image.jpg") is True
         assert ImageValidation.validate_file_extension("image.jpeg") is True
         assert ImageValidation.validate_file_extension("image.png") is True
-        assert ImageValidation.validate_file_extension(
-            "IMAGE.JPG") is True  # Case insensitive
+        assert (
+            ImageValidation.validate_file_extension("IMAGE.JPG") is True
+        )  # Case insensitive
 
     def test_validate_file_extension_invalid(self):
         """Test invalid file extensions."""
@@ -42,10 +43,10 @@ class TestImageValidation:
     def test_validate_file_size_valid(self):
         """Test valid file sizes."""
         assert ImageValidation.validate_file_size(1024) is True  # 1KB
-        assert ImageValidation.validate_file_size(
-            5 * 1024 * 1024) is True  # 5MB
-        assert ImageValidation.validate_file_size(
-            10 * 1024 * 1024) is True  # 10MB (max)
+        assert ImageValidation.validate_file_size(5 * 1024 * 1024) is True  # 5MB
+        assert (
+            ImageValidation.validate_file_size(10 * 1024 * 1024) is True
+        )  # 10MB (max)
 
     def test_validate_file_size_invalid(self):
         """Test invalid file sizes."""
@@ -55,12 +56,11 @@ class TestImageValidation:
 
     def test_validate_image_dimensions_valid(self):
         """Test valid image dimensions."""
-        assert ImageValidation.validate_image_dimensions(
-            224, 224) is True  # Minimum
-        assert ImageValidation.validate_image_dimensions(
-            1920, 1080) is True  # Common size
-        assert ImageValidation.validate_image_dimensions(
-            4096, 4096) is True  # Maximum
+        assert ImageValidation.validate_image_dimensions(224, 224) is True  # Minimum
+        assert (
+            ImageValidation.validate_image_dimensions(1920, 1080) is True
+        )  # Common size
+        assert ImageValidation.validate_image_dimensions(4096, 4096) is True  # Maximum
 
     def test_validate_image_dimensions_invalid(self):
         """Test invalid image dimensions."""
@@ -81,8 +81,7 @@ class TestUserValidation:
     def test_validate_password_strength_valid(self):
         """Test valid passwords."""
         assert UserValidation.validate_password_strength("Password123") is True
-        assert UserValidation.validate_password_strength(
-            "MySecure1Pass") is True
+        assert UserValidation.validate_password_strength("MySecure1Pass") is True
         assert UserValidation.validate_password_strength("Test123ABC") is True
 
     def test_validate_password_strength_invalid(self):
@@ -113,28 +112,30 @@ class TestUserValidation:
         student = Student(
             email="existing@example.com",
             name="Existing User",
-            password_hash="hashed_password"
+            password_hash="hashed_password",
         )
         db_session.add(student)
         db_session.commit()
         db_session.refresh(student)
 
         # Test unique email
-        assert UserValidation.validate_email_uniqueness(
-            "new@example.com", db_session) is True
+        assert (
+            UserValidation.validate_email_uniqueness("new@example.com", db_session)
+            is True
+        )
 
         # Test duplicate email
         with pytest.raises(ValidationError) as exc_info:
-            UserValidation.validate_email_uniqueness(
-                "existing@example.com", db_session)
+            UserValidation.validate_email_uniqueness("existing@example.com", db_session)
         assert "already registered" in str(exc_info.value)
 
         # Test duplicate email with exclusion (for updates)
-        assert UserValidation.validate_email_uniqueness(
-            "existing@example.com",
-            db_session,
-            exclude_id=student.id
-        ) is True
+        assert (
+            UserValidation.validate_email_uniqueness(
+                "existing@example.com", db_session, exclude_id=student.id
+            )
+            is True
+        )
 
 
 class TestFoodValidation:
@@ -142,12 +143,19 @@ class TestFoodValidation:
 
     def test_validate_food_class_valid(self):
         """Test valid food classes."""
-        valid_classes = ['carbohydrates', 'proteins',
-                         'fats', 'vitamins', 'minerals', 'water']
+        valid_classes = [
+            "carbohydrates",
+            "proteins",
+            "fats",
+            "vitamins",
+            "minerals",
+            "water",
+        ]
         for food_class in valid_classes:
             assert FoodValidation.validate_food_class(food_class) is True
-            assert FoodValidation.validate_food_class(
-                food_class.upper()) is True  # Case insensitive
+            assert (
+                FoodValidation.validate_food_class(food_class.upper()) is True
+            )  # Case insensitive
 
     def test_validate_food_class_invalid(self):
         """Test invalid food classes."""
@@ -193,13 +201,15 @@ class TestFoodValidation:
         # Negative values
         with pytest.raises(ValidationError) as exc_info:
             FoodValidation.validate_bounding_box(
-                {"x": -10, "y": 20, "width": 100, "height": 80})
+                {"x": -10, "y": 20, "width": 100, "height": 80}
+            )
         assert "non-negative number" in str(exc_info.value)
 
         # Invalid value type
         with pytest.raises(ValidationError):
             FoodValidation.validate_bounding_box(
-                {"x": "invalid", "y": 20, "width": 100, "height": 80})
+                {"x": "invalid", "y": 20, "width": 100, "height": 80}
+            )
 
 
 class TestNutritionRuleValidation:
@@ -209,22 +219,18 @@ class TestNutritionRuleValidation:
         """Test valid condition logic."""
         # Missing food groups
         valid_logic1 = {"missing_food_groups": ["proteins", "vitamins"]}
-        assert NutritionRuleValidation.validate_condition_logic(
-            valid_logic1) is True
+        assert NutritionRuleValidation.validate_condition_logic(valid_logic1) is True
 
         # All food groups present
         valid_logic2 = {"all_food_groups_present": True}
-        assert NutritionRuleValidation.validate_condition_logic(
-            valid_logic2) is True
+        assert NutritionRuleValidation.validate_condition_logic(valid_logic2) is True
 
         # Ratio conditions
         valid_logic3 = {"carbohydrate_ratio": ">0.7"}
-        assert NutritionRuleValidation.validate_condition_logic(
-            valid_logic3) is True
+        assert NutritionRuleValidation.validate_condition_logic(valid_logic3) is True
 
         valid_logic4 = {"protein_ratio": 0.3}
-        assert NutritionRuleValidation.validate_condition_logic(
-            valid_logic4) is True
+        assert NutritionRuleValidation.validate_condition_logic(valid_logic4) is True
 
     def test_validate_condition_logic_invalid(self):
         """Test invalid condition logic."""
@@ -235,37 +241,39 @@ class TestNutritionRuleValidation:
 
         # Invalid key
         with pytest.raises(ValidationError) as exc_info:
-            NutritionRuleValidation.validate_condition_logic(
-                {"invalid_key": "value"})
+            NutritionRuleValidation.validate_condition_logic({"invalid_key": "value"})
         assert "Invalid condition key" in str(exc_info.value)
 
         # Invalid missing food groups (not a list)
         with pytest.raises(ValidationError) as exc_info:
             NutritionRuleValidation.validate_condition_logic(
-                {"missing_food_groups": "proteins"})
+                {"missing_food_groups": "proteins"}
+            )
         assert "must be a list" in str(exc_info.value)
 
         # Invalid food class in missing groups
         with pytest.raises(ValidationError):
             NutritionRuleValidation.validate_condition_logic(
-                {"missing_food_groups": ["invalid_class"]})
+                {"missing_food_groups": ["invalid_class"]}
+            )
 
         # Invalid ratio format
         with pytest.raises(ValidationError) as exc_info:
             NutritionRuleValidation.validate_condition_logic(
-                {"carbohydrate_ratio": ">invalid"})
+                {"carbohydrate_ratio": ">invalid"}
+            )
         assert "Invalid ratio condition format" in str(exc_info.value)
 
     def test_validate_feedback_template_valid(self):
         """Test valid feedback templates."""
         valid_template = "This is a valid feedback message."
-        assert NutritionRuleValidation.validate_feedback_template(
-            valid_template) is True
+        assert (
+            NutritionRuleValidation.validate_feedback_template(valid_template) is True
+        )
 
         # Long but valid template
         long_template = "A" * 999
-        assert NutritionRuleValidation.validate_feedback_template(
-            long_template) is True
+        assert NutritionRuleValidation.validate_feedback_template(long_template) is True
 
     def test_validate_feedback_template_invalid(self):
         """Test invalid feedback templates."""

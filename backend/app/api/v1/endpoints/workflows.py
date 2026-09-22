@@ -18,28 +18,36 @@ router = APIRouter()
 
 class MealAnalysisRequest(BaseModel):
     """Request model for meal analysis workflow."""
+
     meal_id: str = Field(..., description="Unique meal identifier")
     image_path: str = Field(..., description="Path to the meal image")
     options: Optional[Dict[str, Any]] = Field(
-        default=None, description="Additional workflow options")
+        default=None, description="Additional workflow options"
+    )
 
 
 class BatchMealAnalysisRequest(BaseModel):
     """Request model for batch meal analysis."""
-    meal_requests: List[Dict[str, str]
-                        ] = Field(..., description="List of meal analysis requests")
+
+    meal_requests: List[Dict[str, str]] = Field(
+        ..., description="List of meal analysis requests"
+    )
     max_concurrent: Optional[int] = Field(
-        default=5, description="Maximum concurrent analyses")
+        default=5, description="Maximum concurrent analyses"
+    )
 
 
 class WeeklyInsightsRequest(BaseModel):
     """Request model for weekly insights generation."""
+
     week_start: Optional[str] = Field(
-        default=None, description="Week start date (YYYY-MM-DD)")
+        default=None, description="Week start date (YYYY-MM-DD)"
+    )
 
 
 class WorkflowStatusResponse(BaseModel):
     """Response model for workflow status."""
+
     workflow_id: str
     status: str
     progress: Optional[Dict[str, Any]] = None
@@ -53,7 +61,7 @@ class WorkflowStatusResponse(BaseModel):
 async def start_meal_analysis_workflow(
     request: MealAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: Student = Depends(get_current_user)
+    current_user: Student = Depends(get_current_user),
 ):
     """
     Start a meal analysis workflow.
@@ -75,34 +83,34 @@ async def start_meal_analysis_workflow(
                     student_id=str(current_user.student_id),
                     meal_id=request.meal_id,
                     image_path=request.image_path,
-                    options=request.options
+                    options=request.options,
                 )
                 logger.info(
-                    f"Meal analysis workflow completed for meal {request.meal_id}")
+                    f"Meal analysis workflow completed for meal {request.meal_id}"
+                )
                 return result
             except Exception as e:
                 logger.error(
-                    f"Meal analysis workflow failed for meal {request.meal_id}: {e}", exc_info=True)
+                    f"Meal analysis workflow failed for meal {request.meal_id}: {e}",
+                    exc_info=True,
+                )
                 raise
 
         # Submit as async task
         task_processor = await get_task_processor()
         task_id = await task_processor.submit_task(
-            f"meal_analysis_{request.meal_id}",
-            run_workflow,
-            priority=TaskPriority.HIGH
+            f"meal_analysis_{request.meal_id}", run_workflow, priority=TaskPriority.HIGH
         )
 
         return WorkflowStatusResponse(
             workflow_id=task_id,
             status="started",
-            created_at=__import__('time').time(),
-            updated_at=__import__('time').time()
+            created_at=__import__("time").time(),
+            updated_at=__import__("time").time(),
         )
 
     except Exception as e:
-        logger.error(
-            f"Failed to start meal analysis workflow: {e}", exc_info=True)
+        logger.error(f"Failed to start meal analysis workflow: {e}", exc_info=True)
         return workflow_error_response(e, "meal_analysis")
 
 
@@ -110,7 +118,7 @@ async def start_meal_analysis_workflow(
 async def start_batch_meal_analysis_workflow(
     request: BatchMealAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: Student = Depends(get_current_user)
+    current_user: Student = Depends(get_current_user),
 ):
     """
     Start a batch meal analysis workflow for multiple meals.
@@ -126,7 +134,7 @@ async def start_batch_meal_analysis_workflow(
             if meal_request.get("student_id") != str(current_user.student_id):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Cannot analyze meals for other users"
+                    detail="Cannot analyze meals for other users",
                 )
 
         # Start the batch workflow asynchronously
@@ -134,11 +142,11 @@ async def start_batch_meal_analysis_workflow(
             try:
                 results = await meal_workflow.batch_meal_analysis(request.meal_requests)
                 logger.info(
-                    f"Batch meal analysis completed for {len(request.meal_requests)} meals")
+                    f"Batch meal analysis completed for {len(request.meal_requests)} meals"
+                )
                 return results
             except Exception as e:
-                logger.error(
-                    f"Batch meal analysis workflow failed: {e}", exc_info=True)
+                logger.error(f"Batch meal analysis workflow failed: {e}", exc_info=True)
                 raise
 
         # Submit as async task
@@ -146,19 +154,20 @@ async def start_batch_meal_analysis_workflow(
         task_id = await task_processor.submit_task(
             f"batch_meal_analysis_{len(request.meal_requests)}_meals",
             run_batch_workflow,
-            priority=TaskPriority.NORMAL
+            priority=TaskPriority.NORMAL,
         )
 
         return WorkflowStatusResponse(
             workflow_id=task_id,
             status="started",
-            created_at=__import__('time').time(),
-            updated_at=__import__('time').time()
+            created_at=__import__("time").time(),
+            updated_at=__import__("time").time(),
         )
 
     except Exception as e:
         logger.error(
-            f"Failed to start batch meal analysis workflow: {e}", exc_info=True)
+            f"Failed to start batch meal analysis workflow: {e}", exc_info=True
+        )
         return workflow_error_response(e, "batch_meal_analysis")
 
 
@@ -166,7 +175,7 @@ async def start_batch_meal_analysis_workflow(
 async def start_weekly_insights_workflow(
     request: WeeklyInsightsRequest,
     background_tasks: BackgroundTasks,
-    current_user: Student = Depends(get_current_user)
+    current_user: Student = Depends(get_current_user),
 ):
     """
     Start a weekly insights generation workflow.
@@ -183,14 +192,17 @@ async def start_weekly_insights_workflow(
             try:
                 result = await meal_workflow.generate_weekly_insights(
                     student_id=str(current_user.student_id),
-                    week_start=request.week_start
+                    week_start=request.week_start,
                 )
                 logger.info(
-                    f"Weekly insights generation completed for user {current_user.student_id}")
+                    f"Weekly insights generation completed for user {current_user.student_id}"
+                )
                 return result
             except Exception as e:
                 logger.error(
-                    f"Weekly insights workflow failed for user {current_user.student_id}: {e}", exc_info=True)
+                    f"Weekly insights workflow failed for user {current_user.student_id}: {e}",
+                    exc_info=True,
+                )
                 raise
 
         # Submit as async task
@@ -198,26 +210,24 @@ async def start_weekly_insights_workflow(
         task_id = await task_processor.submit_task(
             f"weekly_insights_{current_user.student_id}",
             run_insights_workflow,
-            priority=TaskPriority.NORMAL
+            priority=TaskPriority.NORMAL,
         )
 
         return WorkflowStatusResponse(
             workflow_id=task_id,
             status="started",
-            created_at=__import__('time').time(),
-            updated_at=__import__('time').time()
+            created_at=__import__("time").time(),
+            updated_at=__import__("time").time(),
         )
 
     except Exception as e:
-        logger.error(
-            f"Failed to start weekly insights workflow: {e}", exc_info=True)
+        logger.error(f"Failed to start weekly insights workflow: {e}", exc_info=True)
         return workflow_error_response(e, "weekly_insights")
 
 
 @router.get("/status/{workflow_id}", response_model=WorkflowStatusResponse)
 async def get_workflow_status(
-    workflow_id: str,
-    current_user: Student = Depends(get_current_user)
+    workflow_id: str, current_user: Student = Depends(get_current_user)
 ):
     """
     Get the status of a running or completed workflow.
@@ -231,7 +241,7 @@ async def get_workflow_status(
         if task_status is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Workflow {workflow_id} not found"
+                detail=f"Workflow {workflow_id} not found",
             )
 
         return WorkflowStatusResponse(
@@ -240,25 +250,26 @@ async def get_workflow_status(
             result=task_status.get("result"),
             error=task_status.get("error"),
             created_at=task_status["created_at"],
-            updated_at=task_status.get("completed_at") or task_status.get(
-                "started_at") or task_status["created_at"]
+            updated_at=task_status.get("completed_at")
+            or task_status.get("started_at")
+            or task_status["created_at"],
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(
-            f"Failed to get workflow status for {workflow_id}: {e}", exc_info=True)
+            f"Failed to get workflow status for {workflow_id}: {e}", exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve workflow status"
+            detail="Failed to retrieve workflow status",
         )
 
 
 @router.delete("/cancel/{workflow_id}")
 async def cancel_workflow(
-    workflow_id: str,
-    current_user: Student = Depends(get_current_user)
+    workflow_id: str, current_user: Student = Depends(get_current_user)
 ):
     """
     Cancel a running workflow.
@@ -272,23 +283,22 @@ async def cancel_workflow(
         if not cancelled:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Workflow {workflow_id} not found or cannot be cancelled"
+                detail=f"Workflow {workflow_id} not found or cannot be cancelled",
             )
 
         return {
             "message": f"Workflow {workflow_id} cancelled successfully",
             "workflow_id": workflow_id,
-            "timestamp": __import__('time').time()
+            "timestamp": __import__("time").time(),
         }
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            f"Failed to cancel workflow {workflow_id}: {e}", exc_info=True)
+        logger.error(f"Failed to cancel workflow {workflow_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cancel workflow"
+            detail="Failed to cancel workflow",
         )
 
 
@@ -296,7 +306,7 @@ async def cancel_workflow(
 async def list_user_workflows(
     current_user: Student = Depends(get_current_user),
     status_filter: Optional[str] = None,
-    limit: int = 50
+    limit: int = 50,
 ):
     """
     List workflows for the current user.
@@ -320,22 +330,22 @@ async def list_user_workflows(
             "total": 0,
             "limit": limit,
             "status_filter": status_filter,
-            "message": "Workflow listing not fully implemented - requires user-task association tracking"
+            "message": "Workflow listing not fully implemented - requires user-task association tracking",
         }
 
     except Exception as e:
         logger.error(
-            f"Failed to list workflows for user {current_user.student_id}: {e}", exc_info=True)
+            f"Failed to list workflows for user {current_user.student_id}: {e}",
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve workflow list"
+            detail="Failed to retrieve workflow list",
         )
 
 
 @router.get("/stats")
-async def get_workflow_statistics(
-    current_user: Student = Depends(get_current_user)
-):
+async def get_workflow_statistics(current_user: Student = Depends(get_current_user)):
     """
     Get workflow statistics and system performance metrics.
 
@@ -351,19 +361,19 @@ async def get_workflow_statistics(
         orchestrator_stats = {
             "running_workflows": len(orchestrator.running_tasks),
             "completed_workflows": len(orchestrator.task_results),
-            "max_concurrent": orchestrator.max_concurrent_tasks
+            "max_concurrent": orchestrator.max_concurrent_tasks,
         }
 
         return {
             "task_processor": task_stats,
             "orchestrator": orchestrator_stats,
-            "timestamp": __import__('time').time(),
-            "service": "workflow-orchestration"
+            "timestamp": __import__("time").time(),
+            "service": "workflow-orchestration",
         }
 
     except Exception as e:
         logger.error(f"Failed to get workflow statistics: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve workflow statistics"
+            detail="Failed to retrieve workflow statistics",
         )

@@ -8,8 +8,11 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.user import Student
 from app.models.consent import (
-    ConsentRequest, ConsentResponse, ConsentUpdateRequest,
-    ConsentHistoryResponse, ConsentVerificationResult
+    ConsentRequest,
+    ConsentResponse,
+    ConsentUpdateRequest,
+    ConsentHistoryResponse,
+    ConsentVerificationResult,
 )
 from app.services.consent_service import ConsentService
 
@@ -21,28 +24,23 @@ async def record_consent(
     consent_data: ConsentRequest,
     request: Request,
     current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Record user consent preferences."""
     consent_service = ConsentService(db)
 
     try:
-        return consent_service.record_consent(
-            current_user.id,
-            consent_data,
-            request
-        )
+        return consent_service.record_consent(current_user.id, consent_data, request)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to record consent"
+            detail="Failed to record consent",
         )
 
 
 @router.get("/", response_model=ConsentResponse)
 async def get_current_consent(
-    current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Student = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """Get current consent status for the authenticated user."""
     consent_service = ConsentService(db)
@@ -54,21 +52,17 @@ async def update_consent(
     consent_updates: ConsentUpdateRequest,
     request: Request,
     current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Update specific consent preferences."""
     consent_service = ConsentService(db)
 
     try:
-        return consent_service.update_consent(
-            current_user.id,
-            consent_updates,
-            request
-        )
+        return consent_service.update_consent(current_user.id, consent_updates, request)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update consent"
+            detail="Failed to update consent",
         )
 
 
@@ -76,20 +70,19 @@ async def update_consent(
 async def verify_consent(
     required_consents: List[str],
     current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Verify that user has given required consents."""
     consent_service = ConsentService(db)
 
     # Validate consent types
     valid_consent_types = ["data_processing", "history_storage", "analytics"]
-    invalid_types = [
-        ct for ct in required_consents if ct not in valid_consent_types]
+    invalid_types = [ct for ct in required_consents if ct not in valid_consent_types]
 
     if invalid_types:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid consent types: {invalid_types}"
+            detail=f"Invalid consent types: {invalid_types}",
         )
 
     return consent_service.verify_consent(current_user.id, required_consents)
@@ -97,8 +90,7 @@ async def verify_consent(
 
 @router.get("/history", response_model=List[ConsentHistoryResponse])
 async def get_consent_history(
-    current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: Student = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """Get consent history for the authenticated user."""
     consent_service = ConsentService(db)
@@ -109,7 +101,7 @@ async def get_consent_history(
 async def revoke_all_consents(
     request: Request,
     current_user: Student = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Revoke all consents (for data deletion requests)."""
     consent_service = ConsentService(db)
@@ -119,7 +111,7 @@ async def revoke_all_consents(
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to revoke consents"
+            detail="Failed to revoke consents",
         )
 
     return {"message": "All consents revoked successfully"}

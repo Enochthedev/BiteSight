@@ -23,7 +23,7 @@ class ValidationError(Exception):
 class ImageValidation:
     """Image validation utilities."""
 
-    ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
+    ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
     MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
     MIN_DIMENSIONS = (224, 224)  # Minimum width, height
     MAX_DIMENSIONS = (4096, 4096)  # Maximum width, height
@@ -45,12 +45,12 @@ class ImageValidation:
         if not filename:
             raise ValidationError("Filename cannot be empty", "filename")
 
-        extension = filename.lower().split('.')[-1]
-        if f'.{extension}' not in cls.ALLOWED_EXTENSIONS:
+        extension = filename.lower().split(".")[-1]
+        if f".{extension}" not in cls.ALLOWED_EXTENSIONS:
             raise ValidationError(
                 f"File extension '.{extension}' not allowed. "
                 f"Allowed extensions: {', '.join(cls.ALLOWED_EXTENSIONS)}",
-                "filename"
+                "filename",
             )
         return True
 
@@ -71,8 +71,8 @@ class ImageValidation:
         if file_size > cls.MAX_FILE_SIZE:
             raise ValidationError(
                 f"File size {file_size} bytes exceeds maximum allowed size "
-                f"{cls.MAX_FILE_SIZE} bytes ({cls.MAX_FILE_SIZE // (1024*1024)}MB)",
-                "file_size"
+                f"{cls.MAX_FILE_SIZE} bytes ({cls.MAX_FILE_SIZE // (1024 * 1024)}MB)",
+                "file_size",
             )
         return True
 
@@ -95,14 +95,14 @@ class ImageValidation:
             raise ValidationError(
                 f"Image dimensions {width}x{height} are too small. "
                 f"Minimum dimensions: {cls.MIN_DIMENSIONS[0]}x{cls.MIN_DIMENSIONS[1]}",
-                "dimensions"
+                "dimensions",
             )
 
         if width > cls.MAX_DIMENSIONS[0] or height > cls.MAX_DIMENSIONS[1]:
             raise ValidationError(
                 f"Image dimensions {width}x{height} are too large. "
                 f"Maximum dimensions: {cls.MAX_DIMENSIONS[0]}x{cls.MAX_DIMENSIONS[1]}",
-                "dimensions"
+                "dimensions",
             )
         return True
 
@@ -111,7 +111,7 @@ class UserValidation:
     """User data validation utilities."""
 
     PASSWORD_MIN_LENGTH = 8
-    PASSWORD_PATTERN = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)')
+    PASSWORD_PATTERN = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)")
 
     @classmethod
     def validate_password_strength(cls, password: str) -> bool:
@@ -130,19 +130,21 @@ class UserValidation:
         if len(password) < cls.PASSWORD_MIN_LENGTH:
             raise ValidationError(
                 f"Password must be at least {cls.PASSWORD_MIN_LENGTH} characters long",
-                "password"
+                "password",
             )
 
         if not cls.PASSWORD_PATTERN.search(password):
             raise ValidationError(
                 "Password must contain at least one lowercase letter, "
                 "one uppercase letter, and one digit",
-                "password"
+                "password",
             )
         return True
 
     @classmethod
-    def validate_email_uniqueness(cls, email: str, db: Session, exclude_id: Optional[UUID] = None) -> bool:
+    def validate_email_uniqueness(
+        cls, email: str, db: Session, exclude_id: Optional[UUID] = None
+    ) -> bool:
         """
         Validate email uniqueness in database.
 
@@ -163,8 +165,7 @@ class UserValidation:
 
         existing_user = query.first()
         if existing_user:
-            raise ValidationError(
-                "Email address is already registered", "email")
+            raise ValidationError("Email address is already registered", "email")
         return True
 
 
@@ -172,7 +173,12 @@ class FoodValidation:
     """Food data validation utilities."""
 
     VALID_FOOD_CLASSES = {
-        'carbohydrates', 'proteins', 'fats', 'vitamins', 'minerals', 'water'
+        "carbohydrates",
+        "proteins",
+        "fats",
+        "vitamins",
+        "minerals",
+        "water",
     }
 
     @classmethod
@@ -193,7 +199,7 @@ class FoodValidation:
             raise ValidationError(
                 f"Invalid food class '{food_class}'. "
                 f"Valid classes: {', '.join(cls.VALID_FOOD_CLASSES)}",
-                "food_class"
+                "food_class",
             )
         return True
 
@@ -214,7 +220,7 @@ class FoodValidation:
         if not 0.0 <= confidence <= 1.0:
             raise ValidationError(
                 f"Confidence score {confidence} must be between 0.0 and 1.0",
-                "confidence"
+                "confidence",
             )
         return True
 
@@ -235,18 +241,17 @@ class FoodValidation:
         if bounding_box is None:
             return True
 
-        required_keys = {'x', 'y', 'width', 'height'}
+        required_keys = {"x", "y", "width", "height"}
         if not all(key in bounding_box for key in required_keys):
             raise ValidationError(
                 f"Bounding box must contain keys: {', '.join(required_keys)}",
-                "bounding_box"
+                "bounding_box",
             )
 
         for key, value in bounding_box.items():
             if not isinstance(value, (int, float)) or value < 0:
                 raise ValidationError(
-                    f"Bounding box {key} must be a non-negative number",
-                    "bounding_box"
+                    f"Bounding box {key} must be a non-negative number", "bounding_box"
                 )
         return True
 
@@ -255,8 +260,13 @@ class NutritionRuleValidation:
     """Nutrition rule validation utilities."""
 
     VALID_CONDITION_KEYS = {
-        'missing_food_groups', 'all_food_groups_present', 'carbohydrate_ratio',
-        'protein_ratio', 'fat_ratio', 'vitamin_ratio', 'mineral_ratio'
+        "missing_food_groups",
+        "all_food_groups_present",
+        "carbohydrate_ratio",
+        "protein_ratio",
+        "fat_ratio",
+        "vitamin_ratio",
+        "mineral_ratio",
     }
 
     @classmethod
@@ -274,45 +284,42 @@ class NutritionRuleValidation:
             ValidationError: If condition logic is invalid
         """
         if not condition_logic:
-            raise ValidationError(
-                "Condition logic cannot be empty", "condition_logic")
+            raise ValidationError("Condition logic cannot be empty", "condition_logic")
 
         for key in condition_logic.keys():
             if key not in cls.VALID_CONDITION_KEYS:
                 raise ValidationError(
                     f"Invalid condition key '{key}'. "
                     f"Valid keys: {', '.join(cls.VALID_CONDITION_KEYS)}",
-                    "condition_logic"
+                    "condition_logic",
                 )
 
         # Validate specific condition types
-        if 'missing_food_groups' in condition_logic:
-            missing_groups = condition_logic['missing_food_groups']
+        if "missing_food_groups" in condition_logic:
+            missing_groups = condition_logic["missing_food_groups"]
             if not isinstance(missing_groups, list):
                 raise ValidationError(
-                    "missing_food_groups must be a list",
-                    "condition_logic"
+                    "missing_food_groups must be a list", "condition_logic"
                 )
             for group in missing_groups:
                 FoodValidation.validate_food_class(group)
 
         # Validate ratio conditions
-        ratio_keys = [k for k in condition_logic.keys()
-                      if k.endswith('_ratio')]
+        ratio_keys = [k for k in condition_logic.keys() if k.endswith("_ratio")]
         for ratio_key in ratio_keys:
             ratio_value = condition_logic[ratio_key]
-            if isinstance(ratio_value, str) and ratio_value.startswith('>'):
+            if isinstance(ratio_value, str) and ratio_value.startswith(">"):
                 try:
                     float(ratio_value[1:])
                 except ValueError:
                     raise ValidationError(
                         f"Invalid ratio condition format: {ratio_value}",
-                        "condition_logic"
+                        "condition_logic",
                     )
             elif not isinstance(ratio_value, (int, float)):
                 raise ValidationError(
                     f"Ratio value must be a number or comparison string: {ratio_value}",
-                    "condition_logic"
+                    "condition_logic",
                 )
 
         return True
@@ -333,12 +340,12 @@ class NutritionRuleValidation:
         """
         if not template or not template.strip():
             raise ValidationError(
-                "Feedback template cannot be empty", "feedback_template")
+                "Feedback template cannot be empty", "feedback_template"
+            )
 
         if len(template) > 1000:
             raise ValidationError(
-                "Feedback template cannot exceed 1000 characters",
-                "feedback_template"
+                "Feedback template cannot exceed 1000 characters", "feedback_template"
             )
         return True
 
@@ -360,8 +367,7 @@ def validate_uuid(uuid_string: str, field_name: str = "id") -> UUID:
     try:
         return UUID(uuid_string)
     except (ValueError, TypeError):
-        raise ValidationError(
-            f"Invalid UUID format for {field_name}", field_name)
+        raise ValidationError(f"Invalid UUID format for {field_name}", field_name)
 
 
 def validate_date_range(start_date: Any, end_date: Any) -> bool:
@@ -379,8 +385,5 @@ def validate_date_range(start_date: Any, end_date: Any) -> bool:
         ValidationError: If date range is invalid
     """
     if start_date and end_date and start_date > end_date:
-        raise ValidationError(
-            "Start date cannot be after end date",
-            "date_range"
-        )
+        raise ValidationError("Start date cannot be after end date", "date_range")
     return True

@@ -9,8 +9,12 @@ from sqlalchemy import desc
 from fastapi import HTTPException, status, Request
 
 from app.models.consent import (
-    ConsentRecord, ConsentRequest, ConsentResponse, ConsentUpdateRequest,
-    ConsentHistoryResponse, ConsentVerificationResult
+    ConsentRecord,
+    ConsentRequest,
+    ConsentResponse,
+    ConsentUpdateRequest,
+    ConsentHistoryResponse,
+    ConsentVerificationResult,
 )
 from app.models.user import Student
 
@@ -25,7 +29,7 @@ class ConsentService:
         self,
         student_id: UUID,
         consent_data: ConsentRequest,
-        request: Optional[Request] = None
+        request: Optional[Request] = None,
     ) -> ConsentResponse:
         """Record user consent preferences."""
         # Get client IP and user agent for audit trail
@@ -33,8 +37,7 @@ class ConsentService:
         user_agent = None
         if request:
             ip_address = self._get_client_ip(request)
-            user_agent = request.headers.get(
-                "user-agent", "")[:500]  # Limit length
+            user_agent = request.headers.get("user-agent", "")[:500]  # Limit length
 
         # Record each consent type separately for granular tracking
         consent_records = []
@@ -46,7 +49,7 @@ class ConsentService:
             consent_given=consent_data.data_processing_consent,
             consent_version=consent_data.consent_version,
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
         consent_records.append(data_processing_record)
 
@@ -57,7 +60,7 @@ class ConsentService:
             consent_given=consent_data.history_storage_consent,
             consent_version=consent_data.consent_version,
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
         consent_records.append(history_storage_record)
 
@@ -69,7 +72,7 @@ class ConsentService:
                 consent_given=consent_data.analytics_consent,
                 consent_version=consent_data.consent_version,
                 ip_address=ip_address,
-                user_agent=user_agent
+                user_agent=user_agent,
             )
             consent_records.append(analytics_record)
 
@@ -78,8 +81,7 @@ class ConsentService:
             self.db.add(record)
 
         # Update user's history_enabled flag based on history storage consent
-        student = self.db.query(Student).filter(
-            Student.id == student_id).first()
+        student = self.db.query(Student).filter(Student.id == student_id).first()
         if student:
             student.history_enabled = consent_data.history_storage_consent
 
@@ -92,7 +94,7 @@ class ConsentService:
         self,
         student_id: UUID,
         consent_updates: ConsentUpdateRequest,
-        request: Optional[Request] = None
+        request: Optional[Request] = None,
     ) -> ConsentResponse:
         """Update specific consent preferences."""
         # Get client IP and user agent for audit trail
@@ -110,7 +112,7 @@ class ConsentService:
                 consent_given=consent_updates.data_processing_consent,
                 consent_version="1.0",  # Could be made configurable
                 ip_address=ip_address,
-                user_agent=user_agent
+                user_agent=user_agent,
             )
             self.db.add(record)
 
@@ -121,13 +123,12 @@ class ConsentService:
                 consent_given=consent_updates.history_storage_consent,
                 consent_version="1.0",
                 ip_address=ip_address,
-                user_agent=user_agent
+                user_agent=user_agent,
             )
             self.db.add(record)
 
             # Update user's history_enabled flag
-            student = self.db.query(Student).filter(
-                Student.id == student_id).first()
+            student = self.db.query(Student).filter(Student.id == student_id).first()
             if student:
                 student.history_enabled = consent_updates.history_storage_consent
 
@@ -138,7 +139,7 @@ class ConsentService:
                 consent_given=consent_updates.analytics_consent,
                 consent_version="1.0",
                 ip_address=ip_address,
-                user_agent=user_agent
+                user_agent=user_agent,
             )
             self.db.add(record)
 
@@ -158,7 +159,7 @@ class ConsentService:
                 self.db.query(ConsentRecord)
                 .filter(
                     ConsentRecord.student_id == student_id,
-                    ConsentRecord.consent_type == consent_type
+                    ConsentRecord.consent_type == consent_type,
                 )
                 .order_by(desc(ConsentRecord.consent_date))
                 .first()
@@ -174,18 +175,18 @@ class ConsentService:
         return ConsentResponse(
             id=student_id,  # Using student_id as the response ID
             student_id=student_id,
-            data_processing_consent=current_consents.get(
-                "data_processing", False),
-            history_storage_consent=current_consents.get(
-                "history_storage", False),
+            data_processing_consent=current_consents.get("data_processing", False),
+            history_storage_consent=current_consents.get("history_storage", False),
             analytics_consent=current_consents.get("analytics", False),
             consent_date=consent_date or datetime.utcnow(),
             consent_version="1.0",
             created_at=consent_date or datetime.utcnow(),
-            updated_at=consent_date or datetime.utcnow()
+            updated_at=consent_date or datetime.utcnow(),
         )
 
-    def verify_consent(self, student_id: UUID, required_consents: List[str]) -> ConsentVerificationResult:
+    def verify_consent(
+        self, student_id: UUID, required_consents: List[str]
+    ) -> ConsentVerificationResult:
         """Verify that user has given required consents."""
         current_consent = self.get_current_consent(student_id)
 
@@ -210,7 +211,7 @@ class ConsentService:
             has_analytics_consent=has_analytics,
             consent_date=current_consent.consent_date,
             requires_update=len(missing_consents) > 0,
-            missing_consents=missing_consents
+            missing_consents=missing_consents,
         )
 
     def get_consent_history(self, student_id: UUID) -> List[ConsentHistoryResponse]:
@@ -228,12 +229,14 @@ class ConsentService:
                 consent_given=record.consent_given,
                 consent_date=record.consent_date,
                 consent_version=record.consent_version or "1.0",
-                ip_address=record.ip_address
+                ip_address=record.ip_address,
             )
             for record in records
         ]
 
-    def revoke_all_consents(self, student_id: UUID, request: Optional[Request] = None) -> bool:
+    def revoke_all_consents(
+        self, student_id: UUID, request: Optional[Request] = None
+    ) -> bool:
         """Revoke all consents for a user (for data deletion requests)."""
         # Get client IP and user agent for audit trail
         ip_address = None
@@ -252,13 +255,12 @@ class ConsentService:
                 consent_given=False,
                 consent_version="1.0",
                 ip_address=ip_address,
-                user_agent=user_agent
+                user_agent=user_agent,
             )
             self.db.add(revocation_record)
 
         # Update user's history_enabled flag
-        student = self.db.query(Student).filter(
-            Student.id == student_id).first()
+        student = self.db.query(Student).filter(Student.id == student_id).first()
         if student:
             student.history_enabled = False
 

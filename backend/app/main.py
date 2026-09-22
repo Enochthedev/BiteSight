@@ -24,7 +24,7 @@ from app.core.middleware import (
     LoggingMiddleware,
     SecurityHeadersMiddleware,
     RateLimitMiddleware,
-    RequestSizeMiddleware
+    RequestSizeMiddleware,
 )
 
 # Setup logging
@@ -41,6 +41,7 @@ async def lifespan(app: FastAPI):
     # Initialize Redis connection
     try:
         from app.core.redis_client import get_redis_client
+
         redis_client = get_redis_client()
         redis_client.connect()
         logger.info("Redis connection established")
@@ -61,6 +62,7 @@ async def lifespan(app: FastAPI):
     # Initialize async task processor
     try:
         from app.core.async_tasks import get_task_processor
+
         task_processor = await get_task_processor()
         logger.info("Async task processor initialized")
     except Exception as e:
@@ -70,6 +72,7 @@ async def lifespan(app: FastAPI):
     # Initialize service orchestrator
     try:
         from app.core.orchestration import get_orchestrator
+
         orchestrator = get_orchestrator()
         logger.info("Service orchestrator initialized")
     except Exception as e:
@@ -79,6 +82,7 @@ async def lifespan(app: FastAPI):
     # Initialize AI service
     try:
         from app.services.ai_service import initialize_ai_service
+
         initialize_ai_service()
         logger.info("AI service initialized")
     except Exception as e:
@@ -109,6 +113,7 @@ async def lifespan(app: FastAPI):
     # Cleanup AI service
     try:
         from app.services.ai_service import cleanup_ai_service
+
         cleanup_ai_service()
         logger.info("AI service cleaned up")
     except Exception as e:
@@ -130,7 +135,7 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=f"{settings.API_V1_STR}/docs",
     redoc_url=f"{settings.API_V1_STR}/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Security middleware
@@ -145,7 +150,7 @@ app.add_middleware(LoggingMiddleware)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],
@@ -167,9 +172,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
                 "message": exc.detail,
                 "type": "http_error",
                 "timestamp": time.time(),
-                "path": str(request.url.path)
+                "path": str(request.url.path),
             }
-        }
+        },
     )
 
 
@@ -196,9 +201,9 @@ async def starlette_exception_handler(request: Request, exc: StarletteHTTPExcept
                 "message": exc.detail,
                 "type": "server_error",
                 "timestamp": time.time(),
-                "path": str(request.url.path)
+                "path": str(request.url.path),
             }
-        }
+        },
     )
 
 
@@ -230,7 +235,7 @@ async def root():
         "message": "Nutrition Feedback API",
         "version": "1.0.0",
         "status": "healthy",
-        "docs_url": f"{settings.API_V1_STR}/docs"
+        "docs_url": f"{settings.API_V1_STR}/docs",
     }
 
 
@@ -249,6 +254,7 @@ async def health_check():
     # Test Redis connection
     try:
         from app.core.redis_client import get_redis_client
+
         redis_client = get_redis_client()
         if redis_client.is_connected():
             redis_status = "healthy"
@@ -261,6 +267,7 @@ async def health_check():
     # Test AI service
     try:
         from app.services.ai_service import get_ai_service
+
         ai_service = get_ai_service()
         ai_status_info = await ai_service.get_server_status()
         ai_status = ai_status_info.get("status", "unavailable")
@@ -284,6 +291,6 @@ async def health_check():
             "database": db_status,
             "redis": redis_status,
             "ai": ai_status,
-            "api": "healthy"
-        }
+            "api": "healthy",
+        },
     }

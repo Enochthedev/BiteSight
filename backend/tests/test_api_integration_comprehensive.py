@@ -30,7 +30,7 @@ class TestComprehensiveAPIIntegration:
             email="api_test@university.edu.ng",
             name="API Test User",
             password_hash="hashed_password",
-            history_enabled=True
+            history_enabled=True,
         )
         db_session.add(user)
         db_session.commit()
@@ -47,7 +47,7 @@ class TestComprehensiveAPIIntegration:
             email="admin@university.edu.ng",
             password_hash="hashed_admin_password",
             role=AdminRole.SUPER_ADMIN,
-            is_active=True
+            is_active=True,
         )
         db_session.add(admin)
         db_session.commit()
@@ -57,9 +57,9 @@ class TestComprehensiveAPIIntegration:
     @pytest.fixture
     def sample_image(self):
         """Create a sample image for testing."""
-        image = Image.new('RGB', (224, 224), color='red')
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
-        image.save(temp_file.name, 'JPEG')
+        image = Image.new("RGB", (224, 224), color="red")
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+        image.save(temp_file.name, "JPEG")
 
         yield temp_file.name
 
@@ -69,13 +69,14 @@ class TestComprehensiveAPIIntegration:
     def auth_headers(self, client, test_user):
         """Get authentication headers for test user."""
         # Mock authentication for testing
-        with patch('app.core.auth.verify_password', return_value=True), \
-                patch('app.core.auth.create_access_token', return_value="mock-jwt-token"):
-
-            response = client.post("/api/v1/auth/login", json={
-                "email": test_user.email,
-                "password": "test_password"
-            })
+        with (
+            patch("app.core.auth.verify_password", return_value=True),
+            patch("app.core.auth.create_access_token", return_value="mock-jwt-token"),
+        ):
+            response = client.post(
+                "/api/v1/auth/login",
+                json={"email": test_user.email, "password": "test_password"},
+            )
 
             if response.status_code == 200:
                 token = response.json().get("access_token", "mock-jwt-token")
@@ -86,13 +87,14 @@ class TestComprehensiveAPIIntegration:
     @pytest.fixture
     def admin_headers(self, client, admin_user):
         """Get authentication headers for admin user."""
-        with patch('app.core.auth.verify_password', return_value=True), \
-                patch('app.core.auth.create_access_token', return_value="mock-admin-token"):
-
-            response = client.post("/api/v1/auth/admin/login", json={
-                "username": admin_user.username,
-                "password": "admin_password"
-            })
+        with (
+            patch("app.core.auth.verify_password", return_value=True),
+            patch("app.core.auth.create_access_token", return_value="mock-admin-token"),
+        ):
+            response = client.post(
+                "/api/v1/auth/admin/login",
+                json={"username": admin_user.username, "password": "admin_password"},
+            )
 
             if response.status_code == 200:
                 token = response.json().get("access_token", "mock-admin-token")
@@ -143,7 +145,7 @@ class TestComprehensiveAPIIntegration:
         registration_data = {
             "name": "New Test User",
             "email": "newuser@university.edu.ng",
-            "password": "SecurePassword123!"
+            "password": "SecurePassword123!",
         }
 
         response = client.post("/api/v1/auth/register", json=registration_data)
@@ -157,11 +159,8 @@ class TestComprehensiveAPIIntegration:
             assert user_data["user"]["email"] == registration_data["email"]
 
         # User login
-        with patch('app.core.auth.verify_password', return_value=True):
-            login_data = {
-                "email": test_user.email,
-                "password": "test_password"
-            }
+        with patch("app.core.auth.verify_password", return_value=True):
+            login_data = {"email": test_user.email, "password": "test_password"}
 
             response = client.post("/api/v1/auth/login", json=login_data)
             assert response.status_code == 200
@@ -172,7 +171,10 @@ class TestComprehensiveAPIIntegration:
             assert "user" in auth_data
 
         # Token refresh
-        with patch('app.core.auth.decode_token', return_value={"sub": str(test_user.student_id)}):
+        with patch(
+            "app.core.auth.decode_token",
+            return_value={"sub": str(test_user.student_id)},
+        ):
             headers = {"Authorization": "Bearer mock-token"}
             response = client.post("/api/v1/auth/refresh", headers=headers)
             assert response.status_code in [200, 401]
@@ -183,27 +185,41 @@ class TestComprehensiveAPIIntegration:
         assert response.status_code in [200, 404]
 
         # Logout
-        with patch('app.core.auth.decode_token', return_value={"sub": str(test_user.student_id)}):
+        with patch(
+            "app.core.auth.decode_token",
+            return_value={"sub": str(test_user.student_id)},
+        ):
             headers = {"Authorization": "Bearer mock-token"}
             response = client.post("/api/v1/auth/logout", headers=headers)
             assert response.status_code in [200, 401]
 
-    def test_meal_analysis_endpoints(self, client, test_user, sample_image, auth_headers):
+    def test_meal_analysis_endpoints(
+        self, client, test_user, sample_image, auth_headers
+    ):
         """Test meal analysis and related endpoints."""
 
-        with patch('app.ml.inference.predictor.FoodPredictor') as mock_predictor, \
-                patch('app.services.feedback_generation_service.FeedbackGenerationService') as mock_feedback:
-
+        with (
+            patch("app.ml.inference.predictor.FoodPredictor") as mock_predictor,
+            patch(
+                "app.services.feedback_generation_service.FeedbackGenerationService"
+            ) as mock_feedback,
+        ):
             # Mock ML predictions
             mock_predictor.return_value.predict_food_async = AsyncMock(
                 return_value={
                     "detected_foods": [
-                        {"name": "jollof_rice", "confidence": 0.95,
-                            "food_class": "carbohydrates"},
-                        {"name": "chicken", "confidence": 0.88,
-                            "food_class": "proteins"}
+                        {
+                            "name": "jollof_rice",
+                            "confidence": 0.95,
+                            "food_class": "carbohydrates",
+                        },
+                        {
+                            "name": "chicken",
+                            "confidence": 0.88,
+                            "food_class": "proteins",
+                        },
                     ],
-                    "analysis_id": "test_analysis_123"
+                    "analysis_id": "test_analysis_123",
                 }
             )
 
@@ -211,17 +227,17 @@ class TestComprehensiveAPIIntegration:
                 return_value={
                     "feedback_text": "Great meal! Good balance of carbohydrates and proteins.",
                     "recommendations": ["Add vegetables for better nutrition"],
-                    "balance_score": 0.8
+                    "balance_score": 0.8,
                 }
             )
 
             # Upload and analyze meal
-            with open(sample_image, 'rb') as img_file:
+            with open(sample_image, "rb") as img_file:
                 response = client.post(
                     "/api/v1/meals/analyze",
                     files={"image": ("meal.jpg", img_file, "image/jpeg")},
                     data={"student_id": str(test_user.student_id)},
-                    headers=auth_headers
+                    headers=auth_headers,
                 )
 
             # Success or accepted for async processing
@@ -229,17 +245,22 @@ class TestComprehensiveAPIIntegration:
 
             if response.status_code == 200:
                 analysis_result = response.json()
-                assert "analysis_id" in analysis_result or "detected_foods" in analysis_result
+                assert (
+                    "analysis_id" in analysis_result
+                    or "detected_foods" in analysis_result
+                )
 
             # Get analysis status
             analysis_id = "test_analysis_123"
             response = client.get(
-                f"/api/v1/meals/analysis/{analysis_id}/status", headers=auth_headers)
+                f"/api/v1/meals/analysis/{analysis_id}/status", headers=auth_headers
+            )
             assert response.status_code in [200, 404]
 
             # Get analysis results
             response = client.get(
-                f"/api/v1/meals/analysis/{analysis_id}/results", headers=auth_headers)
+                f"/api/v1/meals/analysis/{analysis_id}/results", headers=auth_headers
+            )
             assert response.status_code in [200, 404]
 
             # Batch meal upload (for offline sync)
@@ -248,13 +269,14 @@ class TestComprehensiveAPIIntegration:
                     {
                         "student_id": str(test_user.student_id),
                         "timestamp": "2024-01-01T12:00:00Z",
-                        "local_id": "offline_meal_1"
+                        "local_id": "offline_meal_1",
                     }
                 ]
             }
 
             response = client.post(
-                "/api/v1/meals/batch-sync", json=batch_data, headers=auth_headers)
+                "/api/v1/meals/batch-sync", json=batch_data, headers=auth_headers
+            )
             assert response.status_code in [200, 202, 400]
 
     def test_feedback_endpoints(self, client, test_user, auth_headers):
@@ -262,8 +284,7 @@ class TestComprehensiveAPIIntegration:
 
         # Get feedback for a meal
         meal_id = "test_meal_123"
-        response = client.get(
-            f"/api/v1/feedback/{meal_id}", headers=auth_headers)
+        response = client.get(f"/api/v1/feedback/{meal_id}", headers=auth_headers)
         assert response.status_code in [200, 404]
 
         # Submit user feedback on AI feedback
@@ -271,16 +292,18 @@ class TestComprehensiveAPIIntegration:
             "meal_id": meal_id,
             "rating": 4,
             "comments": "The feedback was helpful",
-            "accuracy_rating": 5
+            "accuracy_rating": 5,
         }
 
         response = client.post(
-            "/api/v1/feedback/user-feedback", json=feedback_data, headers=auth_headers)
+            "/api/v1/feedback/user-feedback", json=feedback_data, headers=auth_headers
+        )
         assert response.status_code in [201, 400]
 
         # Get feedback statistics
         response = client.get(
-            f"/api/v1/feedback/stats/{test_user.student_id}", headers=auth_headers)
+            f"/api/v1/feedback/stats/{test_user.student_id}", headers=auth_headers
+        )
         assert response.status_code in [200, 404]
 
     def test_history_endpoints(self, client, test_user, auth_headers):
@@ -288,7 +311,8 @@ class TestComprehensiveAPIIntegration:
 
         # Get meal history
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=auth_headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=auth_headers
+        )
         assert response.status_code == 200
 
         history_data = response.json()
@@ -300,36 +324,37 @@ class TestComprehensiveAPIIntegration:
             "start_date": "2024-01-01",
             "end_date": "2024-01-31",
             "limit": 10,
-            "offset": 0
+            "offset": 0,
         }
 
         response = client.get(
             f"/api/v1/history/{test_user.student_id}/meals",
             params=params,
-            headers=auth_headers
+            headers=auth_headers,
         )
         assert response.status_code == 200
 
         # Get specific meal details
         meal_id = "test_meal_123"
-        response = client.get(
-            f"/api/v1/history/meals/{meal_id}", headers=auth_headers)
+        response = client.get(f"/api/v1/history/meals/{meal_id}", headers=auth_headers)
         assert response.status_code in [200, 404]
 
         # Delete meal from history
         response = client.delete(
-            f"/api/v1/history/meals/{meal_id}", headers=auth_headers)
+            f"/api/v1/history/meals/{meal_id}", headers=auth_headers
+        )
         assert response.status_code in [200, 404]
 
         # Clear all history
         response = client.delete(
-            f"/api/v1/history/{test_user.student_id}/clear", headers=auth_headers)
+            f"/api/v1/history/{test_user.student_id}/clear", headers=auth_headers
+        )
         assert response.status_code == 200
 
     def test_insights_endpoints(self, client, test_user, auth_headers):
         """Test insights and analytics endpoints."""
 
-        with patch('app.services.insights_service.InsightsService') as mock_insights:
+        with patch("app.services.insights_service.InsightsService") as mock_insights:
             mock_insights.return_value.generate_weekly_insights_async = AsyncMock(
                 return_value={
                     "week_period": "Jan 1-7, 2024",
@@ -337,16 +362,17 @@ class TestComprehensiveAPIIntegration:
                     "nutrition_balance": {
                         "carbohydrates": 0.8,
                         "proteins": 0.7,
-                        "vitamins": 0.4
+                        "vitamins": 0.4,
                     },
                     "recommendations": ["Include more vegetables"],
-                    "positive_trends": ["Good protein intake"]
+                    "positive_trends": ["Good protein intake"],
                 }
             )
 
             # Get weekly insights
             response = client.get(
-                f"/api/v1/insights/{test_user.student_id}/weekly", headers=auth_headers)
+                f"/api/v1/insights/{test_user.student_id}/weekly", headers=auth_headers
+            )
             assert response.status_code == 200
 
             insights_data = response.json()
@@ -355,17 +381,21 @@ class TestComprehensiveAPIIntegration:
 
             # Get monthly insights
             response = client.get(
-                f"/api/v1/insights/{test_user.student_id}/monthly", headers=auth_headers)
+                f"/api/v1/insights/{test_user.student_id}/monthly", headers=auth_headers
+            )
             assert response.status_code in [200, 404]
 
             # Get nutrition trends
             response = client.get(
-                f"/api/v1/insights/{test_user.student_id}/trends", headers=auth_headers)
+                f"/api/v1/insights/{test_user.student_id}/trends", headers=auth_headers
+            )
             assert response.status_code in [200, 404]
 
             # Get food frequency analysis
             response = client.get(
-                f"/api/v1/insights/{test_user.student_id}/food-frequency", headers=auth_headers)
+                f"/api/v1/insights/{test_user.student_id}/food-frequency",
+                headers=auth_headers,
+            )
             assert response.status_code in [200, 404]
 
     def test_consent_and_privacy_endpoints(self, client, test_user, auth_headers):
@@ -373,7 +403,8 @@ class TestComprehensiveAPIIntegration:
 
         # Get current consent status
         response = client.get(
-            f"/api/v1/consent/{test_user.student_id}", headers=auth_headers)
+            f"/api/v1/consent/{test_user.student_id}", headers=auth_headers
+        )
         assert response.status_code == 200
 
         consent_data = response.json()
@@ -381,19 +412,19 @@ class TestComprehensiveAPIIntegration:
         assert "analytics" in consent_data
 
         # Update consent preferences
-        new_consent = {
-            "data_storage": True,
-            "analytics": False,
-            "marketing": False
-        }
+        new_consent = {"data_storage": True, "analytics": False, "marketing": False}
 
         response = client.post(
-            f"/api/v1/consent/{test_user.student_id}", json=new_consent, headers=auth_headers)
+            f"/api/v1/consent/{test_user.student_id}",
+            json=new_consent,
+            headers=auth_headers,
+        )
         assert response.status_code in [200, 201]
 
         # Export user data (GDPR compliance)
         response = client.get(
-            f"/api/v1/privacy/{test_user.student_id}/export", headers=auth_headers)
+            f"/api/v1/privacy/{test_user.student_id}/export", headers=auth_headers
+        )
         assert response.status_code == 200
 
         export_data = response.json()
@@ -403,40 +434,37 @@ class TestComprehensiveAPIIntegration:
 
         # Request data deletion
         response = client.delete(
-            f"/api/v1/privacy/{test_user.student_id}/delete", headers=auth_headers)
+            f"/api/v1/privacy/{test_user.student_id}/delete", headers=auth_headers
+        )
         assert response.status_code == 200
 
     def test_admin_endpoints(self, client, admin_user, admin_headers, sample_image):
         """Test admin-specific endpoints."""
 
         # Admin authentication
-        with patch('app.core.auth.verify_password', return_value=True):
-            login_data = {
-                "username": admin_user.username,
-                "password": "admin_password"
-            }
+        with patch("app.core.auth.verify_password", return_value=True):
+            login_data = {"username": admin_user.username, "password": "admin_password"}
 
             response = client.post("/api/v1/auth/admin/login", json=login_data)
             assert response.status_code == 200
 
         # Dataset management
-        with open(sample_image, 'rb') as img_file:
+        with open(sample_image, "rb") as img_file:
             response = client.post(
                 "/api/v1/admin/dataset/upload",
                 files={"image": ("new_food.jpg", img_file, "image/jpeg")},
                 data={
                     "food_name": "test_nigerian_food",
                     "food_class": "proteins",
-                    "cultural_context": "Traditional Nigerian protein source"
+                    "cultural_context": "Traditional Nigerian protein source",
                 },
-                headers=admin_headers
+                headers=admin_headers,
             )
 
         assert response.status_code in [201, 400]
 
         # Get dataset statistics
-        response = client.get(
-            "/api/v1/admin/dataset/stats", headers=admin_headers)
+        response = client.get("/api/v1/admin/dataset/stats", headers=admin_headers)
         assert response.status_code == 200
 
         stats_data = response.json()
@@ -444,8 +472,7 @@ class TestComprehensiveAPIIntegration:
         assert "food_classes" in stats_data
 
         # List dataset items
-        response = client.get(
-            "/api/v1/admin/dataset/items", headers=admin_headers)
+        response = client.get("/api/v1/admin/dataset/items", headers=admin_headers)
         assert response.status_code == 200
 
         # Nutrition rules management
@@ -454,16 +481,16 @@ class TestComprehensiveAPIIntegration:
             "condition_logic": {"missing_food_groups": ["vegetables"]},
             "feedback_template": "Consider adding vegetables to your meal for better nutrition",
             "priority": 1,
-            "is_active": True
+            "is_active": True,
         }
 
         response = client.post(
-            "/api/v1/admin/nutrition-rules", json=rule_data, headers=admin_headers)
+            "/api/v1/admin/nutrition-rules", json=rule_data, headers=admin_headers
+        )
         assert response.status_code in [201, 400]
 
         # Get nutrition rules
-        response = client.get(
-            "/api/v1/admin/nutrition-rules", headers=admin_headers)
+        response = client.get("/api/v1/admin/nutrition-rules", headers=admin_headers)
         assert response.status_code == 200
 
         rules_data = response.json()
@@ -474,21 +501,24 @@ class TestComprehensiveAPIIntegration:
         updated_rule = {
             "rule_name": "updated_test_rule",
             "feedback_template": "Updated feedback template",
-            "priority": 2
+            "priority": 2,
         }
 
         response = client.put(
-            f"/api/v1/admin/nutrition-rules/{rule_id}", json=updated_rule, headers=admin_headers)
+            f"/api/v1/admin/nutrition-rules/{rule_id}",
+            json=updated_rule,
+            headers=admin_headers,
+        )
         assert response.status_code in [200, 404]
 
         # Delete nutrition rule
         response = client.delete(
-            f"/api/v1/admin/nutrition-rules/{rule_id}", headers=admin_headers)
+            f"/api/v1/admin/nutrition-rules/{rule_id}", headers=admin_headers
+        )
         assert response.status_code in [200, 404]
 
         # System analytics
-        response = client.get(
-            "/api/v1/admin/analytics/usage", headers=admin_headers)
+        response = client.get("/api/v1/admin/analytics/usage", headers=admin_headers)
         assert response.status_code == 200
 
         analytics_data = response.json()
@@ -517,12 +547,12 @@ class TestComprehensiveAPIIntegration:
         # Clear specific cache
         cache_key = "test_cache_key"
         response = client.delete(
-            f"/api/v1/cache/clear/{cache_key}", headers=admin_headers)
+            f"/api/v1/cache/clear/{cache_key}", headers=admin_headers
+        )
         assert response.status_code == 200
 
         # Clear all cache
-        response = client.delete(
-            "/api/v1/cache/clear-all", headers=admin_headers)
+        response = client.delete("/api/v1/cache/clear-all", headers=admin_headers)
         assert response.status_code == 200
 
     def test_workflow_endpoints(self, client, test_user, auth_headers):
@@ -531,17 +561,20 @@ class TestComprehensiveAPIIntegration:
         # Get workflow status
         workflow_id = "test_workflow_123"
         response = client.get(
-            f"/api/v1/workflows/{workflow_id}/status", headers=auth_headers)
+            f"/api/v1/workflows/{workflow_id}/status", headers=auth_headers
+        )
         assert response.status_code in [200, 404]
 
         # Cancel workflow
         response = client.post(
-            f"/api/v1/workflows/{workflow_id}/cancel", headers=auth_headers)
+            f"/api/v1/workflows/{workflow_id}/cancel", headers=auth_headers
+        )
         assert response.status_code in [200, 404]
 
         # Get user's active workflows
         response = client.get(
-            f"/api/v1/workflows/user/{test_user.student_id}", headers=auth_headers)
+            f"/api/v1/workflows/user/{test_user.student_id}", headers=auth_headers
+        )
         assert response.status_code == 200
 
     def test_error_handling_across_endpoints(self, client, auth_headers):
@@ -569,7 +602,7 @@ class TestComprehensiveAPIIntegration:
         response = client.post(
             "/api/v1/consent/valid-uuid",
             data="invalid json",
-            headers={**auth_headers, "Content-Type": "application/json"}
+            headers={**auth_headers, "Content-Type": "application/json"},
         )
         assert response.status_code == 422
 
@@ -577,24 +610,26 @@ class TestComprehensiveAPIIntegration:
         response = client.get("/api/v1/history/some-user/meals")
         assert response.status_code == 401
 
-    def test_rate_limiting_across_endpoints(self, client, test_user, auth_headers, sample_image):
+    def test_rate_limiting_across_endpoints(
+        self, client, test_user, auth_headers, sample_image
+    ):
         """Test rate limiting across different endpoints."""
 
         # Test meal analysis rate limiting
         responses = []
 
-        with patch('app.ml.inference.predictor.FoodPredictor') as mock_predictor:
+        with patch("app.ml.inference.predictor.FoodPredictor") as mock_predictor:
             mock_predictor.return_value.predict_food_async = AsyncMock(
                 return_value={"detected_foods": []}
             )
 
             for i in range(20):  # Make many requests quickly
-                with open(sample_image, 'rb') as img_file:
+                with open(sample_image, "rb") as img_file:
                     response = client.post(
                         "/api/v1/meals/analyze",
                         files={"image": ("meal.jpg", img_file, "image/jpeg")},
                         data={"student_id": str(test_user.student_id)},
-                        headers=auth_headers
+                        headers=auth_headers,
                     )
                     responses.append(response.status_code)
 
@@ -631,17 +666,17 @@ class TestComprehensiveAPIIntegration:
         response = client.post(
             f"/api/v1/consent/{test_user.student_id}",
             json=json_data,
-            headers=auth_headers
+            headers=auth_headers,
         )
         # Should handle JSON properly
 
         # Test multipart form data
-        with open(sample_image, 'rb') as img_file:
+        with open(sample_image, "rb") as img_file:
             response = client.post(
                 "/api/v1/meals/analyze",
                 files={"image": ("meal.jpg", img_file, "image/jpeg")},
                 data={"student_id": str(test_user.student_id)},
-                headers=auth_headers
+                headers=auth_headers,
             )
         # Should handle multipart data properly
 
@@ -649,7 +684,7 @@ class TestComprehensiveAPIIntegration:
         response = client.post(
             f"/api/v1/consent/{test_user.student_id}",
             data="plain text data",
-            headers={**auth_headers, "Content-Type": "text/plain"}
+            headers={**auth_headers, "Content-Type": "text/plain"},
         )
         assert response.status_code in [400, 415, 422]
 

@@ -14,9 +14,7 @@ def create_super_admin(email: str, name: str, password: str):
 
     try:
         # Check if super admin already exists
-        existing_admin = db.query(AdminUser).filter(
-            AdminUser.email == email
-        ).first()
+        existing_admin = db.query(AdminUser).filter(AdminUser.email == email).first()
 
         if existing_admin:
             print(f"Admin user with email {email} already exists")
@@ -28,7 +26,7 @@ def create_super_admin(email: str, name: str, password: str):
             name=name,
             password_hash=get_password_hash(password),
             role=AdminRole.SUPER_ADMIN.value,
-            is_active=True
+            is_active=True,
         )
 
         db.add(super_admin)
@@ -54,7 +52,9 @@ def create_super_admin(email: str, name: str, password: str):
 if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("Usage: python create_super_admin.py <email> <name> <password>")
-        print("Example: python create_super_admin.py admin@example.com 'Super Admin' 'securepassword123'")
+        print(
+            "Example: python create_super_admin.py admin@example.com 'Super Admin' 'securepassword123'"
+        )
         sys.exit(1)
 
     email = sys.argv[1]

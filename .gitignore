@@ -7,6 +7,8 @@
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*
+!.env.example
 
 # Dependencies
 node_modules/
@@ -141,7 +143,11 @@ mobile/.metro-health-check*
 *.joblib
 *.h5
 *.pb
-models/
+*.pth
+*.pt
+# trained weights only; app/ml/models/ is source code and must stay tracked
+/models/
+backend/models/
 checkpoints/
 
 # Data files
@@ -217,3 +223,6 @@ celerybeat.pid
 
 # FastAPI
 .pytest_cache
+# User uploads (runtime data, never commit)
+backend/uploads/*
+!backend/uploads/.gitkeep

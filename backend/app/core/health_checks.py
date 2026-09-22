@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class HealthStatus(Enum):
     """Health check status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -26,6 +27,7 @@ class HealthStatus(Enum):
 @dataclass
 class HealthCheckResult:
     """Health check result."""
+
     name: str
     status: HealthStatus
     message: str
@@ -49,7 +51,7 @@ class HealthChecker:
             "cpu": self._check_cpu,
             "file_system": self._check_file_system,
             "model_files": self._check_model_files,
-            "async_tasks": self._check_async_tasks
+            "async_tasks": self._check_async_tasks,
         }
 
     async def run_all_checks(self) -> Dict[str, HealthCheckResult]:
@@ -63,13 +65,14 @@ class HealthChecker:
                 result.response_time = time.time() - start_time
                 results[check_name] = result
             except Exception as e:
-                logger.error(
-                    f"Health check '{check_name}' failed: {e}", exc_info=True)
+                logger.error(f"Health check '{check_name}' failed: {e}", exc_info=True)
                 results[check_name] = HealthCheckResult(
                     name=check_name,
                     status=HealthStatus.UNHEALTHY,
                     message=f"Check failed: {str(e)}",
-                    response_time=time.time() - start_time if 'start_time' in locals() else None
+                    response_time=time.time() - start_time
+                    if "start_time" in locals()
+                    else None,
                 )
 
         return results
@@ -85,13 +88,14 @@ class HealthChecker:
             result.response_time = time.time() - start_time
             return result
         except Exception as e:
-            logger.error(
-                f"Health check '{check_name}' failed: {e}", exc_info=True)
+            logger.error(f"Health check '{check_name}' failed: {e}", exc_info=True)
             return HealthCheckResult(
                 name=check_name,
                 status=HealthStatus.UNHEALTHY,
                 message=f"Check failed: {str(e)}",
-                response_time=time.time() - start_time if 'start_time' in locals() else None
+                response_time=time.time() - start_time
+                if "start_time" in locals()
+                else None,
             )
 
     async def _check_database(self) -> HealthCheckResult:
@@ -132,15 +136,17 @@ class HealthChecker:
                     "connection_time": connection_time,
                     "query_time": total_time,
                     "student_count": student_count,
-                    "database_url": settings.DATABASE_URL.split("@")[1] if "@" in settings.DATABASE_URL else "hidden"
-                }
+                    "database_url": settings.DATABASE_URL.split("@")[1]
+                    if "@" in settings.DATABASE_URL
+                    else "hidden",
+                },
             )
 
         except Exception as e:
             return HealthCheckResult(
                 name="database",
                 status=HealthStatus.UNHEALTHY,
-                message=f"Database connection failed: {str(e)}"
+                message=f"Database connection failed: {str(e)}",
             )
 
     async def _check_disk_space(self) -> HealthCheckResult:
@@ -162,7 +168,9 @@ class HealthChecker:
                 message = f"Sufficient disk space available: {free_gb:.1f}GB free"
             elif free_gb > 1.0 and used_percent < 90:
                 status = HealthStatus.DEGRADED
-                message = f"Low disk space: {free_gb:.1f}GB free ({used_percent:.1f}% used)"
+                message = (
+                    f"Low disk space: {free_gb:.1f}GB free ({used_percent:.1f}% used)"
+                )
             else:
                 status = HealthStatus.UNHEALTHY
                 message = f"Critical disk space: {free_gb:.1f}GB free ({used_percent:.1f}% used)"
@@ -175,15 +183,15 @@ class HealthChecker:
                     "free_gb": free_gb,
                     "total_gb": total_gb,
                     "used_percent": used_percent,
-                    "path": upload_path
-                }
+                    "path": upload_path,
+                },
             )
 
         except Exception as e:
             return HealthCheckResult(
                 name="disk_space",
                 status=HealthStatus.UNHEALTHY,
-                message=f"Disk space check failed: {str(e)}"
+                message=f"Disk space check failed: {str(e)}",
             )
 
     async def _check_memory(self) -> HealthCheckResult:
@@ -212,15 +220,15 @@ class HealthChecker:
                 details={
                     "available_gb": available_gb,
                     "total_gb": total_gb,
-                    "used_percent": used_percent
-                }
+                    "used_percent": used_percent,
+                },
             )
 
         except Exception as e:
             return HealthCheckResult(
                 name="memory",
                 status=HealthStatus.UNHEALTHY,
-                message=f"Memory check failed: {str(e)}"
+                message=f"Memory check failed: {str(e)}",
             )
 
     async def _check_cpu(self) -> HealthCheckResult:
@@ -229,7 +237,7 @@ class HealthChecker:
             # Get CPU usage over a short interval
             cpu_percent = psutil.cpu_percent(interval=1)
             cpu_count = psutil.cpu_count()
-            load_avg = os.getloadavg() if hasattr(os, 'getloadavg') else (0, 0, 0)
+            load_avg = os.getloadavg() if hasattr(os, "getloadavg") else (0, 0, 0)
 
             # Determine status based on CPU usage
             if cpu_percent < 70:
@@ -251,15 +259,15 @@ class HealthChecker:
                     "cpu_count": cpu_count,
                     "load_avg_1min": load_avg[0],
                     "load_avg_5min": load_avg[1],
-                    "load_avg_15min": load_avg[2]
-                }
+                    "load_avg_15min": load_avg[2],
+                },
             )
 
         except Exception as e:
             return HealthCheckResult(
                 name="cpu",
                 status=HealthStatus.UNHEALTHY,
-                message=f"CPU check failed: {str(e)}"
+                message=f"CPU check failed: {str(e)}",
             )
 
     async def _check_file_system(self) -> HealthCheckResult:
@@ -276,11 +284,11 @@ class HealthChecker:
             os.makedirs(test_dir, exist_ok=True)
 
             # Write test file
-            with open(test_file, 'w') as f:
+            with open(test_file, "w") as f:
                 f.write("health check test")
 
             # Read test file
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Clean up
@@ -292,20 +300,20 @@ class HealthChecker:
                     name="file_system",
                     status=HealthStatus.HEALTHY,
                     message="File system operations are working correctly",
-                    details={"upload_dir": upload_dir}
+                    details={"upload_dir": upload_dir},
                 )
             else:
                 return HealthCheckResult(
                     name="file_system",
                     status=HealthStatus.UNHEALTHY,
-                    message="File system read/write test failed"
+                    message="File system read/write test failed",
                 )
 
         except Exception as e:
             return HealthCheckResult(
                 name="file_system",
                 status=HealthStatus.UNHEALTHY,
-                message=f"File system check failed: {str(e)}"
+                message=f"File system check failed: {str(e)}",
             )
 
     async def _check_model_files(self) -> HealthCheckResult:
@@ -322,13 +330,11 @@ class HealthChecker:
             else:
                 model_size = os.path.getsize(model_path) / (1024**2)  # MB
                 if model_size < 1:  # Less than 1MB seems too small
-                    issues.append(
-                        f"Model file seems too small: {model_size:.1f}MB")
+                    issues.append(f"Model file seems too small: {model_size:.1f}MB")
 
             # Check food mapping file
             if not os.path.exists(food_mapping_path):
-                issues.append(
-                    f"Food mapping file not found: {food_mapping_path}")
+                issues.append(f"Food mapping file not found: {food_mapping_path}")
 
             if not issues:
                 return HealthCheckResult(
@@ -338,22 +344,24 @@ class HealthChecker:
                     details={
                         "model_path": model_path,
                         "food_mapping_path": food_mapping_path,
-                        "model_size_mb": os.path.getsize(model_path) / (1024**2) if os.path.exists(model_path) else 0
-                    }
+                        "model_size_mb": os.path.getsize(model_path) / (1024**2)
+                        if os.path.exists(model_path)
+                        else 0,
+                    },
                 )
             else:
                 return HealthCheckResult(
                     name="model_files",
                     status=HealthStatus.DEGRADED,
                     message=f"Model file issues: {'; '.join(issues)}",
-                    details={"issues": issues}
+                    details={"issues": issues},
                 )
 
         except Exception as e:
             return HealthCheckResult(
                 name="model_files",
                 status=HealthStatus.UNHEALTHY,
-                message=f"Model files check failed: {str(e)}"
+                message=f"Model files check failed: {str(e)}",
             )
 
     async def _check_async_tasks(self) -> HealthCheckResult:
@@ -379,17 +387,14 @@ class HealthChecker:
                 message = f"Async task queue is overloaded: {queue_size} tasks queued"
 
             return HealthCheckResult(
-                name="async_tasks",
-                status=status,
-                message=message,
-                details=stats
+                name="async_tasks", status=status, message=message, details=stats
             )
 
         except Exception as e:
             return HealthCheckResult(
                 name="async_tasks",
                 status=HealthStatus.UNHEALTHY,
-                message=f"Async tasks check failed: {str(e)}"
+                message=f"Async tasks check failed: {str(e)}",
             )
 
     def get_overall_status(self, results: Dict[str, HealthCheckResult]) -> HealthStatus:

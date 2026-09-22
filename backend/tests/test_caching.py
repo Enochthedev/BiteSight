@@ -16,7 +16,7 @@ class TestRedisClient:
     @pytest.fixture
     def mock_redis(self):
         """Mock Redis connection."""
-        with patch('redis.Redis') as mock_redis:
+        with patch("redis.Redis") as mock_redis:
             mock_instance = Mock()
             mock_redis.return_value = mock_instance
             yield mock_instance
@@ -37,56 +37,56 @@ class TestRedisClient:
     def test_set_and_get_string(self, redis_client, mock_redis):
         """Test setting and getting string values."""
         mock_redis.set.return_value = True
-        mock_redis.get.return_value = b'test_value'
+        mock_redis.get.return_value = b"test_value"
 
         # Test set
-        result = redis_client.set('test_key', 'test_value')
+        result = redis_client.set("test_key", "test_value")
         assert result is True
-        mock_redis.set.assert_called_once_with(
-            'test_key', 'test_value', ex=None)
+        mock_redis.set.assert_called_once_with("test_key", "test_value", ex=None)
 
         # Test get
-        value = redis_client.get('test_key', deserialize=False)
-        assert value == 'test_value'
-        mock_redis.get.assert_called_once_with('test_key')
+        value = redis_client.get("test_key", deserialize=False)
+        assert value == "test_value"
+        mock_redis.get.assert_called_once_with("test_key")
 
     def test_set_and_get_json(self, redis_client, mock_redis):
         """Test setting and getting JSON values."""
-        test_data = {'key': 'value', 'number': 42}
+        test_data = {"key": "value", "number": 42}
         mock_redis.set.return_value = True
         mock_redis.get.return_value = b'{"key": "value", "number": 42}'
 
         # Test set with serialization
-        result = redis_client.set('test_key', test_data)
+        result = redis_client.set("test_key", test_data)
         assert result is True
 
         # Test get with deserialization
-        value = redis_client.get('test_key')
+        value = redis_client.get("test_key")
         assert value == test_data
 
     def test_set_with_expiration(self, redis_client, mock_redis):
         """Test setting values with expiration."""
         mock_redis.set.return_value = True
 
-        redis_client.set('test_key', 'test_value', expire=timedelta(minutes=5))
+        redis_client.set("test_key", "test_value", expire=timedelta(minutes=5))
         mock_redis.set.assert_called_once_with(
-            'test_key', 'test_value', ex=timedelta(minutes=5))
+            "test_key", "test_value", ex=timedelta(minutes=5)
+        )
 
     def test_delete_keys(self, redis_client, mock_redis):
         """Test deleting keys."""
         mock_redis.delete.return_value = 2
 
-        result = redis_client.delete('key1', 'key2')
+        result = redis_client.delete("key1", "key2")
         assert result == 2
-        mock_redis.delete.assert_called_once_with('key1', 'key2')
+        mock_redis.delete.assert_called_once_with("key1", "key2")
 
     def test_exists_key(self, redis_client, mock_redis):
         """Test checking key existence."""
         mock_redis.exists.return_value = 1
 
-        result = redis_client.exists('test_key')
+        result = redis_client.exists("test_key")
         assert result is True
-        mock_redis.exists.assert_called_once_with('test_key')
+        mock_redis.exists.assert_called_once_with("test_key")
 
     def test_connection_error_handling(self, redis_client, mock_redis):
         """Test handling of connection errors."""
@@ -94,7 +94,7 @@ class TestRedisClient:
 
         mock_redis.get.side_effect = ConnectionError("Connection failed")
 
-        result = redis_client.get('test_key')
+        result = redis_client.get("test_key")
         assert result is None
 
     def test_is_connected(self, redis_client, mock_redis):
@@ -124,7 +124,7 @@ class TestCacheService:
     @pytest.fixture
     def cache_service(self, mock_redis_client):
         """Create cache service with mocked Redis client."""
-        with patch('app.core.cache_service.get_redis_client') as mock_get_client:
+        with patch("app.core.cache_service.get_redis_client") as mock_get_client:
             mock_get_client.return_value = mock_redis_client
             service = CacheService()
             return service
@@ -135,8 +135,7 @@ class TestCacheService:
         model_version = "v1.0"
         results = {"class": "rice", "confidence": 0.95}
 
-        result = cache_service.cache_model_inference(
-            image_hash, model_version, results)
+        result = cache_service.cache_model_inference(image_hash, model_version, results)
         assert result is True
 
         # Verify Redis was called with correct parameters
@@ -169,9 +168,9 @@ class TestCacheService:
 
         # Mock scan_iter to return some keys
         mock_redis_client.client.scan_iter.return_value = [
-            b'user_session:user123',
-            b'weekly_insights:user123:2024-01',
-            b'user_history:user123:recent'
+            b"user_session:user123",
+            b"weekly_insights:user123:2024-01",
+            b"user_history:user123:recent",
         ]
         mock_redis_client.delete.return_value = 3
 
@@ -181,7 +180,8 @@ class TestCacheService:
     def test_generate_cache_key(self, cache_service):
         """Test cache key generation."""
         key = cache_service._generate_cache_key(
-            "test_prefix", "arg1", "arg2", param1="value1")
+            "test_prefix", "arg1", "arg2", param1="value1"
+        )
         assert key.startswith("test_prefix:")
         assert "arg1" in key
         assert "arg2" in key
@@ -202,17 +202,18 @@ class TestCacheDecorator:
     @pytest.fixture
     def mock_cache_service(self):
         """Mock cache service."""
-        with patch('app.core.cache_service.CacheService') as mock_service_class:
+        with patch("app.core.cache_service.CacheService") as mock_service_class:
             mock_service = Mock()
             mock_service_class.return_value = mock_service
             mock_service.redis_client.get.return_value = None
             mock_service.redis_client.set.return_value = True
-            mock_service.ttl_config = {'test_cache': timedelta(minutes=15)}
+            mock_service.ttl_config = {"test_cache": timedelta(minutes=15)}
             yield mock_service
 
     def test_cache_decorator_sync_function(self, mock_cache_service):
         """Test cache decorator with synchronous function."""
-        @cache_result('test_cache')
+
+        @cache_result("test_cache")
         def test_function(arg1, arg2):
             return f"result_{arg1}_{arg2}"
 
@@ -226,12 +227,14 @@ class TestCacheDecorator:
 
     def test_cache_decorator_async_function(self, mock_cache_service):
         """Test cache decorator with asynchronous function."""
-        @cache_result('test_cache')
+
+        @cache_result("test_cache")
         async def async_test_function(arg1, arg2):
             return f"async_result_{arg1}_{arg2}"
 
         # Test async function
         import asyncio
+
         result = asyncio.run(async_test_function("x", "y"))
         assert result == "async_result_x_y"
 
@@ -240,7 +243,7 @@ class TestCacheDecorator:
         cached_value = "cached_result"
         mock_cache_service.redis_client.get.return_value = cached_value
 
-        @cache_result('test_cache')
+        @cache_result("test_cache")
         def test_function(arg1):
             return f"fresh_result_{arg1}"
 
@@ -259,12 +262,12 @@ class TestCacheMonitor:
         """Mock Redis client for monitoring."""
         mock_client = Mock()
         mock_client.get_info.return_value = {
-            'keyspace_hits': 100,
-            'keyspace_misses': 20,
-            'used_memory_human': '1.5MB',
-            'connected_clients': 5,
-            'instantaneous_ops_per_sec': 50,
-            'uptime_in_seconds': 3600
+            "keyspace_hits": 100,
+            "keyspace_misses": 20,
+            "used_memory_human": "1.5MB",
+            "connected_clients": 5,
+            "instantaneous_ops_per_sec": 50,
+            "uptime_in_seconds": 3600,
         }
         mock_client.is_connected.return_value = True
         return mock_client
@@ -272,7 +275,7 @@ class TestCacheMonitor:
     @pytest.fixture
     def cache_monitor(self, mock_redis_client):
         """Create cache monitor with mocked Redis client."""
-        with patch('app.core.cache_monitoring.get_redis_client') as mock_get_client:
+        with patch("app.core.cache_monitoring.get_redis_client") as mock_get_client:
             mock_get_client.return_value = mock_redis_client
             monitor = CacheMonitor()
             return monitor
@@ -284,7 +287,7 @@ class TestCacheMonitor:
         assert metrics.hit_rate == 83.33  # 100/(100+20) * 100
         assert metrics.miss_rate == 16.67  # 20/(100+20) * 100
         assert metrics.total_requests == 120
-        assert metrics.memory_usage == '1.5MB'
+        assert metrics.memory_usage == "1.5MB"
         assert metrics.connected_clients == 5
         assert metrics.operations_per_second == 50
 
@@ -292,36 +295,37 @@ class TestCacheMonitor:
         """Test cache health check when healthy."""
         health = cache_monitor.check_cache_health()
 
-        assert health['status'] == 'healthy'
-        assert len(health['issues']) == 0
-        assert len(health['recommendations']) == 0
+        assert health["status"] == "healthy"
+        assert len(health["issues"]) == 0
+        assert len(health["recommendations"]) == 0
 
     def test_cache_health_check_low_hit_rate(self, cache_monitor, mock_redis_client):
         """Test cache health check with low hit rate."""
         # Mock low hit rate
         mock_redis_client.get_info.return_value = {
-            'keyspace_hits': 10,
-            'keyspace_misses': 90,
-            'used_memory_human': '1.5MB',
-            'connected_clients': 5,
-            'instantaneous_ops_per_sec': 50
+            "keyspace_hits": 10,
+            "keyspace_misses": 90,
+            "used_memory_human": "1.5MB",
+            "connected_clients": 5,
+            "instantaneous_ops_per_sec": 50,
         }
 
         health = cache_monitor.check_cache_health()
 
-        assert health['status'] == 'degraded'
-        assert any('Low cache hit rate' in issue for issue in health['issues'])
-        assert len(health['recommendations']) > 0
+        assert health["status"] == "degraded"
+        assert any("Low cache hit rate" in issue for issue in health["issues"])
+        assert len(health["recommendations"]) > 0
 
-    def test_cache_health_check_connection_failed(self, cache_monitor, mock_redis_client):
+    def test_cache_health_check_connection_failed(
+        self, cache_monitor, mock_redis_client
+    ):
         """Test cache health check when connection fails."""
         mock_redis_client.is_connected.return_value = False
 
         health = cache_monitor.check_cache_health()
 
-        assert health['status'] == 'unhealthy'
-        assert any(
-            'Redis connection failed' in issue for issue in health['issues'])
+        assert health["status"] == "unhealthy"
+        assert any("Redis connection failed" in issue for issue in health["issues"])
 
 
 class TestCacheIntegration:
@@ -347,7 +351,7 @@ class TestCacheIntegration:
         test_results = {
             "predictions": [
                 {"class": "rice", "confidence": 0.95},
-                {"class": "beans", "confidence": 0.85}
+                {"class": "beans", "confidence": 0.85},
             ]
         }
 
@@ -358,9 +362,7 @@ class TestCacheIntegration:
         assert cache_success
 
         # Retrieve the results
-        cached_results = cache_service.get_cached_inference(
-            image_hash, model_version
-        )
+        cached_results = cache_service.get_cached_inference(image_hash, model_version)
         assert cached_results == test_results
 
         # Test cache expiration (would need to wait or mock time)
@@ -377,8 +379,7 @@ async def test_cache_performance():
     start_time = time.time()
 
     for i in range(100):
-        cache_service._generate_cache_key(
-            "perf_test", f"key_{i}", param=f"value_{i}")
+        cache_service._generate_cache_key("perf_test", f"key_{i}", param=f"value_{i}")
 
     end_time = time.time()
     duration = end_time - start_time
@@ -389,7 +390,7 @@ async def test_cache_performance():
 
 def test_cache_error_handling():
     """Test cache error handling."""
-    with patch('app.core.cache_service.get_redis_client') as mock_get_client:
+    with patch("app.core.cache_service.get_redis_client") as mock_get_client:
         # Mock Redis client that raises exceptions
         mock_client = Mock()
         mock_client.set.side_effect = Exception("Redis error")
@@ -400,7 +401,8 @@ def test_cache_error_handling():
 
         # Should handle errors gracefully
         result = cache_service.cache_model_inference(
-            "hash", "version", {"data": "test"})
+            "hash", "version", {"data": "test"}
+        )
         assert result is False
 
         cached_data = cache_service.get_cached_inference("hash", "version")

@@ -5,7 +5,13 @@ from datetime import datetime, date
 from uuid import uuid4
 
 from app.models.user import Student, StudentCreate, StudentUpdate, LoginRequest
-from app.models.meal import Meal, DetectedFood, NigerianFood, MealUploadRequest, FoodDetectionResult
+from app.models.meal import (
+    Meal,
+    DetectedFood,
+    NigerianFood,
+    MealUploadRequest,
+    FoodDetectionResult,
+)
 from app.models.feedback import FeedbackRecord, NutritionRule, NutritionFeedback
 from app.models.history import WeeklyInsight, MealHistoryRequest, NutritionSummary
 
@@ -19,7 +25,7 @@ class TestStudentModel:
             email=sample_student_data["email"],
             name=sample_student_data["name"],
             password_hash="hashed_password",
-            history_enabled=False
+            history_enabled=False,
         )
 
         db_session.add(student)
@@ -43,26 +49,16 @@ class TestStudentModel:
         # Invalid email
         with pytest.raises(ValueError):
             StudentCreate(
-                email="invalid-email",
-                name="Test Name",
-                password="TestPassword123"
+                email="invalid-email", name="Test Name", password="TestPassword123"
             )
 
         # Short password
         with pytest.raises(ValueError):
-            StudentCreate(
-                email="test@example.com",
-                name="Test Name",
-                password="short"
-            )
+            StudentCreate(email="test@example.com", name="Test Name", password="short")
 
         # Empty name
         with pytest.raises(ValueError):
-            StudentCreate(
-                email="test@example.com",
-                name="",
-                password="TestPassword123"
-            )
+            StudentCreate(email="test@example.com", name="", password="TestPassword123")
 
     def test_student_update_validation(self):
         """Test StudentUpdate Pydantic model validation."""
@@ -72,10 +68,7 @@ class TestStudentModel:
         assert student_update.history_enabled is None
 
         # Valid full update
-        student_update = StudentUpdate(
-            name="New Name",
-            history_enabled=True
-        )
+        student_update = StudentUpdate(name="New Name", history_enabled=True)
         assert student_update.name == "New Name"
         assert student_update.history_enabled is True
 
@@ -86,10 +79,7 @@ class TestStudentModel:
     def test_login_request_validation(self):
         """Test LoginRequest Pydantic model validation."""
         # Valid login request
-        login_request = LoginRequest(
-            email="test@example.com",
-            password="password123"
-        )
+        login_request = LoginRequest(email="test@example.com", password="password123")
         assert login_request.email == "test@example.com"
         assert login_request.password == "password123"
 
@@ -107,7 +97,7 @@ class TestMealModel:
         student = Student(
             email=sample_student_data["email"],
             name=sample_student_data["name"],
-            password_hash="hashed_password"
+            password_hash="hashed_password",
         )
         db_session.add(student)
         db_session.commit()
@@ -117,7 +107,7 @@ class TestMealModel:
         meal = Meal(
             student_id=student.id,
             image_path="/uploads/test_image.jpg",
-            analysis_status="pending"
+            analysis_status="pending",
         )
 
         db_session.add(meal)
@@ -136,15 +126,12 @@ class TestMealModel:
         student = Student(
             email=sample_student_data["email"],
             name=sample_student_data["name"],
-            password_hash="hashed_password"
+            password_hash="hashed_password",
         )
         db_session.add(student)
         db_session.commit()
 
-        meal = Meal(
-            student_id=student.id,
-            image_path="/uploads/test_image.jpg"
-        )
+        meal = Meal(student_id=student.id, image_path="/uploads/test_image.jpg")
         db_session.add(meal)
         db_session.commit()
         db_session.refresh(meal)
@@ -155,7 +142,7 @@ class TestMealModel:
             food_name="Jollof Rice",
             confidence_score=0.95,
             food_class="carbohydrates",
-            bounding_box={"x": 10, "y": 20, "width": 100, "height": 80}
+            bounding_box={"x": 10, "y": 20, "width": 100, "height": 80},
         )
 
         db_session.add(detected_food)
@@ -168,7 +155,11 @@ class TestMealModel:
         assert float(detected_food.confidence_score) == 0.95
         assert detected_food.food_class == "carbohydrates"
         assert detected_food.bounding_box == {
-            "x": 10, "y": 20, "width": 100, "height": 80}
+            "x": 10,
+            "y": 20,
+            "width": 100,
+            "height": 80,
+        }
 
     def test_nigerian_food_model(self, db_session, sample_nigerian_food_data):
         """Test NigerianFood model."""
@@ -190,7 +181,7 @@ class TestMealModel:
             food_name="Jollof Rice",
             confidence=0.95,
             food_class="carbohydrates",
-            bounding_box={"x": 10.0, "y": 20.0, "width": 100.0, "height": 80.0}
+            bounding_box={"x": 10.0, "y": 20.0, "width": 100.0, "height": 80.0},
         )
         assert result.food_name == "Jollof Rice"
         assert result.confidence == 0.95
@@ -198,17 +189,13 @@ class TestMealModel:
         # Invalid confidence (too high)
         with pytest.raises(ValueError):
             FoodDetectionResult(
-                food_name="Test Food",
-                confidence=1.5,
-                food_class="carbohydrates"
+                food_name="Test Food", confidence=1.5, food_class="carbohydrates"
             )
 
         # Invalid confidence (negative)
         with pytest.raises(ValueError):
             FoodDetectionResult(
-                food_name="Test Food",
-                confidence=-0.1,
-                food_class="carbohydrates"
+                food_name="Test Food", confidence=-0.1, food_class="carbohydrates"
             )
 
     def test_meal_upload_request_validation(self):
@@ -222,10 +209,7 @@ class TestMealModel:
 
         # Valid request with custom timestamp
         custom_time = datetime.now()
-        request = MealUploadRequest(
-            student_id=student_id,
-            timestamp=custom_time
-        )
+        request = MealUploadRequest(student_id=student_id, timestamp=custom_time)
         assert request.timestamp == custom_time
 
 
@@ -238,15 +222,12 @@ class TestFeedbackModel:
         student = Student(
             email=sample_student_data["email"],
             name=sample_student_data["name"],
-            password_hash="hashed_password"
+            password_hash="hashed_password",
         )
         db_session.add(student)
         db_session.commit()
 
-        meal = Meal(
-            student_id=student.id,
-            image_path="/uploads/test_image.jpg"
-        )
+        meal = Meal(student_id=student.id, image_path="/uploads/test_image.jpg")
         db_session.add(meal)
         db_session.commit()
         db_session.refresh(meal)
@@ -257,7 +238,7 @@ class TestFeedbackModel:
             student_id=student.id,
             feedback_text="Great meal! Try adding more vegetables.",
             feedback_type="nutritional_advice",
-            recommendations={"add_vegetables": True, "reduce_carbs": False}
+            recommendations={"add_vegetables": True, "reduce_carbs": False},
         )
 
         db_session.add(feedback)
@@ -270,7 +251,9 @@ class TestFeedbackModel:
         assert feedback.feedback_text == "Great meal! Try adding more vegetables."
         assert feedback.feedback_type == "nutritional_advice"
         assert feedback.recommendations == {
-            "add_vegetables": True, "reduce_carbs": False}
+            "add_vegetables": True,
+            "reduce_carbs": False,
+        }
 
     def test_create_nutrition_rule(self, db_session, sample_nutrition_rule_data):
         """Test creating nutrition rule in the database."""
@@ -298,7 +281,7 @@ class TestFeedbackModel:
             missing_food_groups=["proteins"],
             recommendations=["Add beans or meat"],
             overall_balance_score=0.7,
-            feedback_message="Good meal, add protein!"
+            feedback_message="Good meal, add protein!",
         )
 
         assert feedback.meal_id == meal_id
@@ -313,7 +296,7 @@ class TestFeedbackModel:
                 missing_food_groups=[],
                 recommendations=[],
                 overall_balance_score=1.5,
-                feedback_message="Test"
+                feedback_message="Test",
             )
 
 
@@ -326,7 +309,7 @@ class TestHistoryModel:
         student = Student(
             email=sample_student_data["email"],
             name=sample_student_data["name"],
-            password_hash="hashed_password"
+            password_hash="hashed_password",
         )
         db_session.add(student)
         db_session.commit()
@@ -340,9 +323,9 @@ class TestHistoryModel:
             nutrition_summary={
                 "carbohydrates_frequency": 0.8,
                 "proteins_frequency": 0.6,
-                "balance_score": 0.7
+                "balance_score": 0.7,
             },
-            recommendations="Try to include more vegetables in your meals."
+            recommendations="Try to include more vegetables in your meals.",
         )
 
         db_session.add(insight)
@@ -368,7 +351,7 @@ class TestHistoryModel:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             limit=100,
-            offset=10
+            offset=10,
         )
         assert request.start_date == date(2024, 1, 1)
         assert request.end_date == date(2024, 1, 31)
@@ -393,7 +376,7 @@ class TestHistoryModel:
             vitamins_frequency=0.7,
             minerals_frequency=0.5,
             water_frequency=0.9,
-            balance_score=0.65
+            balance_score=0.65,
         )
 
         assert summary.carbohydrates_frequency == 0.8
@@ -408,7 +391,7 @@ class TestHistoryModel:
                 vitamins_frequency=0.7,
                 minerals_frequency=0.5,
                 water_frequency=0.9,
-                balance_score=0.65
+                balance_score=0.65,
             )
 
         # Invalid frequency (negative)
@@ -420,5 +403,5 @@ class TestHistoryModel:
                 vitamins_frequency=0.7,
                 minerals_frequency=0.5,
                 water_frequency=0.9,
-                balance_score=0.65
+                balance_score=0.65,
             )

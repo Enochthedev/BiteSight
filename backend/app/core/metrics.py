@@ -5,7 +5,14 @@ from typing import Dict, Optional, Any
 from functools import wraps
 from contextlib import contextmanager
 
-from prometheus_client import Counter, Histogram, Gauge, Info, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    Info,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
 from fastapi import Request, Response
 from fastapi.responses import PlainTextResponse
 
@@ -16,91 +23,63 @@ perf_logger = get_performance_logger(__name__)
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
-    'http_requests_total',
-    'Total HTTP requests',
-    ['method', 'endpoint', 'status']
+    "http_requests_total", "Total HTTP requests", ["method", "endpoint", "status"]
 )
 
 REQUEST_DURATION = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request duration in seconds',
-    ['method', 'endpoint']
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
 )
 
-ACTIVE_CONNECTIONS = Gauge(
-    'active_connections',
-    'Number of active connections'
-)
+ACTIVE_CONNECTIONS = Gauge("active_connections", "Number of active connections")
 
 ML_INFERENCE_COUNT = Counter(
-    'ml_inference_requests_total',
-    'Total ML inference requests',
-    ['model_name', 'status']
+    "ml_inference_requests_total",
+    "Total ML inference requests",
+    ["model_name", "status"],
 )
 
 ML_INFERENCE_DURATION = Histogram(
-    'ml_inference_duration_seconds',
-    'ML inference duration in seconds',
-    ['model_name']
+    "ml_inference_duration_seconds", "ML inference duration in seconds", ["model_name"]
 )
 
 ML_INFERENCE_ERRORS = Counter(
-    'ml_inference_errors_total',
-    'Total ML inference errors',
-    ['model_name', 'error_type']
+    "ml_inference_errors_total",
+    "Total ML inference errors",
+    ["model_name", "error_type"],
 )
 
 DATABASE_QUERY_COUNT = Counter(
-    'database_queries_total',
-    'Total database queries',
-    ['query_type', 'status']
+    "database_queries_total", "Total database queries", ["query_type", "status"]
 )
 
 DATABASE_QUERY_DURATION = Histogram(
-    'database_query_duration_seconds',
-    'Database query duration in seconds',
-    ['query_type']
+    "database_query_duration_seconds",
+    "Database query duration in seconds",
+    ["query_type"],
 )
 
-IMAGE_UPLOAD_COUNT = Counter(
-    'image_uploads_total',
-    'Total image uploads',
-    ['status']
-)
+IMAGE_UPLOAD_COUNT = Counter("image_uploads_total", "Total image uploads", ["status"])
 
 IMAGE_UPLOAD_FAILURES = Counter(
-    'image_upload_failures_total',
-    'Total image upload failures',
-    ['error_type']
+    "image_upload_failures_total", "Total image upload failures", ["error_type"]
 )
 
 CACHE_OPERATIONS = Counter(
-    'cache_operations_total',
-    'Total cache operations',
-    ['operation', 'status']
+    "cache_operations_total", "Total cache operations", ["operation", "status"]
 )
 
-CACHE_HIT_RATE = Gauge(
-    'cache_hit_rate',
-    'Cache hit rate percentage'
-)
+CACHE_HIT_RATE = Gauge("cache_hit_rate", "Cache hit rate percentage")
 
-USER_REGISTRATIONS = Counter(
-    'user_registrations_total',
-    'Total user registrations'
-)
+USER_REGISTRATIONS = Counter("user_registrations_total", "Total user registrations")
 
 FEEDBACK_GENERATED = Counter(
-    'feedback_generated_total',
-    'Total feedback messages generated',
-    ['feedback_type']
+    "feedback_generated_total", "Total feedback messages generated", ["feedback_type"]
 )
 
 # Application info
-APP_INFO = Info(
-    'nutrition_feedback_app',
-    'Nutrition Feedback System application info'
-)
+APP_INFO = Info("nutrition_feedback_app", "Nutrition Feedback System application info")
 
 
 class MetricsCollector:
@@ -108,34 +87,48 @@ class MetricsCollector:
 
     def __init__(self):
         self.start_time = time.time()
-        self._cache_stats = {'hits': 0, 'misses': 0}
+        self._cache_stats = {"hits": 0, "misses": 0}
 
-    def record_request(self, method: str, endpoint: str, status_code: int, duration: float):
+    def record_request(
+        self, method: str, endpoint: str, status_code: int, duration: float
+    ):
         """Record HTTP request metrics."""
-        REQUEST_COUNT.labels(method=method, endpoint=endpoint,
-                             status=str(status_code)).inc()
-        REQUEST_DURATION.labels(
-            method=method, endpoint=endpoint).observe(duration)
+        REQUEST_COUNT.labels(
+            method=method, endpoint=endpoint, status=str(status_code)
+        ).inc()
+        REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
 
         perf_logger.log_request(method, endpoint, status_code, duration)
 
-    def record_ml_inference(self, model_name: str, duration: float, success: bool,
-                            confidence: Optional[float] = None, error_type: Optional[str] = None):
+    def record_ml_inference(
+        self,
+        model_name: str,
+        duration: float,
+        success: bool,
+        confidence: Optional[float] = None,
+        error_type: Optional[str] = None,
+    ):
         """Record ML inference metrics."""
-        status = 'success' if success else 'error'
+        status = "success" if success else "error"
         ML_INFERENCE_COUNT.labels(model_name=model_name, status=status).inc()
         ML_INFERENCE_DURATION.labels(model_name=model_name).observe(duration)
 
         if not success and error_type:
             ML_INFERENCE_ERRORS.labels(
-                model_name=model_name, error_type=error_type).inc()
+                model_name=model_name, error_type=error_type
+            ).inc()
 
         perf_logger.log_ml_inference(model_name, duration, success, confidence)
 
-    def record_database_query(self, query_type: str, duration: float, success: bool,
-                              rows_affected: Optional[int] = None):
+    def record_database_query(
+        self,
+        query_type: str,
+        duration: float,
+        success: bool,
+        rows_affected: Optional[int] = None,
+    ):
         """Record database query metrics."""
-        status = 'success' if success else 'error'
+        status = "success" if success else "error"
         DATABASE_QUERY_COUNT.labels(query_type=query_type, status=status).inc()
         DATABASE_QUERY_DURATION.labels(query_type=query_type).observe(duration)
 
@@ -143,7 +136,7 @@ class MetricsCollector:
 
     def record_image_upload(self, success: bool, error_type: Optional[str] = None):
         """Record image upload metrics."""
-        status = 'success' if success else 'error'
+        status = "success" if success else "error"
         IMAGE_UPLOAD_COUNT.labels(status=status).inc()
 
         if not success and error_type:
@@ -151,19 +144,19 @@ class MetricsCollector:
 
     def record_cache_operation(self, operation: str, hit: bool):
         """Record cache operation metrics."""
-        status = 'hit' if hit else 'miss'
+        status = "hit" if hit else "miss"
         CACHE_OPERATIONS.labels(operation=operation, status=status).inc()
 
         # Update cache stats
         if hit:
-            self._cache_stats['hits'] += 1
+            self._cache_stats["hits"] += 1
         else:
-            self._cache_stats['misses'] += 1
+            self._cache_stats["misses"] += 1
 
         # Update hit rate
-        total = self._cache_stats['hits'] + self._cache_stats['misses']
+        total = self._cache_stats["hits"] + self._cache_stats["misses"]
         if total > 0:
-            hit_rate = (self._cache_stats['hits'] / total) * 100
+            hit_rate = (self._cache_stats["hits"] / total) * 100
             CACHE_HIT_RATE.set(hit_rate)
 
     def record_user_registration(self):
@@ -180,11 +173,13 @@ class MetricsCollector:
 
     def set_app_info(self, version: str, environment: str):
         """Set application information."""
-        APP_INFO.info({
-            'version': version,
-            'environment': environment,
-            'start_time': str(self.start_time)
-        })
+        APP_INFO.info(
+            {
+                "version": version,
+                "environment": environment,
+                "start_time": str(self.start_time),
+            }
+        )
 
 
 # Global metrics collector instance
@@ -193,6 +188,7 @@ metrics = MetricsCollector()
 
 def timed_operation(operation_name: str):
     """Decorator to time operations and record metrics."""
+
     def decorator(func):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -200,13 +196,13 @@ def timed_operation(operation_name: str):
             try:
                 result = await func(*args, **kwargs)
                 duration = time.time() - start_time
-                logger.info(
-                    f"Operation {operation_name} completed in {duration:.3f}s")
+                logger.info(f"Operation {operation_name} completed in {duration:.3f}s")
                 return result
             except Exception as e:
                 duration = time.time() - start_time
                 logger.error(
-                    f"Operation {operation_name} failed after {duration:.3f}s: {e}")
+                    f"Operation {operation_name} failed after {duration:.3f}s: {e}"
+                )
                 raise
 
         @wraps(func)
@@ -215,17 +211,17 @@ def timed_operation(operation_name: str):
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
-                logger.info(
-                    f"Operation {operation_name} completed in {duration:.3f}s")
+                logger.info(f"Operation {operation_name} completed in {duration:.3f}s")
                 return result
             except Exception as e:
                 duration = time.time() - start_time
                 logger.error(
-                    f"Operation {operation_name} failed after {duration:.3f}s: {e}")
+                    f"Operation {operation_name} failed after {duration:.3f}s: {e}"
+                )
                 raise
 
         # Return appropriate wrapper based on function type
-        if hasattr(func, '__code__') and func.__code__.co_flags & 0x80:  # CO_COROUTINE
+        if hasattr(func, "__code__") and func.__code__.co_flags & 0x80:  # CO_COROUTINE
             return async_wrapper
         else:
             return sync_wrapper
@@ -246,10 +242,7 @@ def measure_time(operation_name: str):
 
 async def metrics_endpoint(request: Request) -> Response:
     """Prometheus metrics endpoint."""
-    return PlainTextResponse(
-        generate_latest(),
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return PlainTextResponse(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 class RequestMetricsMiddleware:

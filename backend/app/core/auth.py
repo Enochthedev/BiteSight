@@ -72,33 +72,33 @@ security = HTTPBearer()
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Dependency to get current authenticated user from JWT token.
-    
+
     Args:
         credentials: HTTP Bearer credentials
         db: Database session
-        
+
     Returns:
         Current user (Student) object
-        
+
     Raises:
         HTTPException: If authentication fails
     """
     from app.models.user import Student
-    
+
     token = credentials.credentials
     user_id = verify_token(token)
-    
+
     if user_id is None:
         raise create_authentication_exception()
-    
+
     # Query user from database
     user = db.query(Student).filter(Student.id == user_id).first()
-    
+
     if user is None:
         raise create_authentication_exception()
-    
+
     return user

@@ -66,7 +66,9 @@ The backend uses `app/core/config.py` for configuration. Key settings:
 
 ```python
 # Database
-DATABASE_URL = "postgresql://nutrition_user:nutrition_pass@127.0.0.1:5433/nutrition_feedback"
+DATABASE_URL = (
+    "postgresql://nutrition_user:nutrition_pass@127.0.0.1:5433/nutrition_feedback"
+)
 
 # Redis
 REDIS_URL = "redis://localhost:6379"
@@ -162,13 +164,14 @@ from app.core.config import settings
 # Create engine with connection pooling
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,      # Verify connections before using
-    pool_recycle=300,        # Recycle connections every 5 minutes
-    echo=False               # Set True for SQL debugging
+    pool_pre_ping=True,  # Verify connections before using
+    pool_recycle=300,  # Recycle connections every 5 minutes
+    echo=False,  # Set True for SQL debugging
 )
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 # Dependency injection for FastAPI
 def get_db():
@@ -185,6 +188,7 @@ def get_db():
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+
 
 @router.get("/example")
 async def example_endpoint(db: Session = Depends(get_db)):
@@ -221,12 +225,14 @@ The AI service is initialized on app startup in `app/main.py`:
 async def lifespan(app: FastAPI):
     # Startup
     from app.services.ai_service import initialize_ai_service
+
     initialize_ai_service()  # Loads model and food mapper
-    
+
     yield
-    
+
     # Shutdown
     from app.services.ai_service import cleanup_ai_service
+
     cleanup_ai_service()
 ```
 
@@ -507,11 +513,10 @@ python -m alembic upgrade head
 
 ## 📚 Additional Documentation
 
-- **AI Setup**: See `AI_SETUP_SUMMARY.md`
-- **Training Guide**: See `TRAINING_GUIDE.md`
-- **Dataset Guide**: See `dataset/README.md`
-- **Integration Status**: See `AI_INTEGRATION_COMPLETE.md`
-- **Mobile Testing**: See `MOBILE_INTEGRATION_TESTING.md`
+- **Model training**: [docs/model-training.md](../docs/model-training.md)
+- **Dataset guide**: [dataset/README.md](dataset/README.md)
+- **Mobile integration tests**: [docs/mobile-integration-testing.md](../docs/mobile-integration-testing.md)
+- **Deployment**: [docs/deployment.md](../docs/deployment.md)
 
 ---
 

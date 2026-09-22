@@ -26,7 +26,7 @@ def test_admin_user(db_session: Session):
         name="Test Admin",
         password_hash=get_password_hash("testpassword123"),
         role=AdminRole.ADMIN.value,
-        is_active=True
+        is_active=True,
     )
     db_session.add(admin_user)
     db_session.commit()
@@ -42,7 +42,7 @@ def test_super_admin_user(db_session: Session):
         name="Test Super Admin",
         password_hash=get_password_hash("superpassword123"),
         role=AdminRole.SUPER_ADMIN.value,
-        is_active=True
+        is_active=True,
     )
     db_session.add(admin_user)
     db_session.commit()
@@ -67,7 +67,7 @@ class TestAdminAuthentication:
             email="newadmin@test.com",
             name="New Admin",
             password="newpassword123",
-            role=AdminRole.ADMIN
+            role=AdminRole.ADMIN,
         )
 
         admin_user = admin_service.create_admin_user(admin_data)
@@ -78,7 +78,9 @@ class TestAdminAuthentication:
         assert admin_user.is_active is True
         assert admin_user.password_hash != "newpassword123"  # Should be hashed
 
-    def test_create_duplicate_admin_user(self, admin_service: AdminService, test_admin_user):
+    def test_create_duplicate_admin_user(
+        self, admin_service: AdminService, test_admin_user
+    ):
         """Test creating admin user with duplicate email."""
         from app.models.admin import AdminUserCreate
         from fastapi import HTTPException
@@ -87,7 +89,7 @@ class TestAdminAuthentication:
             email=test_admin_user.email,
             name="Duplicate Admin",
             password="password123",
-            role=AdminRole.ADMIN
+            role=AdminRole.ADMIN,
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -96,13 +98,14 @@ class TestAdminAuthentication:
         assert exc_info.value.status_code == 400
         assert "Email already registered" in str(exc_info.value.detail)
 
-    def test_authenticate_admin_success(self, admin_service: AdminService, test_admin_user):
+    def test_authenticate_admin_success(
+        self, admin_service: AdminService, test_admin_user
+    ):
         """Test successful admin authentication."""
         from app.models.admin import AdminLoginRequest
 
         login_data = AdminLoginRequest(
-            email=test_admin_user.email,
-            password="testpassword123"
+            email=test_admin_user.email, password="testpassword123"
         )
 
         authenticated_admin = admin_service.authenticate_admin(login_data)
@@ -111,13 +114,14 @@ class TestAdminAuthentication:
         assert authenticated_admin.id == test_admin_user.id
         assert authenticated_admin.email == test_admin_user.email
 
-    def test_authenticate_admin_wrong_password(self, admin_service: AdminService, test_admin_user):
+    def test_authenticate_admin_wrong_password(
+        self, admin_service: AdminService, test_admin_user
+    ):
         """Test admin authentication with wrong password."""
         from app.models.admin import AdminLoginRequest
 
         login_data = AdminLoginRequest(
-            email=test_admin_user.email,
-            password="wrongpassword"
+            email=test_admin_user.email, password="wrongpassword"
         )
 
         authenticated_admin = admin_service.authenticate_admin(login_data)
@@ -129,15 +133,16 @@ class TestAdminAuthentication:
         from app.models.admin import AdminLoginRequest
 
         login_data = AdminLoginRequest(
-            email="nonexistent@test.com",
-            password="password123"
+            email="nonexistent@test.com", password="password123"
         )
 
         authenticated_admin = admin_service.authenticate_admin(login_data)
 
         assert authenticated_admin is None
 
-    def test_authenticate_inactive_admin(self, admin_service: AdminService, test_admin_user, db_session):
+    def test_authenticate_inactive_admin(
+        self, admin_service: AdminService, test_admin_user, db_session
+    ):
         """Test authentication with inactive admin user."""
         from app.models.admin import AdminLoginRequest
 
@@ -146,8 +151,7 @@ class TestAdminAuthentication:
         db_session.commit()
 
         login_data = AdminLoginRequest(
-            email=test_admin_user.email,
-            password="testpassword123"
+            email=test_admin_user.email, password="testpassword123"
         )
 
         authenticated_admin = admin_service.authenticate_admin(login_data)
@@ -157,9 +161,7 @@ class TestAdminAuthentication:
     def test_create_admin_session(self, admin_service: AdminService, test_admin_user):
         """Test creating admin session."""
         session = admin_service.create_admin_session(
-            admin_user=test_admin_user,
-            ip_address="127.0.0.1",
-            user_agent="Test Agent"
+            admin_user=test_admin_user, ip_address="127.0.0.1", user_agent="Test Agent"
         )
 
         assert session.admin_user_id == test_admin_user.id
@@ -179,11 +181,17 @@ class TestAdminAuthentication:
         for perm in permissions:
             assert ":" in perm
 
-    def test_has_permission_super_admin(self, admin_service: AdminService, test_super_admin_user):
+    def test_has_permission_super_admin(
+        self, admin_service: AdminService, test_super_admin_user
+    ):
         """Test that super admin has all permissions."""
         # Super admin should have any permission
-        assert admin_service.has_permission(
-            test_super_admin_user, "any_resource", "any_action") is True
+        assert (
+            admin_service.has_permission(
+                test_super_admin_user, "any_resource", "any_action"
+            )
+            is True
+        )
 
     def test_logout_admin(self, admin_service: AdminService, test_admin_user):
         """Test admin logout."""
@@ -196,8 +204,9 @@ class TestAdminAuthentication:
         assert success is True
 
         # Verify session is deactivated
-        updated_session = admin_service.db.query(admin_service.db.query(
-            type(session)).filter_by(id=session.id)).first()
+        updated_session = admin_service.db.query(
+            admin_service.db.query(type(session)).filter_by(id=session.id)
+        ).first()
         if updated_session:
             assert updated_session.is_active is False
 
@@ -209,10 +218,7 @@ class TestAdminEndpoints:
         """Test successful admin login endpoint."""
         response = client.post(
             "/api/v1/admin/login",
-            json={
-                "email": test_admin_user.email,
-                "password": "testpassword123"
-            }
+            json={"email": test_admin_user.email, "password": "testpassword123"},
         )
 
         assert response.status_code == 200
@@ -229,10 +235,7 @@ class TestAdminEndpoints:
         """Test admin login with invalid credentials."""
         response = client.post(
             "/api/v1/admin/login",
-            json={
-                "email": test_admin_user.email,
-                "password": "wrongpassword"
-            }
+            json={"email": test_admin_user.email, "password": "wrongpassword"},
         )
 
         assert response.status_code == 401
@@ -243,18 +246,14 @@ class TestAdminEndpoints:
         # Login first
         login_response = client.post(
             "/api/v1/admin/login",
-            json={
-                "email": test_admin_user.email,
-                "password": "testpassword123"
-            }
+            json={"email": test_admin_user.email, "password": "testpassword123"},
         )
 
         token = login_response.json()["access_token"]
 
         # Logout
         response = client.post(
-            "/api/v1/admin/logout",
-            headers={"Authorization": f"Bearer {token}"}
+            "/api/v1/admin/logout", headers={"Authorization": f"Bearer {token}"}
         )
 
         assert response.status_code == 200
@@ -265,18 +264,14 @@ class TestAdminEndpoints:
         # Login first
         login_response = client.post(
             "/api/v1/admin/login",
-            json={
-                "email": test_admin_user.email,
-                "password": "testpassword123"
-            }
+            json={"email": test_admin_user.email, "password": "testpassword123"},
         )
 
         token = login_response.json()["access_token"]
 
         # Get profile
         response = client.get(
-            "/api/v1/admin/me",
-            headers={"Authorization": f"Bearer {token}"}
+            "/api/v1/admin/me", headers={"Authorization": f"Bearer {token}"}
         )
 
         assert response.status_code == 200
@@ -287,15 +282,14 @@ class TestAdminEndpoints:
         assert data["role"] == test_admin_user.role
         assert data["is_active"] is True
 
-    def test_create_admin_user_endpoint(self, client: TestClient, test_super_admin_user):
+    def test_create_admin_user_endpoint(
+        self, client: TestClient, test_super_admin_user
+    ):
         """Test creating admin user via endpoint."""
         # Login as super admin first
         login_response = client.post(
             "/api/v1/admin/login",
-            json={
-                "email": test_super_admin_user.email,
-                "password": "superpassword123"
-            }
+            json={"email": test_super_admin_user.email, "password": "superpassword123"},
         )
 
         token = login_response.json()["access_token"]
@@ -308,8 +302,8 @@ class TestAdminEndpoints:
                 "email": "newadmin@test.com",
                 "name": "New Admin",
                 "password": "newpassword123",
-                "role": "admin"
-            }
+                "role": "admin",
+            },
         )
 
         assert response.status_code == 201
@@ -331,10 +325,7 @@ class TestAdminEndpoints:
         # Login as regular admin
         login_response = client.post(
             "/api/v1/admin/login",
-            json={
-                "email": test_admin_user.email,
-                "password": "testpassword123"
-            }
+            json={"email": test_admin_user.email, "password": "testpassword123"},
         )
 
         token = login_response.json()["access_token"]
@@ -347,8 +338,8 @@ class TestAdminEndpoints:
                 "email": "newadmin@test.com",
                 "name": "New Admin",
                 "password": "newpassword123",
-                "role": "admin"
-            }
+                "role": "admin",
+            },
         )
 
         assert response.status_code == 403

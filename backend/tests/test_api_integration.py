@@ -111,10 +111,7 @@ class TestMiddleware:
         """Test request size limiting."""
         # Create a large payload (larger than typical limit)
         large_data = "x" * (11 * 1024 * 1024)  # 11MB
-        response = client.post(
-            "/api/v1/auth/register",
-            json={"data": large_data}
-        )
+        response = client.post("/api/v1/auth/register", json={"data": large_data})
         # Should be rejected due to size limit
         assert response.status_code == 413
 
@@ -161,7 +158,7 @@ class TestAuthenticationIntegration:
         user_data = {
             "email": "test@example.com",
             "name": "Test User",
-            "password": "testpassword123"
+            "password": "testpassword123",
         }
         response = client.post("/api/v1/auth/register", json=user_data)
         # Should return proper structure (may fail due to validation, but structure should be consistent)
@@ -172,10 +169,7 @@ class TestAuthenticationIntegration:
 
     def test_login_endpoint_structure(self):
         """Test login endpoint structure."""
-        login_data = {
-            "email": "test@example.com",
-            "password": "testpassword123"
-        }
+        login_data = {"email": "test@example.com", "password": "testpassword123"}
         response = client.post("/api/v1/auth/login", json=login_data)
         # Should return proper structure
         assert response.status_code in [200, 401, 422]
@@ -201,7 +195,8 @@ class TestMealEndpointsIntegration:
     def test_meal_analysis_endpoint_structure(self):
         """Test meal analysis endpoint structure."""
         response = client.get(
-            "/api/v1/meals/123e4567-e89b-12d3-a456-426614174000/analysis")
+            "/api/v1/meals/123e4567-e89b-12d3-a456-426614174000/analysis"
+        )
         # Should require auth or not found
         assert response.status_code in [401, 404]
 
@@ -211,8 +206,7 @@ class TestFeedbackEndpointsIntegration:
 
     def test_feedback_endpoint_structure(self):
         """Test feedback endpoint structure."""
-        response = client.get(
-            "/api/v1/feedback/123e4567-e89b-12d3-a456-426614174000")
+        response = client.get("/api/v1/feedback/123e4567-e89b-12d3-a456-426614174000")
         # Should require auth or not found
         assert response.status_code in [401, 404]
 

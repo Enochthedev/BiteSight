@@ -9,8 +9,11 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from app.core.logging_config import (
-    setup_logging, get_logger, get_performance_logger,
-    JSONFormatter, PerformanceLogger
+    setup_logging,
+    get_logger,
+    get_performance_logger,
+    JSONFormatter,
+    PerformanceLogger,
 )
 
 
@@ -29,7 +32,7 @@ class TestJSONFormatter:
             lineno=42,
             msg="Test message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.module = "test_module"
         record.funcName = "test_function"
@@ -56,7 +59,7 @@ class TestJSONFormatter:
             lineno=42,
             msg="Test message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.module = "test_module"
         record.funcName = "test_function"
@@ -91,7 +94,7 @@ class TestJSONFormatter:
                 lineno=42,
                 msg="Error occurred",
                 args=(),
-                exc_info=True
+                exc_info=True,
             )
             record.module = "test_module"
             record.funcName = "test_function"
@@ -224,8 +227,8 @@ class TestLoggingIntegration:
                     extra={
                         "user_id": "user123",
                         "request_id": "req456",
-                        "endpoint": "GET /api/test"
-                    }
+                        "endpoint": "GET /api/test",
+                    },
                 )
 
                 # Read the log file and verify JSON format
@@ -266,7 +269,7 @@ class TestLoggingIntegration:
             finally:
                 os.chdir(original_cwd)
 
-    @patch('app.core.config.settings')
+    @patch("app.core.config.settings")
     def test_debug_mode_logging(self, mock_settings):
         """Test logging configuration in debug mode."""
         mock_settings.DEBUG = True
@@ -285,7 +288,7 @@ class TestLoggingIntegration:
             finally:
                 os.chdir(original_cwd)
 
-    @patch('app.core.config.settings')
+    @patch("app.core.config.settings")
     def test_production_mode_logging(self, mock_settings):
         """Test logging configuration in production mode."""
         mock_settings.DEBUG = False
@@ -320,7 +323,8 @@ class TestLogRotation:
                 # Get the file handler
                 app_logger = logging.getLogger("app")
                 file_handlers = [
-                    handler for handler in app_logger.handlers
+                    handler
+                    for handler in app_logger.handlers
                     if isinstance(handler, logging.handlers.RotatingFileHandler)
                 ]
 

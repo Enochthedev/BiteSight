@@ -8,9 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 
-from app.models.feedback import (
-    NutritionRule, NutritionRuleCreate, NutritionRuleUpdate
-)
+from app.models.feedback import NutritionRule, NutritionRuleCreate, NutritionRuleUpdate
 
 
 class NutritionRulesService:
@@ -22,14 +20,16 @@ class NutritionRulesService:
     def create_rule(self, rule_data: NutritionRuleCreate) -> NutritionRule:
         """Create a new nutrition rule."""
         # Check if rule name already exists
-        existing_rule = self.db.query(NutritionRule).filter(
-            func.lower(NutritionRule.rule_name) == rule_data.rule_name.lower()
-        ).first()
+        existing_rule = (
+            self.db.query(NutritionRule)
+            .filter(func.lower(NutritionRule.rule_name) == rule_data.rule_name.lower())
+            .first()
+        )
 
         if existing_rule:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Rule '{rule_data.rule_name}' already exists"
+                detail=f"Rule '{rule_data.rule_name}' already exists",
             )
 
         # Create new rule
@@ -38,7 +38,7 @@ class NutritionRulesService:
             condition_logic=rule_data.condition_logic,
             feedback_template=rule_data.feedback_template,
             priority=rule_data.priority,
-            is_active=rule_data.is_active
+            is_active=rule_data.is_active,
         )
 
         self.db.add(rule)
@@ -49,30 +49,37 @@ class NutritionRulesService:
 
     def get_rule(self, rule_id: UUID) -> Optional[NutritionRule]:
         """Get nutrition rule by ID."""
-        return self.db.query(NutritionRule).filter(
-            NutritionRule.id == rule_id
-        ).first()
+        return self.db.query(NutritionRule).filter(NutritionRule.id == rule_id).first()
 
-    def update_rule(self, rule_id: UUID, rule_data: NutritionRuleUpdate) -> Optional[NutritionRule]:
+    def update_rule(
+        self, rule_id: UUID, rule_data: NutritionRuleUpdate
+    ) -> Optional[NutritionRule]:
         """Update nutrition rule."""
         rule = self.get_rule(rule_id)
         if not rule:
             return None
 
         # Check for name conflicts if updating name
-        if rule_data.rule_name and rule_data.rule_name.lower() != rule.rule_name.lower():
-            existing_rule = self.db.query(NutritionRule).filter(
-                and_(
-                    func.lower(
-                        NutritionRule.rule_name) == rule_data.rule_name.lower(),
-                    NutritionRule.id != rule_id
+        if (
+            rule_data.rule_name
+            and rule_data.rule_name.lower() != rule.rule_name.lower()
+        ):
+            existing_rule = (
+                self.db.query(NutritionRule)
+                .filter(
+                    and_(
+                        func.lower(NutritionRule.rule_name)
+                        == rule_data.rule_name.lower(),
+                        NutritionRule.id != rule_id,
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if existing_rule:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Rule '{rule_data.rule_name}' already exists"
+                    detail=f"Rule '{rule_data.rule_name}' already exists",
                 )
 
         # Update fields
@@ -102,10 +109,9 @@ class NutritionRulesService:
         self.db.commit()
         return True
 
-    def list_rules(self,
-                   active_only: bool = False,
-                   skip: int = 0,
-                   limit: int = 100) -> Tuple[List[NutritionRule], int]:
+    def list_rules(
+        self, active_only: bool = False, skip: int = 0, limit: int = 100
+    ) -> Tuple[List[NutritionRule], int]:
         """List nutrition rules with optional filtering."""
         query = self.db.query(NutritionRule)
 
@@ -116,18 +122,24 @@ class NutritionRulesService:
         total_count = query.count()
 
         # Apply pagination and ordering
-        rules = query.order_by(
-            NutritionRule.priority.desc(),
-            NutritionRule.created_at.desc()
-        ).offset(skip).limit(limit).all()
+        rules = (
+            query.order_by(
+                NutritionRule.priority.desc(), NutritionRule.created_at.desc()
+            )
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
         return rules, total_count
 
-    def search_rules(self,
-                     query_text: Optional[str] = None,
-                     active_only: bool = False,
-                     skip: int = 0,
-                     limit: int = 100) -> Tuple[List[NutritionRule], int]:
+    def search_rules(
+        self,
+        query_text: Optional[str] = None,
+        active_only: bool = False,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> Tuple[List[NutritionRule], int]:
         """Search nutrition rules by name or template content."""
         query = self.db.query(NutritionRule)
 
@@ -139,8 +151,7 @@ class NutritionRulesService:
             query = query.filter(
                 or_(
                     func.lower(NutritionRule.rule_name).like(search_term),
-                    func.lower(NutritionRule.feedback_template).like(
-                        search_term)
+                    func.lower(NutritionRule.feedback_template).like(search_term),
                 )
             )
 
@@ -148,10 +159,14 @@ class NutritionRulesService:
         total_count = query.count()
 
         # Apply pagination and ordering
-        rules = query.order_by(
-            NutritionRule.priority.desc(),
-            NutritionRule.created_at.desc()
-        ).offset(skip).limit(limit).all()
+        rules = (
+            query.order_by(
+                NutritionRule.priority.desc(), NutritionRule.created_at.desc()
+            )
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
         return rules, total_count
 
@@ -187,42 +202,44 @@ class NutritionRulesService:
 
     def get_active_rules_by_priority(self) -> List[NutritionRule]:
         """Get all active rules ordered by priority (highest first)."""
-        return self.db.query(NutritionRule).filter(
-            NutritionRule.is_active == True
-        ).order_by(
-            NutritionRule.priority.desc(),
-            NutritionRule.created_at.desc()
-        ).all()
+        return (
+            self.db.query(NutritionRule)
+            .filter(NutritionRule.is_active == True)
+            .order_by(NutritionRule.priority.desc(), NutritionRule.created_at.desc())
+            .all()
+        )
 
-    def test_rule_condition(self, rule_id: UUID, test_data: Dict[str, Any]) -> Dict[str, Any]:
+    def test_rule_condition(
+        self, rule_id: UUID, test_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Test a rule's condition logic against provided data."""
         rule = self.get_rule(rule_id)
         if not rule:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Rule not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Rule not found"
             )
 
         try:
             # This is a simplified rule evaluation
             # In a real implementation, you'd have a more sophisticated rule engine
-            result = self._evaluate_rule_condition(
-                rule.condition_logic, test_data)
+            result = self._evaluate_rule_condition(rule.condition_logic, test_data)
 
             return {
                 "rule_id": str(rule.id),
                 "rule_name": rule.rule_name,
                 "condition_met": result,
                 "test_data": test_data,
-                "feedback_template": rule.feedback_template if result else None
+                "feedback_template": rule.feedback_template if result else None,
             }
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Error evaluating rule condition: {str(e)}"
+                detail=f"Error evaluating rule condition: {str(e)}",
             )
 
-    def _evaluate_rule_condition(self, condition_logic: Dict[str, Any], data: Dict[str, Any]) -> bool:
+    def _evaluate_rule_condition(
+        self, condition_logic: Dict[str, Any], data: Dict[str, Any]
+    ) -> bool:
         """Evaluate rule condition logic against data."""
         # This is a simplified implementation
         # A real rule engine would be more sophisticated
@@ -237,7 +254,8 @@ class NutritionRulesService:
             required_groups = condition_logic.get("required_groups", [])
             detected_groups = data.get("detected_food_groups", [])
             missing_groups = [
-                group for group in required_groups if group not in detected_groups]
+                group for group in required_groups if group not in detected_groups
+            ]
             return len(missing_groups) > 0
 
         elif condition_type == "food_group_balance":
@@ -249,7 +267,8 @@ class NutritionRulesService:
             required_foods = condition_logic.get("required_foods", [])
             detected_foods = data.get("detected_foods", [])
             detected_food_names = [
-                food.get("name", "").lower() for food in detected_foods]
+                food.get("name", "").lower() for food in detected_foods
+            ]
             return any(food.lower() in detected_food_names for food in required_foods)
 
         elif condition_type == "custom":
@@ -272,11 +291,16 @@ class NutritionRulesService:
             errors.append("Condition type is required")
             return errors
 
-        valid_types = ["missing_food_groups",
-                       "food_group_balance", "specific_food_present", "custom"]
+        valid_types = [
+            "missing_food_groups",
+            "food_group_balance",
+            "specific_food_present",
+            "custom",
+        ]
         if condition_type not in valid_types:
             errors.append(
-                f"Invalid condition type. Must be one of: {', '.join(valid_types)}")
+                f"Invalid condition type. Must be one of: {', '.join(valid_types)}"
+            )
 
         # Validate specific condition types
         if condition_type == "missing_food_groups":
@@ -306,8 +330,12 @@ class NutritionRulesService:
 
         # Check for common template variables
         valid_variables = [
-            "{missing_groups}", "{detected_foods}", "{recommendations}",
-            "{food_groups}", "{student_name}", "{meal_time}"
+            "{missing_groups}",
+            "{detected_foods}",
+            "{recommendations}",
+            "{food_groups}",
+            "{student_name}",
+            "{meal_time}",
         ]
 
         # This is a basic validation - in a real system you might use a template engine
@@ -320,29 +348,31 @@ class NutritionRulesService:
         original_rule = self.get_rule(rule_id)
         if not original_rule:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Original rule not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Original rule not found"
             )
 
         # Check if new name already exists
-        existing_rule = self.db.query(NutritionRule).filter(
-            func.lower(NutritionRule.rule_name) == new_name.lower()
-        ).first()
+        existing_rule = (
+            self.db.query(NutritionRule)
+            .filter(func.lower(NutritionRule.rule_name) == new_name.lower())
+            .first()
+        )
 
         if existing_rule:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Rule '{new_name}' already exists"
+                detail=f"Rule '{new_name}' already exists",
             )
 
         # Create duplicate rule
         duplicate_rule = NutritionRule(
             rule_name=new_name,
-            condition_logic=original_rule.condition_logic.copy(
-            ) if original_rule.condition_logic else {},
+            condition_logic=original_rule.condition_logic.copy()
+            if original_rule.condition_logic
+            else {},
             feedback_template=original_rule.feedback_template,
             priority=original_rule.priority,
-            is_active=False  # Start as inactive
+            is_active=False,  # Start as inactive
         )
 
         self.db.add(duplicate_rule)
@@ -354,15 +384,18 @@ class NutritionRulesService:
     def get_rules_statistics(self) -> Dict[str, Any]:
         """Get statistics about nutrition rules."""
         total_rules = self.db.query(NutritionRule).count()
-        active_rules = self.db.query(NutritionRule).filter(
-            NutritionRule.is_active == True
-        ).count()
+        active_rules = (
+            self.db.query(NutritionRule).filter(NutritionRule.is_active == True).count()
+        )
 
         # Get priority distribution
-        priority_stats = self.db.query(
-            NutritionRule.priority,
-            func.count(NutritionRule.id).label('count')
-        ).group_by(NutritionRule.priority).all()
+        priority_stats = (
+            self.db.query(
+                NutritionRule.priority, func.count(NutritionRule.id).label("count")
+            )
+            .group_by(NutritionRule.priority)
+            .all()
+        )
 
         priority_distribution = {row[0]: row[1] for row in priority_stats}
 
@@ -371,5 +404,7 @@ class NutritionRulesService:
             "active_rules": active_rules,
             "inactive_rules": total_rules - active_rules,
             "priority_distribution": priority_distribution,
-            "activation_percentage": (active_rules / total_rules * 100) if total_rules > 0 else 0
+            "activation_percentage": (active_rules / total_rules * 100)
+            if total_rules > 0
+            else 0,
         }

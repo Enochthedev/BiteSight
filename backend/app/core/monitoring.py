@@ -17,6 +17,7 @@ logger = get_logger(__name__)
 @dataclass
 class Alert:
     """Alert data structure."""
+
     id: str
     severity: str  # critical, warning, info
     title: str
@@ -35,8 +36,14 @@ class AlertManager:
         self.alert_history: List[Alert] = []
         self.max_history = 1000
 
-    def create_alert(self, alert_id: str, severity: str, title: str,
-                     description: str, metadata: Optional[Dict[str, Any]] = None) -> Alert:
+    def create_alert(
+        self,
+        alert_id: str,
+        severity: str,
+        title: str,
+        description: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Alert:
         """Create a new alert."""
         alert = Alert(
             id=alert_id,
@@ -44,7 +51,7 @@ class AlertManager:
             title=title,
             description=description,
             timestamp=datetime.utcnow(),
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         self.active_alerts[alert_id] = alert
@@ -52,7 +59,7 @@ class AlertManager:
 
         # Trim history if needed
         if len(self.alert_history) > self.max_history:
-            self.alert_history = self.alert_history[-self.max_history:]
+            self.alert_history = self.alert_history[-self.max_history :]
 
         logger.warning(f"Alert created: {title} - {description}")
         return alert
@@ -93,16 +100,16 @@ class MonitoringService:
 
         # Thresholds for alerting
         self.thresholds = {
-            'cpu_critical': 90,
-            'cpu_warning': 80,
-            'memory_critical': 90,
-            'memory_warning': 80,
-            'disk_critical': 95,
-            'disk_warning': 85,
-            'response_time_critical': 5.0,
-            'response_time_warning': 2.0,
-            'error_rate_critical': 0.1,
-            'error_rate_warning': 0.05
+            "cpu_critical": 90,
+            "cpu_warning": 80,
+            "memory_critical": 90,
+            "memory_warning": 80,
+            "disk_critical": 95,
+            "disk_warning": 85,
+            "response_time_critical": 5.0,
+            "response_time_warning": 2.0,
+            "error_rate_critical": 0.1,
+            "error_rate_warning": 0.05,
         }
 
     async def run_monitoring_cycle(self):
@@ -134,7 +141,7 @@ class MonitoringService:
                 "monitoring_failure",
                 "critical",
                 "Monitoring System Failure",
-                f"Monitoring cycle failed: {str(e)}"
+                f"Monitoring cycle failed: {str(e)}",
             )
 
     async def _process_health_results(self, results: Dict[str, HealthCheckResult]):
@@ -150,7 +157,7 @@ class MonitoringService:
                         "critical",
                         f"Health Check Failed: {check_name}",
                         result.message,
-                        result.details
+                        result.details,
                     )
 
             elif result.status == HealthStatus.DEGRADED:
@@ -162,7 +169,7 @@ class MonitoringService:
                         "warning",
                         f"Health Check Degraded: {check_name}",
                         result.message,
-                        result.details
+                        result.details,
                     )
 
             else:  # HEALTHY
@@ -191,10 +198,12 @@ class MonitoringService:
         """Get current monitoring system status."""
         return {
             "enabled": self.monitoring_enabled,
-            "last_check": datetime.fromtimestamp(self.last_check_time).isoformat() if self.last_check_time else None,
+            "last_check": datetime.fromtimestamp(self.last_check_time).isoformat()
+            if self.last_check_time
+            else None,
             "check_interval": self.check_interval,
             "active_alerts": len(self.alert_manager.active_alerts),
-            "thresholds": self.thresholds
+            "thresholds": self.thresholds,
         }
 
     def get_system_overview(self) -> Dict[str, Any]:
@@ -203,22 +212,25 @@ class MonitoringService:
         recent_alerts = self.alert_manager.get_alert_history(hours=24)
 
         # Categorize alerts by severity
-        critical_alerts = [
-            a for a in active_alerts if a.severity == "critical"]
+        critical_alerts = [a for a in active_alerts if a.severity == "critical"]
         warning_alerts = [a for a in active_alerts if a.severity == "warning"]
 
         return {
             "timestamp": datetime.utcnow().isoformat(),
-            "overall_status": "critical" if critical_alerts else "warning" if warning_alerts else "healthy",
+            "overall_status": "critical"
+            if critical_alerts
+            else "warning"
+            if warning_alerts
+            else "healthy",
             "alerts": {
                 "active": {
                     "total": len(active_alerts),
                     "critical": len(critical_alerts),
-                    "warning": len(warning_alerts)
+                    "warning": len(warning_alerts),
                 },
-                "recent_24h": len(recent_alerts)
+                "recent_24h": len(recent_alerts),
             },
-            "monitoring": self.get_monitoring_status()
+            "monitoring": self.get_monitoring_status(),
         }
 
 
@@ -233,7 +245,7 @@ class PerformanceMonitor:
         """Record a request duration."""
         self.request_times.append(duration)
         if len(self.request_times) > self.max_samples:
-            self.request_times = self.request_times[-self.max_samples:]
+            self.request_times = self.request_times[-self.max_samples :]
 
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics."""
@@ -250,7 +262,7 @@ class PerformanceMonitor:
             "max_response_time": max(times),
             "p50_response_time": times[int(count * 0.5)],
             "p95_response_time": times[int(count * 0.95)],
-            "p99_response_time": times[int(count * 0.99)]
+            "p99_response_time": times[int(count * 0.99)],
         }
 
 

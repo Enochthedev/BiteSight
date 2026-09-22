@@ -31,7 +31,7 @@ class TestDataEncryptionSecurity:
             email="encryption_test@university.edu.ng",
             name="Encryption Test User",
             password_hash=hash_password("SecurePassword123!"),
-            history_enabled=True
+            history_enabled=True,
         )
         db_session.add(user)
         db_session.commit()
@@ -41,11 +41,11 @@ class TestDataEncryptionSecurity:
     @pytest.fixture
     def auth_headers(self, client, test_user):
         """Get authentication headers."""
-        with patch('app.core.auth.verify_password', return_value=True):
-            response = client.post("/api/v1/auth/login", json={
-                "email": test_user.email,
-                "password": "SecurePassword123!"
-            })
+        with patch("app.core.auth.verify_password", return_value=True):
+            response = client.post(
+                "/api/v1/auth/login",
+                json={"email": test_user.email, "password": "SecurePassword123!"},
+            )
 
             if response.status_code == 200:
                 token = response.json().get("access_token", "mock-token")
@@ -58,9 +58,9 @@ class TestDataEncryptionSecurity:
         """Create a sample image for testing."""
         from PIL import Image
 
-        image = Image.new('RGB', (224, 224), color='red')
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
-        image.save(temp_file.name, 'JPEG')
+        image = Image.new("RGB", (224, 224), color="red")
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+        image.save(temp_file.name, "JPEG")
 
         yield temp_file.name
 
@@ -85,31 +85,33 @@ class TestDataEncryptionSecurity:
             assert hashed != hashed2, "Password hashes should be unique due to salt"
 
             # Both should verify correctly
-            assert verify_password(
-                password, hashed), "Original hash should verify"
-            assert verify_password(
-                password, hashed2), "Second hash should verify"
+            assert verify_password(password, hashed), "Original hash should verify"
+            assert verify_password(password, hashed2), "Second hash should verify"
 
             # Wrong password should not verify
-            assert not verify_password(
-                password + "x", hashed), "Wrong password should not verify"
+            assert not verify_password(password + "x", hashed), (
+                "Wrong password should not verify"
+            )
 
             # Hash should be sufficiently long (indicates proper algorithm)
-            assert len(
-                hashed) >= 60, "Hash should be at least 60 characters (bcrypt)"
+            assert len(hashed) >= 60, "Hash should be at least 60 characters (bcrypt)"
 
             # Hash should contain salt information
-            assert hashed.startswith("$2b$") or hashed.startswith(
-                "$2a$"), "Should use bcrypt"
+            assert hashed.startswith("$2b$") or hashed.startswith("$2a$"), (
+                "Should use bcrypt"
+            )
 
             # Test hash strength (should be slow)
             import time
+
             start_time = time.time()
             hash_password(password)
             hash_time = time.time() - start_time
 
             # Should take reasonable time (not too fast, not too slow)
-            assert 0.01 < hash_time < 2.0, f"Hash time {hash_time}s should be reasonable"
+            assert 0.01 < hash_time < 2.0, (
+                f"Hash time {hash_time}s should be reasonable"
+            )
 
     def test_jwt_token_security(self):
         """Test JWT token encryption and security."""
@@ -122,7 +124,7 @@ class TestDataEncryptionSecurity:
         token = create_access_token(data=user_data)
 
         # Token should be properly formatted JWT
-        parts = token.split('.')
+        parts = token.split(".")
         assert len(parts) == 3, "JWT should have 3 parts"
 
         # Decode and verify token structure
@@ -130,15 +132,16 @@ class TestDataEncryptionSecurity:
         import json
 
         # Decode header (without verification for testing)
-        header = json.loads(base64.urlsafe_b64decode(parts[0] + '=='))
+        header = json.loads(base64.urlsafe_b64decode(parts[0] + "=="))
         assert "alg" in header, "JWT header should specify algorithm"
         assert "typ" in header, "JWT header should specify type"
         assert header["typ"] == "JWT", "Should be JWT type"
 
         # Algorithm should be secure
-        secure_algorithms = ["HS256", "HS384",
-                             "HS512", "RS256", "RS384", "RS512"]
-        assert header["alg"] in secure_algorithms, f"Algorithm {header['alg']} should be secure"
+        secure_algorithms = ["HS256", "HS384", "HS512", "RS256", "RS384", "RS512"]
+        assert header["alg"] in secure_algorithms, (
+            f"Algorithm {header['alg']} should be secure"
+        )
 
         # Verify token
         payload = verify_token(token)
@@ -156,37 +159,42 @@ class TestDataEncryptionSecurity:
         from app.core.database import get_database_url
 
         # Get database URL (mocked for testing)
-        with patch.dict(os.environ, {
-            'DATABASE_URL': 'postgresql://user:password@localhost:5432/testdb'
-        }):
+        with patch.dict(
+            os.environ,
+            {"DATABASE_URL": "postgresql://user:password@localhost:5432/testdb"},
+        ):
             db_url = get_database_url()
 
             # Should use secure connection parameters
-            assert "sslmode" in db_url or "ssl" in db_url, "Should use SSL for database connections"
+            assert "sslmode" in db_url or "ssl" in db_url, (
+                "Should use SSL for database connections"
+            )
 
             # Should not expose credentials in logs
             # This would be tested by checking log output
 
-    def test_file_storage_encryption(self, client, test_user, sample_image, auth_headers):
+    def test_file_storage_encryption(
+        self, client, test_user, sample_image, auth_headers
+    ):
         """Test file storage encryption and security."""
 
-        with patch('app.services.image_service.ImageService') as mock_image_service:
+        with patch("app.services.image_service.ImageService") as mock_image_service:
             # Mock encrypted file storage
             mock_image_service.return_value.store_image_encrypted = Mock(
                 return_value={
                     "encrypted_path": "/encrypted/path/image.enc",
                     "encryption_key_id": "key_123",
-                    "checksum": "abc123def456"
+                    "checksum": "abc123def456",
                 }
             )
 
             # Upload image
-            with open(sample_image, 'rb') as img_file:
+            with open(sample_image, "rb") as img_file:
                 response = client.post(
                     "/api/v1/meals/analyze",
                     files={"image": ("meal.jpg", img_file, "image/jpeg")},
                     data={"student_id": str(test_user.student_id)},
-                    headers=auth_headers
+                    headers=auth_headers,
                 )
 
             # Verify encryption was used
@@ -203,14 +211,14 @@ class TestDataEncryptionSecurity:
         sensitive_data = {
             "personal_notes": "Private health information",
             "dietary_restrictions": "Allergic to peanuts",
-            "medical_conditions": "Diabetes type 2"
+            "medical_conditions": "Diabetes type 2",
         }
 
         # This would test actual database encryption
         # In a real implementation, sensitive fields would be encrypted before storage
 
         # Mock encrypted field storage
-        with patch('app.models.user.encrypt_field') as mock_encrypt:
+        with patch("app.models.user.encrypt_field") as mock_encrypt:
             mock_encrypt.return_value = "encrypted_data_blob"
 
             # Update user with sensitive data
@@ -239,7 +247,8 @@ class TestDataEncryptionSecurity:
 
             # Should have reasonable max-age (at least 1 year)
             import re
-            max_age_match = re.search(r'max-age=(\d+)', hsts_header)
+
+            max_age_match = re.search(r"max-age=(\d+)", hsts_header)
             if max_age_match:
                 max_age = int(max_age_match.group(1))
                 assert max_age >= 31536000, "HSTS max-age should be at least 1 year"
@@ -252,12 +261,11 @@ class TestDataEncryptionSecurity:
         settings = get_settings()
 
         # Test that API keys are properly configured
-        if hasattr(settings, 'SECRET_KEY'):
+        if hasattr(settings, "SECRET_KEY"):
             secret_key = settings.SECRET_KEY
 
             # Secret key should be sufficiently long and random
-            assert len(
-                secret_key) >= 32, "Secret key should be at least 32 characters"
+            assert len(secret_key) >= 32, "Secret key should be at least 32 characters"
 
             # Should not be default/example values
             insecure_keys = [
@@ -266,12 +274,13 @@ class TestDataEncryptionSecurity:
                 "123456",
                 "your-secret-key-here",
                 "change-me",
-                "default"
+                "default",
             ]
 
             for insecure_key in insecure_keys:
-                assert insecure_key not in secret_key.lower(
-                ), f"Secret key should not contain '{insecure_key}'"
+                assert insecure_key not in secret_key.lower(), (
+                    f"Secret key should not contain '{insecure_key}'"
+                )
 
     def test_session_security(self, client, test_user, auth_headers):
         """Test session security and management."""
@@ -280,7 +289,8 @@ class TestDataEncryptionSecurity:
 
         # Make authenticated request
         response = client.get(
-            f"/api/v1/history/{test_user.student_id}/meals", headers=auth_headers)
+            f"/api/v1/history/{test_user.student_id}/meals", headers=auth_headers
+        )
 
         if response.status_code == 200:
             # Test that session tokens are secure
@@ -292,8 +302,12 @@ class TestDataEncryptionSecurity:
                 if "session" in cookie_header.lower():
                     # Should have secure attributes
                     assert "Secure" in cookie_header, "Session cookies should be Secure"
-                    assert "HttpOnly" in cookie_header, "Session cookies should be HttpOnly"
-                    assert "SameSite" in cookie_header, "Session cookies should have SameSite"
+                    assert "HttpOnly" in cookie_header, (
+                        "Session cookies should be HttpOnly"
+                    )
+                    assert "SameSite" in cookie_header, (
+                        "Session cookies should have SameSite"
+                    )
 
     def test_encryption_key_management(self):
         """Test encryption key management security."""
@@ -301,12 +315,12 @@ class TestDataEncryptionSecurity:
         # Test key rotation and management
 
         # Mock key management service
-        with patch('app.core.encryption.KeyManager') as mock_key_manager:
+        with patch("app.core.encryption.KeyManager") as mock_key_manager:
             mock_key_manager.return_value.get_current_key = Mock(
                 return_value={
                     "key_id": "key_123",
                     "key_data": "encrypted_key_data",
-                    "created_at": "2024-01-01T00:00:00Z"
+                    "created_at": "2024-01-01T00:00:00Z",
                 }
             )
 
@@ -314,7 +328,7 @@ class TestDataEncryptionSecurity:
                 return_value={
                     "old_key_id": "key_123",
                     "new_key_id": "key_124",
-                    "rotation_date": "2024-01-02T00:00:00Z"
+                    "rotation_date": "2024-01-02T00:00:00Z",
                 }
             )
 
@@ -337,13 +351,13 @@ class TestDataEncryptionSecurity:
         # Test that backups are encrypted
 
         # Mock backup service
-        with patch('app.core.backup.BackupService') as mock_backup:
+        with patch("app.core.backup.BackupService") as mock_backup:
             mock_backup.return_value.create_encrypted_backup = Mock(
                 return_value={
                     "backup_id": "backup_123",
                     "encrypted": True,
                     "encryption_algorithm": "AES-256-GCM",
-                    "backup_path": "/encrypted/backups/backup_123.enc"
+                    "backup_path": "/encrypted/backups/backup_123.enc",
                 }
             )
 
@@ -351,7 +365,9 @@ class TestDataEncryptionSecurity:
             backup_result = backup_service.create_encrypted_backup()
 
             assert backup_result["encrypted"] == True, "Backups should be encrypted"
-            assert "AES" in backup_result["encryption_algorithm"], "Should use strong encryption"
+            assert "AES" in backup_result["encryption_algorithm"], (
+                "Should use strong encryption"
+            )
 
     def test_log_data_security(self):
         """Test that logs don't contain sensitive data."""
@@ -363,7 +379,7 @@ class TestDataEncryptionSecurity:
             "secret_key_abc123",
             "credit_card_4111111111111111",
             "ssn_123456789",
-            "api_key_xyz789"
+            "api_key_xyz789",
         ]
 
         # Mock logging to capture log messages
@@ -372,11 +388,12 @@ class TestDataEncryptionSecurity:
         def mock_log_handler(message):
             log_messages.append(message)
 
-        with patch('app.core.logging_config.logger.info', side_effect=mock_log_handler):
+        with patch("app.core.logging_config.logger.info", side_effect=mock_log_handler):
             # Simulate operations that might log sensitive data
 
             # Login attempt (should not log password)
             from app.core.logging_config import logger
+
             logger.info(f"Login attempt for user with password: {'*' * 8}")
 
             # API key usage (should not log full key)
@@ -385,7 +402,9 @@ class TestDataEncryptionSecurity:
         # Verify no sensitive data in logs
         for message in log_messages:
             for sensitive in sensitive_data:
-                assert sensitive not in message, f"Sensitive data '{sensitive}' found in logs"
+                assert sensitive not in message, (
+                    f"Sensitive data '{sensitive}' found in logs"
+                )
 
     def test_memory_security(self):
         """Test memory security and cleanup."""
@@ -406,8 +425,9 @@ class TestDataEncryptionSecurity:
             sensitive_buffer[i] = 0
 
         # Verify clearing
-        assert all(
-            b == 0 for b in sensitive_buffer), "Sensitive data should be cleared from memory"
+        assert all(b == 0 for b in sensitive_buffer), (
+            "Sensitive data should be cleared from memory"
+        )
 
     def test_cryptographic_randomness(self):
         """Test cryptographic randomness quality."""
@@ -420,11 +440,12 @@ class TestDataEncryptionSecurity:
         random_values = [secrets.token_bytes(32) for _ in range(100)]
 
         # All values should be different
-        assert len(set(random_values)) == len(
-            random_values), "Random values should be unique"
+        assert len(set(random_values)) == len(random_values), (
+            "Random values should be unique"
+        )
 
         # Test entropy (basic check)
-        combined = b''.join(random_values)
+        combined = b"".join(random_values)
 
         # Should have good byte distribution
         byte_counts = [0] * 256
@@ -437,7 +458,9 @@ class TestDataEncryptionSecurity:
 
         # Allow some variance but not extreme
         assert min_count > 0, "All byte values should appear"
-        assert max_count / min_count < 10, "Byte distribution should be reasonably uniform"
+        assert max_count / min_count < 10, (
+            "Byte distribution should be reasonably uniform"
+        )
 
     def test_secure_file_permissions(self, sample_image):
         """Test secure file permissions and access."""
@@ -452,8 +475,9 @@ class TestDataEncryptionSecurity:
         octal_mode = oct(file_mode)[-3:]
 
         # File should not be world-writable
-        assert not (
-            file_mode & 0o002), f"File should not be world-writable: {octal_mode}"
+        assert not (file_mode & 0o002), (
+            f"File should not be world-writable: {octal_mode}"
+        )
 
         # File should not be world-readable for sensitive files
         # (This depends on the specific file type and security requirements)
@@ -464,7 +488,7 @@ class TestDataEncryptionSecurity:
         # Test that temporary files are created securely
 
         # Create secure temporary file
-        with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(mode="w+b", delete=False) as temp_file:
             temp_path = temp_file.name
 
             # Write sensitive data
@@ -480,15 +504,17 @@ class TestDataEncryptionSecurity:
             expected_mode = 0o600  # rw-------
             actual_mode = file_mode & 0o777
 
-            assert actual_mode == expected_mode, f"Temp file permissions should be 600, got {oct(actual_mode)}"
+            assert actual_mode == expected_mode, (
+                f"Temp file permissions should be 600, got {oct(actual_mode)}"
+            )
 
         # Clean up
         if os.path.exists(temp_path):
             # Securely delete temporary file
-            with open(temp_path, 'r+b') as f:
+            with open(temp_path, "r+b") as f:
                 length = f.seek(0, 2)  # Get file length
                 f.seek(0)
-                f.write(b'\x00' * length)  # Overwrite with zeros
+                f.write(b"\x00" * length)  # Overwrite with zeros
                 f.flush()
                 os.fsync(f.fileno())  # Force write to disk
 
@@ -502,13 +528,18 @@ class TestDataEncryptionSecurity:
         from app.core.database import get_database_url
 
         # Mock database configuration
-        with patch.dict(os.environ, {
-            'DATABASE_URL': 'postgresql://user:pass@localhost:5432/db?sslmode=require'
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "DATABASE_URL": "postgresql://user:pass@localhost:5432/db?sslmode=require"
+            },
+        ):
             db_url = get_database_url()
 
             # Should enforce SSL/TLS
-            assert "sslmode=require" in db_url or "ssl=true" in db_url, "Database should use SSL"
+            assert "sslmode=require" in db_url or "ssl=true" in db_url, (
+                "Database should use SSL"
+            )
 
         # Test that sensitive database fields are encrypted
         # This would depend on the actual ORM and encryption implementation
@@ -518,7 +549,8 @@ class TestDataEncryptionSecurity:
 
         # Test user profile endpoint
         response = client.get(
-            f"/api/v1/users/{test_user.student_id}/profile", headers=auth_headers)
+            f"/api/v1/users/{test_user.student_id}/profile", headers=auth_headers
+        )
 
         if response.status_code == 200:
             profile_data = response.json()
@@ -530,20 +562,23 @@ class TestDataEncryptionSecurity:
                 "secret_key",
                 "internal_id",
                 "admin_notes",
-                "system_flags"
+                "system_flags",
             ]
 
             for field in sensitive_fields:
-                assert field not in profile_data, f"Sensitive field '{field}' should not be in API response"
+                assert field not in profile_data, (
+                    f"Sensitive field '{field}' should not be in API response"
+                )
 
             # Should only include necessary fields
-            expected_fields = {"student_id",
-                               "email", "name", "history_enabled"}
+            expected_fields = {"student_id", "email", "name", "history_enabled"}
             actual_fields = set(profile_data.keys())
 
             # All expected fields should be present
             for field in expected_fields:
-                assert field in actual_fields, f"Expected field '{field}' missing from response"
+                assert field in actual_fields, (
+                    f"Expected field '{field}' missing from response"
+                )
 
     def test_encryption_algorithm_strength(self):
         """Test that strong encryption algorithms are used."""
@@ -551,13 +586,13 @@ class TestDataEncryptionSecurity:
         # Test encryption algorithm configuration
 
         # Mock encryption service
-        with patch('app.core.encryption.EncryptionService') as mock_encryption:
+        with patch("app.core.encryption.EncryptionService") as mock_encryption:
             mock_encryption.return_value.get_algorithm_info = Mock(
                 return_value={
                     "algorithm": "AES-256-GCM",
                     "key_size": 256,
                     "mode": "GCM",
-                    "iv_size": 96
+                    "iv_size": 96,
                 }
             )
 
@@ -565,11 +600,12 @@ class TestDataEncryptionSecurity:
             algo_info = encryption_service.get_algorithm_info()
 
             # Should use strong algorithms
-            strong_algorithms = ["AES-256-GCM",
-                                 "AES-256-CBC", "ChaCha20-Poly1305"]
-            assert algo_info[
-                "algorithm"] in strong_algorithms, f"Should use strong algorithm, got {algo_info['algorithm']}"
+            strong_algorithms = ["AES-256-GCM", "AES-256-CBC", "ChaCha20-Poly1305"]
+            assert algo_info["algorithm"] in strong_algorithms, (
+                f"Should use strong algorithm, got {algo_info['algorithm']}"
+            )
 
             # Key size should be adequate
-            assert algo_info[
-                "key_size"] >= 256, f"Key size should be at least 256 bits, got {algo_info['key_size']}"
+            assert algo_info["key_size"] >= 256, (
+                f"Key size should be at least 256 bits, got {algo_info['key_size']}"
+            )

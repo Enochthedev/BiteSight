@@ -8,22 +8,28 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.admin_dependencies import (
-    require_nutrition_rules_management, require_nutritionist_or_admin
+    require_nutrition_rules_management,
+    require_nutritionist_or_admin,
 )
 from app.models.admin import AdminUser
 from app.models.feedback import (
-    NutritionRule, NutritionRuleCreate, NutritionRuleUpdate, NutritionRuleResponse
+    NutritionRule,
+    NutritionRuleCreate,
+    NutritionRuleUpdate,
+    NutritionRuleResponse,
 )
 from app.services.nutrition_rules_service import NutritionRulesService
 
 router = APIRouter()
 
 
-@router.post("/rules", response_model=NutritionRuleResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rules", response_model=NutritionRuleResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_nutrition_rule(
     rule_data: NutritionRuleCreate,
     current_admin: AdminUser = Depends(require_nutrition_rules_management),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Create a new nutrition rule."""
     rules_service = NutritionRulesService(db)
@@ -38,34 +44,30 @@ async def create_nutrition_rule(
             priority=rule.priority,
             is_active=rule.is_active,
             created_at=rule.created_at,
-            updated_at=rule.updated_at
+            updated_at=rule.updated_at,
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create nutrition rule"
+            detail="Failed to create nutrition rule",
         )
 
 
 @router.get("/rules", response_model=List[NutritionRuleResponse])
 async def list_nutrition_rules(
-    active_only: bool = Query(
-        False, description="Filter to active rules only"),
+    active_only: bool = Query(False, description="Filter to active rules only"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000,
-                       description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """List nutrition rules with optional filtering."""
     rules_service = NutritionRulesService(db)
 
     rules, total_count = rules_service.list_rules(
-        active_only=active_only,
-        skip=skip,
-        limit=limit
+        active_only=active_only, skip=skip, limit=limit
     )
 
     return [
@@ -77,7 +79,7 @@ async def list_nutrition_rules(
             priority=rule.priority,
             is_active=rule.is_active,
             created_at=rule.created_at,
-            updated_at=rule.updated_at
+            updated_at=rule.updated_at,
         )
         for rule in rules
     ]
@@ -86,23 +88,19 @@ async def list_nutrition_rules(
 @router.get("/rules/search", response_model=List[NutritionRuleResponse])
 async def search_nutrition_rules(
     query: Optional[str] = Query(
-        None, description="Search term for rule name or template"),
-    active_only: bool = Query(
-        False, description="Filter to active rules only"),
+        None, description="Search term for rule name or template"
+    ),
+    active_only: bool = Query(False, description="Filter to active rules only"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, ge=1, le=1000,
-                       description="Number of records to return"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Search nutrition rules by name or template content."""
     rules_service = NutritionRulesService(db)
 
     rules, total_count = rules_service.search_rules(
-        query_text=query,
-        active_only=active_only,
-        skip=skip,
-        limit=limit
+        query_text=query, active_only=active_only, skip=skip, limit=limit
     )
 
     return [
@@ -114,7 +112,7 @@ async def search_nutrition_rules(
             priority=rule.priority,
             is_active=rule.is_active,
             created_at=rule.created_at,
-            updated_at=rule.updated_at
+            updated_at=rule.updated_at,
         )
         for rule in rules
     ]
@@ -124,7 +122,7 @@ async def search_nutrition_rules(
 async def get_nutrition_rule(
     rule_id: UUID,
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Get nutrition rule by ID."""
     rules_service = NutritionRulesService(db)
@@ -132,8 +130,7 @@ async def get_nutrition_rule(
     rule = rules_service.get_rule(rule_id)
     if not rule:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition rule not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
         )
 
     return NutritionRuleResponse(
@@ -144,7 +141,7 @@ async def get_nutrition_rule(
         priority=rule.priority,
         is_active=rule.is_active,
         created_at=rule.created_at,
-        updated_at=rule.updated_at
+        updated_at=rule.updated_at,
     )
 
 
@@ -153,7 +150,7 @@ async def update_nutrition_rule(
     rule_id: UUID,
     rule_data: NutritionRuleUpdate,
     current_admin: AdminUser = Depends(require_nutrition_rules_management),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Update nutrition rule."""
     rules_service = NutritionRulesService(db)
@@ -162,8 +159,7 @@ async def update_nutrition_rule(
         updated_rule = rules_service.update_rule(rule_id, rule_data)
         if not updated_rule:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Nutrition rule not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
             )
 
         return NutritionRuleResponse(
@@ -174,14 +170,14 @@ async def update_nutrition_rule(
             priority=updated_rule.priority,
             is_active=updated_rule.is_active,
             created_at=updated_rule.created_at,
-            updated_at=updated_rule.updated_at
+            updated_at=updated_rule.updated_at,
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update nutrition rule"
+            detail="Failed to update nutrition rule",
         )
 
 
@@ -189,7 +185,7 @@ async def update_nutrition_rule(
 async def delete_nutrition_rule(
     rule_id: UUID,
     current_admin: AdminUser = Depends(require_nutrition_rules_management),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Delete nutrition rule."""
     rules_service = NutritionRulesService(db)
@@ -197,8 +193,7 @@ async def delete_nutrition_rule(
     success = rules_service.delete_rule(rule_id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition rule not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
         )
 
     return {"message": "Nutrition rule successfully deleted"}
@@ -208,7 +203,7 @@ async def delete_nutrition_rule(
 async def activate_nutrition_rule(
     rule_id: UUID,
     current_admin: AdminUser = Depends(require_nutrition_rules_management),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Activate a nutrition rule."""
     rules_service = NutritionRulesService(db)
@@ -216,8 +211,7 @@ async def activate_nutrition_rule(
     success = rules_service.activate_rule(rule_id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition rule not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
         )
 
     return {"message": "Nutrition rule activated successfully"}
@@ -227,7 +221,7 @@ async def activate_nutrition_rule(
 async def deactivate_nutrition_rule(
     rule_id: UUID,
     current_admin: AdminUser = Depends(require_nutrition_rules_management),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Deactivate a nutrition rule."""
     rules_service = NutritionRulesService(db)
@@ -235,8 +229,7 @@ async def deactivate_nutrition_rule(
     success = rules_service.deactivate_rule(rule_id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition rule not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
         )
 
     return {"message": "Nutrition rule deactivated successfully"}
@@ -247,7 +240,7 @@ async def update_rule_priority(
     rule_id: UUID,
     new_priority: int = Query(..., ge=1, description="New priority value"),
     current_admin: AdminUser = Depends(require_nutrition_rules_management),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Update rule priority."""
     rules_service = NutritionRulesService(db)
@@ -255,8 +248,7 @@ async def update_rule_priority(
     success = rules_service.update_rule_priority(rule_id, new_priority)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition rule not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
         )
 
     return {"message": f"Rule priority updated to {new_priority}"}
@@ -267,7 +259,7 @@ async def test_nutrition_rule(
     rule_id: UUID,
     test_data: Dict[str, Any],
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Test a nutrition rule against provided data."""
     rules_service = NutritionRulesService(db)
@@ -280,7 +272,7 @@ async def test_nutrition_rule(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to test nutrition rule"
+            detail="Failed to test nutrition rule",
         )
 
 
@@ -289,7 +281,7 @@ async def duplicate_nutrition_rule(
     rule_id: UUID,
     new_name: str = Query(..., description="Name for the duplicated rule"),
     current_admin: AdminUser = Depends(require_nutrition_rules_management),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Duplicate an existing nutrition rule."""
     rules_service = NutritionRulesService(db)
@@ -304,21 +296,21 @@ async def duplicate_nutrition_rule(
             priority=duplicated_rule.priority,
             is_active=duplicated_rule.is_active,
             created_at=duplicated_rule.created_at,
-            updated_at=duplicated_rule.updated_at
+            updated_at=duplicated_rule.updated_at,
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to duplicate nutrition rule"
+            detail="Failed to duplicate nutrition rule",
         )
 
 
 @router.get("/rules/active/priority-order", response_model=List[NutritionRuleResponse])
 async def get_active_rules_by_priority(
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Get all active rules ordered by priority."""
     rules_service = NutritionRulesService(db)
@@ -334,7 +326,7 @@ async def get_active_rules_by_priority(
             priority=rule.priority,
             is_active=rule.is_active,
             created_at=rule.created_at,
-            updated_at=rule.updated_at
+            updated_at=rule.updated_at,
         )
         for rule in rules
     ]
@@ -344,7 +336,7 @@ async def get_active_rules_by_priority(
 async def validate_rule_condition(
     condition_logic: Dict[str, Any],
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Validate rule condition logic."""
     rules_service = NutritionRulesService(db)
@@ -352,14 +344,11 @@ async def validate_rule_condition(
     try:
         errors = rules_service.validate_rule_condition(condition_logic)
 
-        return {
-            "is_valid": len(errors) == 0,
-            "errors": errors
-        }
+        return {"is_valid": len(errors) == 0, "errors": errors}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to validate rule condition"
+            detail="Failed to validate rule condition",
         )
 
 
@@ -367,7 +356,7 @@ async def validate_rule_condition(
 async def validate_feedback_template(
     template: str,
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Validate feedback template."""
     rules_service = NutritionRulesService(db)
@@ -375,21 +364,18 @@ async def validate_feedback_template(
     try:
         errors = rules_service.validate_feedback_template(template)
 
-        return {
-            "is_valid": len(errors) == 0,
-            "errors": errors
-        }
+        return {"is_valid": len(errors) == 0, "errors": errors}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to validate feedback template"
+            detail="Failed to validate feedback template",
         )
 
 
 @router.get("/statistics")
 async def get_rules_statistics(
     current_admin: AdminUser = Depends(require_nutritionist_or_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Get statistics about nutrition rules."""
     rules_service = NutritionRulesService(db)
@@ -400,5 +386,5 @@ async def get_rules_statistics(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve rules statistics"
+            detail="Failed to retrieve rules statistics",
         )

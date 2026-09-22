@@ -35,7 +35,7 @@ nutrition-feedback-system/
 │   │   ├── services/                           # Service tests
 │   │   └── ... (existing test files)
 │   └── run_security_tests.js                   # Mobile security test runner
-└── TESTING_README.md                           # This file
+└── docs/testing.md                             # This file
 ```
 
 ## Running Tests

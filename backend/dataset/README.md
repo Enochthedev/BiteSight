@@ -217,7 +217,7 @@ For quick MVP deployment, you can:
    - Train only on Nigerian food classes
    - Requires less data (30-50 images per class)
 
-See `TRAINING_GUIDE.md` for detailed instructions.
+See [docs/model-training.md](../../docs/model-training.md) for detailed instructions.
 
 ## Data Privacy & Ethics
 
@@ -231,7 +231,7 @@ See `TRAINING_GUIDE.md` for detailed instructions.
 
 ## Next Steps
 
-1. **Read:** `TRAINING_GUIDE.md` for training instructions
+1. **Read:** [docs/model-training.md](../../docs/model-training.md) for training instructions
 2. **Collect:** Start with top 10 foods (50 images each)
 3. **Organize:** Place images in correct directories
 4. **Verify:** Run verification script
@@ -239,7 +239,7 @@ See `TRAINING_GUIDE.md` for detailed instructions.
 
 ## Need Help?
 
-- Check `TRAINING_GUIDE.md` for detailed training instructions
+- Check [docs/model-training.md](../../docs/model-training.md) for detailed training instructions
 - See `scripts/dataset_utils.py` for automation tools
 - Review `app/ml/dataset/` for data loading code
 

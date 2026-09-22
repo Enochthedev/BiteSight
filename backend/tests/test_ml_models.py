@@ -14,15 +14,24 @@ from PIL import Image
 import json
 
 from app.ml.models.mobilenet_food_classifier import (
-    MobileNetV2FoodClassifier, FoodClassificationHead, EnsembleFoodClassifier,
-    create_mobilenet_food_classifier, count_parameters
+    MobileNetV2FoodClassifier,
+    FoodClassificationHead,
+    EnsembleFoodClassifier,
+    create_mobilenet_food_classifier,
+    count_parameters,
 )
 from app.ml.training.trainer import (
-    FoodModelTrainer, TrainingConfig, TrainingMetrics, create_trainer
+    FoodModelTrainer,
+    TrainingConfig,
+    TrainingMetrics,
+    create_trainer,
 )
 from app.ml.inference.predictor import (
-    FoodPredictor, InferenceConfig, PredictionResult, ModelCache,
-    create_predictor
+    FoodPredictor,
+    InferenceConfig,
+    PredictionResult,
+    ModelCache,
+    create_predictor,
 )
 from app.ml.dataset.food_mapping import NigerianFoodMapper
 
@@ -88,8 +97,7 @@ class TestMobileNetV2FoodClassifier:
 
         # Freeze backbone
         sample_model.freeze_backbone()
-        assert not any(
-            p.requires_grad for p in sample_model.backbone.parameters())
+        assert not any(p.requires_grad for p in sample_model.backbone.parameters())
 
         # Unfreeze backbone
         sample_model.unfreeze_backbone()
@@ -99,16 +107,15 @@ class TestMobileNetV2FoodClassifier:
         """Test model info retrieval."""
         info = sample_model.get_model_info()
 
-        assert 'model_name' in info
-        assert 'num_classes' in info
-        assert 'total_parameters' in info
-        assert 'trainable_parameters' in info
-        assert info['num_classes'] == 10
+        assert "model_name" in info
+        assert "num_classes" in info
+        assert "total_parameters" in info
+        assert "trainable_parameters" in info
+        assert info["num_classes"] == 10
 
     def test_create_mobilenet_food_classifier(self):
         """Test factory function."""
-        model = create_mobilenet_food_classifier(
-            num_classes=15, pretrained=False)
+        model = create_mobilenet_food_classifier(num_classes=15, pretrained=False)
 
         assert isinstance(model, MobileNetV2FoodClassifier)
         assert model.num_classes == 15
@@ -129,21 +136,14 @@ class TestFoodClassificationHead:
     def test_classification_head_init(self):
         """Test classification head initialization."""
         head = FoodClassificationHead(
-            input_dim=1280,
-            num_classes=10,
-            hidden_dims=[512, 256],
-            dropout_rate=0.2
+            input_dim=1280, num_classes=10, hidden_dims=[512, 256], dropout_rate=0.2
         )
 
         assert isinstance(head.classifier, nn.Sequential)
 
     def test_classification_head_forward(self):
         """Test forward pass through classification head."""
-        head = FoodClassificationHead(
-            input_dim=1280,
-            num_classes=10,
-            hidden_dims=[512]
-        )
+        head = FoodClassificationHead(input_dim=1280, num_classes=10, hidden_dims=[512])
 
         input_tensor = torch.randn(4, 1280)
         output = head(input_tensor)
@@ -158,8 +158,7 @@ class TestEnsembleFoodClassifier:
     def sample_models(self):
         """Create sample models for ensemble."""
         models = [
-            MobileNetV2FoodClassifier(num_classes=5, pretrained=False)
-            for _ in range(3)
+            MobileNetV2FoodClassifier(num_classes=5, pretrained=False) for _ in range(3)
         ]
         return models
 
@@ -215,7 +214,7 @@ class TestTrainingPipeline:
             learning_rate=0.01,
             batch_size=8,
             early_stopping_patience=5,
-            mixed_precision=False  # Disable for testing
+            mixed_precision=False,  # Disable for testing
         )
 
     def test_training_config(self, sample_config):
@@ -233,7 +232,7 @@ class TestTrainingPipeline:
             val_loss=0.6,
             val_accuracy=80.0,
             learning_rate=0.001,
-            epoch_time=30.0
+            epoch_time=30.0,
         )
 
         assert metrics.epoch == 1
@@ -248,7 +247,7 @@ class TestTrainingPipeline:
             model=model,
             train_loader=train_loader,
             val_loader=val_loader,
-            config=sample_config
+            config=sample_config,
         )
 
         assert trainer.model == model
@@ -262,9 +261,7 @@ class TestTrainingPipeline:
         model = MobileNetV2FoodClassifier(num_classes=5, pretrained=False)
 
         trainer = create_trainer(
-            model=model,
-            train_loader=train_loader,
-            val_loader=val_loader
+            model=model, train_loader=train_loader, val_loader=val_loader
         )
 
         assert isinstance(trainer, FoodModelTrainer)
@@ -282,7 +279,7 @@ class TestTrainingPipeline:
                 model=model,
                 train_loader=train_loader,
                 val_loader=val_loader,
-                config=sample_config
+                config=sample_config,
             )
 
             train_loss, train_accuracy = trainer.train_epoch()
@@ -305,7 +302,7 @@ class TestTrainingPipeline:
                 model=model,
                 train_loader=train_loader,
                 val_loader=val_loader,
-                config=sample_config
+                config=sample_config,
             )
 
             val_loss, val_accuracy = trainer.validate_epoch()
@@ -373,12 +370,12 @@ class TestInferencePredictor:
     @pytest.fixture
     def sample_model_checkpoint(self):
         """Create sample model checkpoint for testing."""
-        with tempfile.NamedTemporaryFile(suffix='.pth', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".pth", delete=False) as f:
             model = MobileNetV2FoodClassifier(num_classes=5, pretrained=False)
 
             checkpoint = {
-                'model_state_dict': model.state_dict(),
-                'class_names': ['class_0', 'class_1', 'class_2', 'class_3', 'class_4']
+                "model_state_dict": model.state_dict(),
+                "class_names": ["class_0", "class_1", "class_2", "class_3", "class_4"],
             }
 
             torch.save(checkpoint, f.name)
@@ -390,14 +387,12 @@ class TestInferencePredictor:
     @pytest.fixture
     def sample_image(self):
         """Create sample PIL image for testing."""
-        return Image.new('RGB', (224, 224), color='blue')
+        return Image.new("RGB", (224, 224), color="blue")
 
     def test_inference_config(self):
         """Test inference configuration."""
         config = InferenceConfig(
-            model_path="test_model.pth",
-            batch_size=16,
-            confidence_threshold=0.5
+            model_path="test_model.pth", batch_size=16, confidence_threshold=0.5
         )
 
         assert config.model_path == "test_model.pth"
@@ -410,7 +405,7 @@ class TestInferencePredictor:
             class_name="jollof_rice",
             confidence=0.85,
             class_index=0,
-            nutritional_category="carbohydrates"
+            nutritional_category="carbohydrates",
         )
 
         assert result.class_name == "jollof_rice"
@@ -420,9 +415,7 @@ class TestInferencePredictor:
     def test_predictor_initialization(self, sample_model_checkpoint):
         """Test predictor initialization."""
         config = InferenceConfig(
-            model_path=sample_model_checkpoint,
-            device="cpu",
-            warmup_iterations=1
+            model_path=sample_model_checkpoint, device="cpu", warmup_iterations=1
         )
 
         predictor = FoodPredictor(config=config)
@@ -436,10 +429,8 @@ class TestInferencePredictor:
         predictor = create_predictor(
             model_path=sample_model_checkpoint,
             config=InferenceConfig(
-                model_path=sample_model_checkpoint,
-                device="cpu",
-                warmup_iterations=1
-            )
+                model_path=sample_model_checkpoint, device="cpu", warmup_iterations=1
+            ),
         )
 
         assert isinstance(predictor, FoodPredictor)
@@ -447,9 +438,7 @@ class TestInferencePredictor:
     def test_preprocess_image(self, sample_model_checkpoint, sample_image):
         """Test image preprocessing."""
         config = InferenceConfig(
-            model_path=sample_model_checkpoint,
-            device="cpu",
-            warmup_iterations=1
+            model_path=sample_model_checkpoint, device="cpu", warmup_iterations=1
         )
         predictor = FoodPredictor(config=config)
 
@@ -464,7 +453,7 @@ class TestInferencePredictor:
             model_path=sample_model_checkpoint,
             device="cpu",
             confidence_threshold=0.0,  # Accept all predictions for testing
-            warmup_iterations=1
+            warmup_iterations=1,
         )
         predictor = FoodPredictor(config=config)
 
@@ -482,7 +471,7 @@ class TestInferencePredictor:
             device="cpu",
             confidence_threshold=0.0,
             batch_size=2,
-            warmup_iterations=1
+            warmup_iterations=1,
         )
         predictor = FoodPredictor(config=config)
 
@@ -497,18 +486,16 @@ class TestInferencePredictor:
     def test_get_model_info(self, sample_model_checkpoint):
         """Test model info retrieval."""
         config = InferenceConfig(
-            model_path=sample_model_checkpoint,
-            device="cpu",
-            warmup_iterations=1
+            model_path=sample_model_checkpoint, device="cpu", warmup_iterations=1
         )
         predictor = FoodPredictor(config=config)
 
         info = predictor.get_model_info()
 
-        assert 'model_type' in info
-        assert 'num_classes' in info
-        assert 'class_names' in info
-        assert info['num_classes'] == 5
+        assert "model_type" in info
+        assert "num_classes" in info
+        assert "class_names" in info
+        assert info["num_classes"] == 5
 
 
 if __name__ == "__main__":

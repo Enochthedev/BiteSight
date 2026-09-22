@@ -11,7 +11,7 @@ from app.models.feedback import (
     NutritionFeedback,
     NutritionRuleCreate,
     NutritionRuleUpdate,
-    NutritionRuleResponse
+    NutritionRuleResponse,
 )
 from app.services.feedback_service import feedback_service
 from app.services.nutrition_rule_service import nutrition_rule_service
@@ -27,7 +27,7 @@ async def generate_meal_feedback(
     student_id: UUID,
     detected_foods: List[Dict[str, Any]],
     cultural_context: str = "nigerian_general",
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Generate nutrition feedback for a meal."""
 
@@ -39,7 +39,7 @@ async def generate_meal_feedback(
                 food_name=food_data.get("food_name", ""),
                 confidence=food_data.get("confidence", 0.0),
                 food_class=food_data.get("food_class", ""),
-                bounding_box=food_data.get("bounding_box")
+                bounding_box=food_data.get("bounding_box"),
             )
             food_results.append(food_result)
 
@@ -49,7 +49,7 @@ async def generate_meal_feedback(
             student_id=student_id,
             detected_foods=food_results,
             db=db,
-            cultural_context=cultural_context
+            cultural_context=cultural_context,
         )
 
         return feedback
@@ -57,23 +57,19 @@ async def generate_meal_feedback(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating feedback: {str(e)}"
+            detail=f"Error generating feedback: {str(e)}",
         )
 
 
 @router.get("/history/{student_id}", response_model=List[FeedbackResponse])
 async def get_feedback_history(
-    student_id: UUID,
-    limit: int = 10,
-    db: Session = Depends(get_db)
+    student_id: UUID, limit: int = 10, db: Session = Depends(get_db)
 ):
     """Get feedback history for a student."""
 
     try:
         feedback_records = await feedback_service.get_feedback_history(
-            student_id=student_id,
-            db=db,
-            limit=limit
+            student_id=student_id, db=db, limit=limit
         )
 
         return [
@@ -86,7 +82,7 @@ async def get_feedback_history(
                 recommendations=record.recommendations,
                 feedback_date=record.feedback_date,
                 created_at=record.created_at,
-                updated_at=record.updated_at
+                updated_at=record.updated_at,
             )
             for record in feedback_records
         ]
@@ -94,21 +90,17 @@ async def get_feedback_history(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving feedback history: {str(e)}"
+            detail=f"Error retrieving feedback history: {str(e)}",
         )
 
 
 @router.get("/meal/{meal_id}", response_model=Optional[FeedbackResponse])
-async def get_meal_feedback(
-    meal_id: UUID,
-    db: Session = Depends(get_db)
-):
+async def get_meal_feedback(meal_id: UUID, db: Session = Depends(get_db)):
     """Get feedback for a specific meal."""
 
     try:
         feedback_record = await feedback_service.get_feedback_by_meal(
-            meal_id=meal_id,
-            db=db
+            meal_id=meal_id, db=db
         )
 
         if not feedback_record:
@@ -123,29 +115,25 @@ async def get_meal_feedback(
             recommendations=feedback_record.recommendations,
             feedback_date=feedback_record.feedback_date,
             created_at=feedback_record.created_at,
-            updated_at=feedback_record.updated_at
+            updated_at=feedback_record.updated_at,
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving meal feedback: {str(e)}"
+            detail=f"Error retrieving meal feedback: {str(e)}",
         )
 
 
 @router.get("/trends/{student_id}")
 async def get_nutrition_trends(
-    student_id: UUID,
-    days: int = 30,
-    db: Session = Depends(get_db)
+    student_id: UUID, days: int = 30, db: Session = Depends(get_db)
 ):
     """Get nutrition trends for a student."""
 
     try:
         trends = await feedback_service.get_student_nutrition_trends(
-            student_id=student_id,
-            db=db,
-            days=days
+            student_id=student_id, db=db, days=days
         )
 
         return trends
@@ -153,29 +141,25 @@ async def get_nutrition_trends(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving nutrition trends: {str(e)}"
+            detail=f"Error retrieving nutrition trends: {str(e)}",
         )
 
 
 @router.put("/{feedback_id}", response_model=FeedbackResponse)
 async def update_feedback(
-    feedback_id: UUID,
-    update_data: Dict[str, Any],
-    db: Session = Depends(get_db)
+    feedback_id: UUID, update_data: Dict[str, Any], db: Session = Depends(get_db)
 ):
     """Update existing feedback."""
 
     try:
         updated_record = await feedback_service.update_feedback(
-            feedback_id=feedback_id,
-            updated_data=update_data,
-            db=db
+            feedback_id=feedback_id, updated_data=update_data, db=db
         )
 
         if not updated_record:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Feedback record not found"
+                detail="Feedback record not found",
             )
 
         return FeedbackResponse(
@@ -187,7 +171,7 @@ async def update_feedback(
             recommendations=updated_record.recommendations,
             feedback_date=updated_record.feedback_date,
             created_at=updated_record.created_at,
-            updated_at=updated_record.updated_at
+            updated_at=updated_record.updated_at,
         )
 
     except HTTPException:
@@ -195,27 +179,21 @@ async def update_feedback(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating feedback: {str(e)}"
+            detail=f"Error updating feedback: {str(e)}",
         )
 
 
 @router.delete("/{feedback_id}")
-async def delete_feedback(
-    feedback_id: UUID,
-    db: Session = Depends(get_db)
-):
+async def delete_feedback(feedback_id: UUID, db: Session = Depends(get_db)):
     """Delete feedback record."""
 
     try:
-        deleted = await feedback_service.delete_feedback(
-            feedback_id=feedback_id,
-            db=db
-        )
+        deleted = await feedback_service.delete_feedback(feedback_id=feedback_id, db=db)
 
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Feedback record not found"
+                detail="Feedback record not found",
             )
 
         return {"message": "Feedback deleted successfully"}
@@ -225,16 +203,16 @@ async def delete_feedback(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error deleting feedback: {str(e)}"
+            detail=f"Error deleting feedback: {str(e)}",
         )
 
 
 # Nutrition Rules Management Endpoints
 
+
 @router.post("/rules", response_model=NutritionRuleResponse)
 async def create_nutrition_rule(
-    rule_data: NutritionRuleCreate,
-    db: Session = Depends(get_db)
+    rule_data: NutritionRuleCreate, db: Session = Depends(get_db)
 ):
     """Create a new nutrition rule."""
 
@@ -245,15 +223,12 @@ async def create_nutrition_rule(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating nutrition rule: {str(e)}"
+            detail=f"Error creating nutrition rule: {str(e)}",
         )
 
 
 @router.get("/rules", response_model=List[NutritionRuleResponse])
-async def get_nutrition_rules(
-    active_only: bool = False,
-    db: Session = Depends(get_db)
-):
+async def get_nutrition_rules(active_only: bool = False, db: Session = Depends(get_db)):
     """Get all nutrition rules."""
 
     try:
@@ -263,15 +238,12 @@ async def get_nutrition_rules(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving nutrition rules: {str(e)}"
+            detail=f"Error retrieving nutrition rules: {str(e)}",
         )
 
 
 @router.get("/rules/{rule_id}", response_model=NutritionRuleResponse)
-async def get_nutrition_rule(
-    rule_id: UUID,
-    db: Session = Depends(get_db)
-):
+async def get_nutrition_rule(rule_id: UUID, db: Session = Depends(get_db)):
     """Get a specific nutrition rule."""
 
     try:
@@ -279,8 +251,7 @@ async def get_nutrition_rule(
 
         if not rule:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Nutrition rule not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
             )
 
         return rule
@@ -290,15 +261,13 @@ async def get_nutrition_rule(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving nutrition rule: {str(e)}"
+            detail=f"Error retrieving nutrition rule: {str(e)}",
         )
 
 
 @router.put("/rules/{rule_id}", response_model=NutritionRuleResponse)
 async def update_nutrition_rule(
-    rule_id: UUID,
-    rule_data: NutritionRuleUpdate,
-    db: Session = Depends(get_db)
+    rule_id: UUID, rule_data: NutritionRuleUpdate, db: Session = Depends(get_db)
 ):
     """Update a nutrition rule."""
 
@@ -307,8 +276,7 @@ async def update_nutrition_rule(
 
         if not updated_rule:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Nutrition rule not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
             )
 
         return updated_rule
@@ -318,15 +286,12 @@ async def update_nutrition_rule(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating nutrition rule: {str(e)}"
+            detail=f"Error updating nutrition rule: {str(e)}",
         )
 
 
 @router.delete("/rules/{rule_id}")
-async def delete_nutrition_rule(
-    rule_id: UUID,
-    db: Session = Depends(get_db)
-):
+async def delete_nutrition_rule(rule_id: UUID, db: Session = Depends(get_db)):
     """Delete a nutrition rule."""
 
     try:
@@ -334,8 +299,7 @@ async def delete_nutrition_rule(
 
         if not deleted:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Nutrition rule not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Nutrition rule not found"
             )
 
         return {"message": "Nutrition rule deleted successfully"}
@@ -345,5 +309,5 @@ async def delete_nutrition_rule(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error deleting nutrition rule: {str(e)}"
+            detail=f"Error deleting nutrition rule: {str(e)}",
         )

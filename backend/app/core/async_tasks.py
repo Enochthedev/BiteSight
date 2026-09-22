@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class TaskPriority(Enum):
     """Task priority levels."""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -26,6 +27,7 @@ class TaskPriority(Enum):
 @dataclass
 class AsyncTask:
     """Async task definition."""
+
     task_id: str
     name: str
     func: Callable[..., Awaitable[Any]]
@@ -51,7 +53,8 @@ class AsyncTaskProcessor:
         self.max_workers = max_workers
         self.max_queue_size = max_queue_size
         self.task_queue: asyncio.PriorityQueue = asyncio.PriorityQueue(
-            maxsize=max_queue_size)
+            maxsize=max_queue_size
+        )
         self.active_tasks: Dict[str, AsyncTask] = {}
         self.completed_tasks: Dict[str, AsyncTask] = {}
         self.workers: List[asyncio.Task] = []
@@ -64,8 +67,7 @@ class AsyncTaskProcessor:
             return
 
         self.running = True
-        logger.info(
-            f"Starting async task processor with {self.max_workers} workers")
+        logger.info(f"Starting async task processor with {self.max_workers} workers")
 
         # Start worker tasks
         for i in range(self.max_workers):
@@ -102,7 +104,7 @@ class AsyncTaskProcessor:
         max_retries: int = 3,
         retry_delay: float = 1.0,
         timeout: Optional[float] = None,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
         Submit a task for async processing.
@@ -121,7 +123,7 @@ class AsyncTaskProcessor:
             priority=priority,
             max_retries=max_retries,
             retry_delay=retry_delay,
-            timeout=timeout
+            timeout=timeout,
         )
 
         # Add to queue with priority (lower number = higher priority)
@@ -188,8 +190,7 @@ class AsyncTaskProcessor:
 
     async def _process_task(self, task: AsyncTask, worker_name: str):
         """Process a single task."""
-        logger.info(
-            f"Worker {worker_name} processing task {task.task_id}: {task.name}")
+        logger.info(f"Worker {worker_name} processing task {task.task_id}: {task.name}")
 
         # Move to active tasks
         self.active_tasks[task.task_id] = task
@@ -200,8 +201,7 @@ class AsyncTaskProcessor:
             # Execute task with timeout
             if task.timeout:
                 result = await asyncio.wait_for(
-                    task.func(*task.args, **task.kwargs),
-                    timeout=task.timeout
+                    task.func(*task.args, **task.kwargs), timeout=task.timeout
                 )
             else:
                 result = await task.func(*task.args, **task.kwargs)
@@ -217,8 +217,7 @@ class AsyncTaskProcessor:
             )
 
         except asyncio.TimeoutError:
-            logger.error(
-                f"Task {task.task_id} timed out after {task.timeout}s")
+            logger.error(f"Task {task.task_id} timed out after {task.timeout}s")
             await self._handle_task_failure(task, "Task timed out")
 
         except Exception as e:
@@ -272,7 +271,7 @@ class AsyncTaskProcessor:
             "retry_count": task.retry_count,
             "max_retries": task.max_retries,
             "error": task.error,
-            "result": task.result if task.status == "completed" else None
+            "result": task.result if task.status == "completed" else None,
         }
 
     async def get_queue_stats(self) -> Dict[str, Any]:
@@ -284,7 +283,7 @@ class AsyncTaskProcessor:
             "workers": len(self.workers),
             "running": self.running,
             "max_workers": self.max_workers,
-            "max_queue_size": self.max_queue_size
+            "max_queue_size": self.max_queue_size,
         }
 
     async def cleanup_completed_tasks(self, max_age_seconds: int = 3600):
@@ -293,8 +292,7 @@ class AsyncTaskProcessor:
         to_remove = []
 
         for task_id, task in self.completed_tasks.items():
-            if (task.completed_at and
-                    current_time - task.completed_at > max_age_seconds):
+            if task.completed_at and current_time - task.completed_at > max_age_seconds:
                 to_remove.append(task_id)
 
         for task_id in to_remove:
@@ -312,8 +310,7 @@ async def get_task_processor() -> AsyncTaskProcessor:
     global _task_processor
     if _task_processor is None:
         _task_processor = AsyncTaskProcessor(
-            max_workers=settings.MAX_CONCURRENT_REQUESTS,
-            max_queue_size=100
+            max_workers=settings.MAX_CONCURRENT_REQUESTS, max_queue_size=100
         )
         await _task_processor.start()
     return _task_processor
@@ -324,7 +321,7 @@ async def submit_async_task(
     func: Callable[..., Awaitable[Any]],
     *args,
     priority: TaskPriority = TaskPriority.NORMAL,
-    **kwargs
+    **kwargs,
 ) -> str:
     """Convenience function to submit an async task."""
     processor = await get_task_processor()
@@ -332,6 +329,7 @@ async def submit_async_task(
 
 
 # Common async task functions for the nutrition feedback system
+
 
 async def async_meal_analysis(meal_id: str, image_path: str) -> Dict[str, Any]:
     """Async meal analysis task."""
@@ -345,7 +343,7 @@ async def async_meal_analysis(meal_id: str, image_path: str) -> Dict[str, Any]:
         "detected_foods": ["jollof_rice", "chicken", "plantain"],
         "confidence_scores": [0.95, 0.88, 0.92],
         "analysis_complete": True,
-        "timestamp": time.time()
+        "timestamp": time.time(),
     }
 
 
@@ -359,20 +357,18 @@ async def async_weekly_insights_generation(student_id: str) -> Dict[str, Any]:
     return {
         "student_id": student_id,
         "week_period": "2024-01-01 to 2024-01-07",
-        "nutrition_balance": {
-            "carbohydrates": 0.8,
-            "proteins": 0.6,
-            "vegetables": 0.4
-        },
+        "nutrition_balance": {"carbohydrates": 0.8, "proteins": 0.6, "vegetables": 0.4},
         "recommendations": [
             "Try to include more vegetables in your meals",
-            "Good protein intake this week!"
+            "Good protein intake this week!",
         ],
-        "generated_at": time.time()
+        "generated_at": time.time(),
     }
 
 
-async def async_model_training(dataset_path: str, model_config: Dict[str, Any]) -> Dict[str, Any]:
+async def async_model_training(
+    dataset_path: str, model_config: Dict[str, Any]
+) -> Dict[str, Any]:
     """Async model training task."""
     logger.info(f"Starting model training with dataset {dataset_path}")
 
@@ -384,5 +380,5 @@ async def async_model_training(dataset_path: str, model_config: Dict[str, Any]) 
         "accuracy": 0.94,
         "training_time": 5.0,
         "dataset_size": 1000,
-        "completed_at": time.time()
+        "completed_at": time.time(),
     }

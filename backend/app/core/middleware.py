@@ -50,7 +50,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 f"Error: {str(e)} "
                 f"for {request.method} {request.url.path} "
                 f"in {process_time:.4f}s",
-                exc_info=True
+                exc_info=True,
             )
             raise
 
@@ -105,9 +105,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                         "code": 429,
                         "message": "Rate limit exceeded",
                         "type": "rate_limit_error",
-                        "retry_after": 60
+                        "retry_after": 60,
                     }
-                }
+                },
             )
 
         # Add current request
@@ -116,8 +116,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         # Add rate limit headers
-        remaining = max(0, self.requests_per_minute -
-                        len(self.requests[client_ip]))
+        remaining = max(0, self.requests_per_minute - len(self.requests[client_ip]))
         response.headers["X-RateLimit-Limit"] = str(self.requests_per_minute)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
         response.headers["X-RateLimit-Reset"] = str(int(current_time + 60))
@@ -164,9 +163,9 @@ class RequestSizeMiddleware(BaseHTTPMiddleware):
                             "code": 413,
                             "message": f"Request size {content_length} exceeds maximum allowed size {self.max_size}",
                             "type": "request_too_large",
-                            "max_size": self.max_size
+                            "max_size": self.max_size,
                         }
-                    }
+                    },
                 )
 
         return await call_next(request)
@@ -177,8 +176,7 @@ class HealthCheckMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app, health_endpoints: Optional[list] = None):
         super().__init__(app)
-        self.health_endpoints = health_endpoints or [
-            "/health", "/ping", "/status"]
+        self.health_endpoints = health_endpoints or ["/health", "/ping", "/status"]
 
     async def dispatch(self, request: Request, call_next):
         """Handle health check requests quickly."""
@@ -209,7 +207,9 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
         else:
             # No cache for API endpoints
             if request.url.path.startswith("/api"):
-                response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+                response.headers["Cache-Control"] = (
+                    "no-cache, no-store, must-revalidate"
+                )
                 response.headers["Pragma"] = "no-cache"
                 response.headers["Expires"] = "0"
 

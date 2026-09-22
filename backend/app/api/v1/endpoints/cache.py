@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_cache_stats(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Get cache performance statistics.
@@ -27,12 +27,12 @@ async def get_cache_stats(
         return {
             "status": "success",
             "data": stats,
-            "message": "Cache statistics retrieved successfully"
+            "message": "Cache statistics retrieved successfully",
         }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve cache stats: {str(e)}"
+            detail=f"Failed to retrieve cache stats: {str(e)}",
         )
 
 
@@ -48,9 +48,9 @@ async def check_cache_health() -> Dict[str, Any]:
 
         # Set appropriate HTTP status based on health
         status_code = status.HTTP_200_OK
-        if health_status['status'] == 'unhealthy':
+        if health_status["status"] == "unhealthy":
             status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        elif health_status['status'] == 'degraded':
+        elif health_status["status"] == "degraded":
             status_code = status.HTTP_206_PARTIAL_CONTENT
 
         return JSONResponse(
@@ -58,8 +58,8 @@ async def check_cache_health() -> Dict[str, Any]:
             content={
                 "status": "success",
                 "data": health_status,
-                "message": f"Cache health status: {health_status['status']}"
-            }
+                "message": f"Cache health status: {health_status['status']}",
+            },
         )
     except Exception as e:
         return JSONResponse(
@@ -67,15 +67,14 @@ async def check_cache_health() -> Dict[str, Any]:
             content={
                 "status": "error",
                 "data": None,
-                "message": f"Health check failed: {str(e)}"
-            }
+                "message": f"Health check failed: {str(e)}",
+            },
         )
 
 
 @router.get("/metrics", response_model=Dict[str, Any])
 async def get_cache_metrics(
-    hours: int = 1,
-    current_user: User = Depends(get_current_user)
+    hours: int = 1, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Get cache performance metrics for specified time period.
@@ -85,7 +84,7 @@ async def get_cache_metrics(
         if hours < 1 or hours > 24:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Hours parameter must be between 1 and 24"
+                detail="Hours parameter must be between 1 and 24",
             )
 
         cache_monitor = get_cache_monitor()
@@ -107,23 +106,22 @@ async def get_cache_metrics(
                     "memory_usage": current_metrics.memory_usage,
                     "connected_clients": current_metrics.connected_clients,
                     "operations_per_second": current_metrics.operations_per_second,
-                    "average_response_time": current_metrics.average_response_time
+                    "average_response_time": current_metrics.average_response_time,
                 },
-                "summary": summary
+                "summary": summary,
             },
-            "message": f"Cache metrics for last {hours} hour(s) retrieved successfully"
+            "message": f"Cache metrics for last {hours} hour(s) retrieved successfully",
         }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve cache metrics: {str(e)}"
+            detail=f"Failed to retrieve cache metrics: {str(e)}",
         )
 
 
 @router.delete("/clear", response_model=Dict[str, Any])
 async def clear_cache(
-    cache_type: str = "all",
-    current_user: User = Depends(get_current_user)
+    cache_type: str = "all", current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Clear cache entries.
@@ -142,19 +140,19 @@ async def clear_cache(
                 return {
                     "status": "success",
                     "data": {"cleared": True, "cache_type": "all"},
-                    "message": "All cache cleared successfully"
+                    "message": "All cache cleared successfully",
                 }
             else:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to clear cache"
+                    detail="Failed to clear cache",
                 )
         else:
             # Clear specific cache type (would need pattern matching)
             # For now, return not implemented
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="Selective cache clearing not yet implemented"
+                detail="Selective cache clearing not yet implemented",
             )
 
     except HTTPException:
@@ -162,14 +160,13 @@ async def clear_cache(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear cache: {str(e)}"
+            detail=f"Failed to clear cache: {str(e)}",
         )
 
 
 @router.delete("/user/{user_id}", response_model=Dict[str, Any])
 async def clear_user_cache(
-    user_id: str,
-    current_user: User = Depends(get_current_user)
+    user_id: str, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Clear cache entries for a specific user.
@@ -183,22 +180,19 @@ async def clear_user_cache(
 
         return {
             "status": "success",
-            "data": {
-                "user_id": user_id,
-                "deleted_entries": deleted_count
-            },
-            "message": f"Cleared {deleted_count} cache entries for user {user_id}"
+            "data": {"user_id": user_id, "deleted_entries": deleted_count},
+            "message": f"Cleared {deleted_count} cache entries for user {user_id}",
         }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear user cache: {str(e)}"
+            detail=f"Failed to clear user cache: {str(e)}",
         )
 
 
 @router.post("/warmup", response_model=Dict[str, Any])
 async def warmup_cache(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Warmup cache with commonly accessed data.
@@ -210,10 +204,10 @@ async def warmup_cache(
         return {
             "status": "success",
             "data": {"warmup_completed": True},
-            "message": "Cache warmup completed successfully"
+            "message": "Cache warmup completed successfully",
         }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to warmup cache: {str(e)}"
+            detail=f"Failed to warmup cache: {str(e)}",
         )
